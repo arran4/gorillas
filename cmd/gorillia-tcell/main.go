@@ -22,6 +22,8 @@ type Game struct {
 	bananaX, bananaY   float64
 	bananaVX, bananaVY float64
 	bananaActive       bool
+	sunX, sunY         int
+	sunHitTicks        int
 }
 
 const buildingWidth = 8
@@ -34,7 +36,29 @@ func newGame() *Game {
 	}
 	g.gorillas[0] = 1
 	g.gorillas[1] = len(g.buildings) - 2
+	g.sunX = g.Width - 4
+	g.sunY = 1
 	return g
+}
+
+var (
+	sunHappy = []string{`\|/`, `-o-`, `/|\`}
+	sunShock = []string{`\|/`, `-O-`, `/|\`}
+)
+
+func (g *Game) drawSun() {
+	art := sunHappy
+	if g.sunHitTicks > 0 {
+		art = sunShock
+		g.sunHitTicks--
+	}
+	for dy, line := range art {
+		for dx, r := range line {
+			if r != ' ' {
+				g.screen.SetContent(g.sunX+dx, g.sunY+dy, r, nil, tcell.StyleDefault)
+			}
+		}
+	}
 }
 
 func (g *Game) draw() {
@@ -47,8 +71,7 @@ func (g *Game) draw() {
 	}
 	g.drawGorilla(g.gorillas[0])
 	g.drawGorilla(g.gorillas[1])
-	// draw a simple sun
-	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
+	g.drawSun()
 	if g.bananaActive {
 		g.screen.SetContent(int(g.bananaX), int(g.bananaY), 'o', nil, tcell.StyleDefault)
 	}
@@ -107,6 +130,9 @@ func (g *Game) run() error {
 				g.bananaX += g.bananaVX
 				g.bananaY += g.bananaVY
 				g.bananaVY += 0.2
+				if int(g.bananaX) >= g.sunX && int(g.bananaX) < g.sunX+3 && int(g.bananaY) >= g.sunY && int(g.bananaY) < g.sunY+3 {
+					g.sunHitTicks = 10
+				}
 				idx := int(g.bananaX) / buildingWidth
 				if idx >= 0 && idx < len(g.buildings) {
 					if int(g.bananaY) >= g.Height-g.buildings[idx].h {
