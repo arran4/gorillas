@@ -110,16 +110,8 @@ func (g *Game) throw() {
 	g.bananaActive = true
 }
 
-func (g *Game) run() error {
-	s, err := tcell.NewScreen()
-	if err != nil {
-		return err
-	}
-	if err = s.Init(); err != nil {
-		return err
-	}
+func (g *Game) run(s tcell.Screen) error {
 	g.screen = s
-	defer s.Fini()
 
 	ticker := time.NewTicker(50 * time.Millisecond)
 	for {
@@ -178,8 +170,21 @@ func (g *Game) run() error {
 }
 
 func main() {
+	s, err := tcell.NewScreen()
+	if err != nil {
+		panic(err)
+	}
+	if err = s.Init(); err != nil {
+		panic(err)
+	}
+	defer s.Fini()
+
+	if !introScreen(s) {
+		return
+	}
+
 	g := newGame()
-	if err := g.run(); err != nil {
+	if err := g.run(s); err != nil {
 		panic(err)
 	}
 }
