@@ -11,11 +11,13 @@ import (
 )
 
 type building struct {
-	h int
+	h       int
+	windows []int
 }
 
 type Game struct {
 	*gorillas.Game
+	buildings []building
 	screen             tcell.Screen
 	buildings          []building
 	gorillas           [2]int
@@ -31,8 +33,15 @@ const buildingWidth = 8
 func newGame() *Game {
 	g := &Game{Game: gorillas.NewGame(80, 24)}
 	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < g.Width; i += buildingWidth {
-		g.buildings = append(g.buildings, building{rand.Intn(g.Height - 5)})
+	for _, b := range g.Buildings {
+		var wins []int
+		top := g.Height - int(b.H) + 2
+		for y := g.Height - 2; y > top; y -= 2 {
+			if rand.Intn(3) != 0 {
+				wins = append(wins, y)
+			}
+		}
+		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins})
 	}
 	g.gorillas[0] = 1
 	g.gorillas[1] = len(g.buildings) - 2
@@ -64,17 +73,22 @@ func (g *Game) drawSun() {
 func (g *Game) draw() {
 	g.screen.Clear()
 	for i, b := range g.buildings {
+		x := i*buildingWidth + 4
 		for y := g.Height - 1; y >= g.Height-b.h; y-- {
-			g.screen.SetContent(i*buildingWidth+4, y, '#', nil, tcell.StyleDefault)
+			g.screen.SetContent(x, y, '#', nil, tcell.StyleDefault)
 		}
-		_ = i
+		for _, wy := range b.windows {
+			g.screen.SetContent(x, wy, 'o', nil, tcell.StyleDefault)
+		}
 	}
-	g.drawGorilla(g.gorillas[0])
-	g.drawGorilla(g.gorillas[1])
+	g.drawGorilla(0)
+	g.drawGorilla(1)
+	// draw a simple sun
+	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
+	if g.Banana.Active {
+		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), 'o', nil, tcell.StyleDefault)
+  }
 	g.drawSun()
-	if g.bananaActive {
-		g.screen.SetContent(int(g.bananaX), int(g.bananaY), 'o', nil, tcell.StyleDefault)
-	}
 	s := fmt.Sprintf("A:%2.0f P:%2.0f P%d %d-%d", g.Angle, g.Power, g.Current+1, g.Wins[0], g.Wins[1])
 	for i, r := range s {
 		g.screen.SetContent(i, 0, r, nil, tcell.StyleDefault)
@@ -83,8 +97,8 @@ func (g *Game) draw() {
 }
 
 func (g *Game) drawGorilla(idx int) {
-	x := idx*buildingWidth + 4
-	y := g.Height - g.buildings[idx].h - 1
+	x := int(g.Gorillas[idx].X)
+	y := int(g.Gorillas[idx].Y) - 1
 	style := tcell.StyleDefault
 	g.screen.SetContent(x, y-2, 'O', nil, style)
 	g.screen.SetContent(x-1, y-1, '/', nil, style)
@@ -95,19 +109,7 @@ func (g *Game) drawGorilla(idx int) {
 }
 
 func (g *Game) throw() {
-	startX := float64(g.gorillas[g.Current]*8 + 4)
-	startY := float64(g.Height - g.buildings[g.gorillas[g.Current]].h - 1)
-	radians := g.Angle * math.Pi / 180
-	speed := g.Power / 2
-	vx := math.Cos(radians) * speed
-	if g.Current == 1 {
-		vx = -vx
-	}
-	g.bananaX = startX
-	g.bananaY = startY
-	g.bananaVX = vx / 5
-	g.bananaVY = -math.Sin(radians) * speed / 5
-	g.bananaActive = true
+	g.Throw()
 }
 
 func (g *Game) run(s tcell.Screen) error {
@@ -118,7 +120,8 @@ func (g *Game) run(s tcell.Screen) error {
 		g.draw()
 		select {
 		case <-ticker.C:
-			if g.bananaActive {
+			if g.Banana.Active {
+				g.Step()
 				g.bananaX += g.bananaVX
 				g.bananaY += g.bananaVY
 				g.bananaVY += 0.2

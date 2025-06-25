@@ -11,9 +11,14 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+type window struct {
+	x, y, w, h float64
+}
+
 type building struct {
 	x, w, h float64
 	color   color.Color
+	windows []window
 }
 
 type Game struct {
@@ -27,12 +32,20 @@ func newGame() *Game {
 	bw := float64(g.Width) / gorillas.BuildingCount
 	for i := 0; i < gorillas.BuildingCount; i++ {
 		h := g.Buildings[i].H
-		g.buildings = append(g.buildings, building{
+		b := building{
 			x:     float64(i) * bw,
 			w:     bw,
 			h:     h,
 			color: color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255},
-		})
+		}
+		for wx := b.x + 3; wx < b.x+b.w-3; wx += 6 {
+			for wy := float64(g.Height) - 3; wy > float64(g.Height)-b.h+3; wy -= 6 {
+				if rand.Intn(3) != 0 {
+					b.windows = append(b.windows, window{wx, wy, 3, 3})
+				}
+			}
+		}
+		g.buildings = append(g.buildings, b)
 	}
 	return g
 }
@@ -82,6 +95,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 	for i, b := range g.buildings {
 		ebitenutil.DrawRect(screen, b.x, float64(g.Height)-b.h, b.w-1, b.h, b.color)
+		for _, w := range b.windows {
+			ebitenutil.DrawRect(screen, w.x, w.y, w.w, w.h, color.RGBA{255, 255, 0, 255})
+		}
 		_ = i
 	}
 	for _, gr := range g.Gorillas {

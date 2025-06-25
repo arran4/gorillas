@@ -37,10 +37,46 @@ func NewGame(width, height int) *Game {
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50}
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(width) / BuildingCount
+
+	// create a sloping skyline similar to the original BASIC version
+	slope := rand.Intn(6) + 1
+	newHt := float64(height) * 0.3
+	if slope == 2 || slope == 6 {
+		newHt = float64(height) * 0.7
+	}
+	htInc := float64(height) / 20
+
 	for i := 0; i < BuildingCount; i++ {
-		h := float64(100 + rand.Intn(height-200))
+		x := float64(i) * bw
+		switch slope {
+		case 1:
+			newHt += htInc
+		case 2:
+			newHt -= htInc
+		case 3, 5:
+			if x > float64(width)/2 {
+				newHt -= 2 * htInc
+			} else {
+				newHt += 2 * htInc
+			}
+		case 4:
+			if x > float64(width)/2 {
+				newHt += 2 * htInc
+			} else {
+				newHt -= 2 * htInc
+			}
+		}
+
+		h := newHt + rand.Float64()*float64(height)/8
+		if h < float64(height)*0.1 {
+			h = float64(height) * 0.1
+		}
+		if h > float64(height)*0.9 {
+			h = float64(height) * 0.9
+		}
+
 		g.Buildings = append(g.Buildings, Building{
-			X: float64(i) * bw,
+			X: x,
 			W: bw,
 			H: h,
 		})
