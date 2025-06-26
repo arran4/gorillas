@@ -25,6 +25,10 @@ type Game struct {
 	screen      tcell.Screen
 	sunX, sunY  int
 	sunHitTicks int
+	angleInput  string
+	powerInput  string
+	enteringAng bool
+	enteringPow bool
 }
 
 const buildingWidth = 8
@@ -108,7 +112,23 @@ func (g *Game) draw() {
 	}
 	g.drawSun()
 	g.drawWindArrow()
-	s := fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1])
+	angleStr := fmt.Sprintf("%3.0f", g.Angle)
+	if g.enteringAng {
+		if g.angleInput == "" {
+			angleStr = "_"
+		} else {
+			angleStr = g.angleInput
+		}
+	}
+	powerStr := fmt.Sprintf("%3.0f", g.Power)
+	if g.enteringPow {
+		if g.powerInput == "" {
+			powerStr = "_"
+		} else {
+			powerStr = g.powerInput
+		}
+	}
+	s := fmt.Sprintf("A:%3s P:%3s W:%+2.0f P%d %d-%d", angleStr, powerStr, g.Wind, g.Current+1, g.Wins[0], g.Wins[1])
 	for i, r := range s {
 		g.screen.SetContent(i, 0, r, nil, tcell.StyleDefault)
 	}
@@ -180,6 +200,69 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 
 		ev := s.PollEvent()
 		if key, ok := ev.(*tcell.EventKey); ok {
+			if g.enteringAng || g.enteringPow {
+				switch key.Key() {
+				case tcell.KeyEnter:
+					if g.enteringAng {
+						if v, err := strconv.Atoi(g.angleInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 360 {
+								v = 360
+							}
+							g.Angle = float64(v)
+						}
+						g.enteringAng = false
+						g.angleInput = ""
+						g.enteringPow = true
+					} else {
+						if v, err := strconv.Atoi(g.powerInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 200 {
+								v = 200
+							}
+							g.Power = float64(v)
+						}
+						g.enteringPow = false
+						g.powerInput = ""
+						g.throw()
+					}
+				case tcell.KeyEsc:
+					g.enteringAng = false
+					g.enteringPow = false
+					g.angleInput = ""
+					g.powerInput = ""
+				case tcell.KeyBackspace, tcell.KeyBackspace2:
+					if g.enteringAng {
+						if len(g.angleInput) > 0 {
+							g.angleInput = g.angleInput[:len(g.angleInput)-1]
+						}
+					} else if g.enteringPow {
+						if len(g.powerInput) > 0 {
+							g.powerInput = g.powerInput[:len(g.powerInput)-1]
+						}
+					}
+				default:
+					if key.Rune() >= '0' && key.Rune() <= '9' {
+						if g.enteringAng {
+							if len(g.angleInput) < 3 {
+								g.angleInput += string(key.Rune())
+							}
+						} else if g.enteringPow {
+							if len(g.powerInput) < 3 {
+								g.powerInput += string(key.Rune())
+							}
+						}
+					}
+				}
+				continue
+			}
+			if key.Rune() >= '0' && key.Rune() <= '9' {
+				g.enteringAng = true
+				g.angleInput = string(key.Rune())
+				continue
+			}
 			switch key.Key() {
 			case tcell.KeyEscape:
 				return nil

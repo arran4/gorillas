@@ -8,11 +8,13 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/arran4/gorillas"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const sunRadius = 20
@@ -80,6 +82,10 @@ type Game struct {
 	buildings   []building
 	sunX, sunY  float64
 	sunHitTicks int
+	angleInput  string
+	powerInput  string
+	enteringAng bool
+	enteringPow bool
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -115,6 +121,66 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 
 func (g *Game) Update() error {
 	if !g.Banana.Active && !g.Explosion.Active {
+		if g.enteringAng || g.enteringPow {
+			for _, k := range inpututil.AppendJustPressedKeys(nil) {
+				switch k {
+				case ebiten.KeyEnter:
+					if g.enteringAng {
+						if v, err := strconv.Atoi(g.angleInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 360 {
+								v = 360
+							}
+							g.Angle = float64(v)
+						}
+						g.enteringAng = false
+						g.angleInput = ""
+						g.enteringPow = true
+					} else {
+						if v, err := strconv.Atoi(g.powerInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 200 {
+								v = 200
+							}
+							g.Power = float64(v)
+						}
+						g.enteringPow = false
+						g.powerInput = ""
+						g.Throw()
+					}
+				case ebiten.KeyEscape:
+					g.enteringAng = false
+					g.enteringPow = false
+					g.angleInput = ""
+					g.powerInput = ""
+				case ebiten.KeyBackspace:
+					if g.enteringAng && len(g.angleInput) > 0 {
+						g.angleInput = g.angleInput[:len(g.angleInput)-1]
+					} else if g.enteringPow && len(g.powerInput) > 0 {
+						g.powerInput = g.powerInput[:len(g.powerInput)-1]
+					}
+				default:
+					if k >= ebiten.Key0 && k <= ebiten.Key9 {
+						r := '0' + rune(k-ebiten.Key0)
+						if g.enteringAng && len(g.angleInput) < 3 {
+							g.angleInput += string(r)
+						} else if g.enteringPow && len(g.powerInput) < 3 {
+							g.powerInput += string(r)
+						}
+					}
+				}
+			}
+			return nil
+		}
+		for _, k := range inpututil.AppendJustPressedKeys(nil) {
+			if k >= ebiten.Key0 && k <= ebiten.Key9 {
+				g.enteringAng = true
+				g.angleInput = string('0' + rune(k-ebiten.Key0))
+				return nil
+			}
+		}
 		if g.Current == 0 {
 			if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 				g.Angle += 1
@@ -183,7 +249,23 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	g.drawSun(screen)
 	g.drawWindArrow(screen)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
+	angleStr := fmt.Sprintf("%3.0f", g.Angle)
+	if g.enteringAng {
+		if g.angleInput == "" {
+			angleStr = "_"
+		} else {
+			angleStr = g.angleInput
+		}
+	}
+	powerStr := fmt.Sprintf("%3.0f", g.Power)
+	if g.enteringPow {
+		if g.powerInput == "" {
+			powerStr = "_"
+		} else {
+			powerStr = g.powerInput
+		}
+	}
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%3s P:%3s W:%+2.0f P%d %d-%d", angleStr, powerStr, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
 }
 
 func (g *Game) drawWindArrow(img *ebiten.Image) {
