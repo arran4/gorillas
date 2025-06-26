@@ -357,3 +357,31 @@ func TestVariableWindChangesEachRound(t *testing.T) {
 		t.Fatalf("expected wind 10 got %f", g.Wind)
 	}
 }
+
+func TestGroundBounceReflectsVelocity(t *testing.T) {
+	g := newTestGame()
+	for i := range g.Buildings {
+		g.Buildings[i].H = 0
+	}
+	g.Gorillas[0] = Gorilla{X: 30, Y: 50}
+	g.Angle = -90
+	g.Power = 20
+	g.Throw()
+
+	for g.Banana.Active && g.Banana.Y < float64(g.Height) {
+		g.Step()
+	}
+
+	if !g.Banana.Active {
+		t.Fatal("banana became inactive before ground impact")
+	}
+	if g.Banana.Y != float64(g.Height) {
+		t.Fatalf("expected banana at ground, got %f", g.Banana.Y)
+	}
+	if math.Abs(g.Banana.VY+5) > 1e-6 {
+		t.Fatalf("expected vy -5 after bounce got %f", g.Banana.VY)
+	}
+	if !g.Banana.Active {
+		t.Fatal("banana should remain active after bounce")
+	}
+}
