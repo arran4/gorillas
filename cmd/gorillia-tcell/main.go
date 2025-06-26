@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/arran4/gorillas"
@@ -238,7 +239,9 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				switch key.Key() {
 				case tcell.KeyEnter:
 					if g.enteringAng {
-						if v, err := strconv.Atoi(g.angleInput); err == nil {
+						if strings.HasPrefix(g.angleInput, "*") {
+							g.Angle = g.LastAngle[g.Current]
+						} else if v, err := strconv.Atoi(g.angleInput); err == nil {
 							if v < 0 {
 								v = 0
 							} else if v > 360 {
@@ -250,7 +253,9 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 						g.angleInput = ""
 						g.enteringPow = true
 					} else {
-						if v, err := strconv.Atoi(g.powerInput); err == nil {
+						if strings.HasPrefix(g.powerInput, "*") {
+							g.Power = g.LastPower[g.Current]
+						} else if v, err := strconv.Atoi(g.powerInput); err == nil {
 							if v < 0 {
 								v = 0
 							} else if v > 200 {
@@ -278,18 +283,34 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 						}
 					}
 				default:
-					if key.Rune() >= '0' && key.Rune() <= '9' {
+					r := key.Rune()
+					if r == '*' {
+						if g.enteringAng {
+							if len(g.angleInput) == 0 {
+								g.angleInput = "*"
+							}
+						} else if g.enteringPow {
+							if len(g.powerInput) == 0 {
+								g.powerInput = "*"
+							}
+						}
+					} else if r >= '0' && r <= '9' {
 						if g.enteringAng {
 							if len(g.angleInput) < 3 {
-								g.angleInput += string(key.Rune())
+								g.angleInput += string(r)
 							}
 						} else if g.enteringPow {
 							if len(g.powerInput) < 3 {
-								g.powerInput += string(key.Rune())
+								g.powerInput += string(r)
 							}
 						}
 					}
 				}
+				continue
+			}
+			if key.Rune() == '*' {
+				g.enteringAng = true
+				g.angleInput = "*"
 				continue
 			}
 			if key.Rune() >= '0' && key.Rune() <= '9' {

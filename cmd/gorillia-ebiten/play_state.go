@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -17,11 +18,30 @@ type playState struct{}
 func (playState) Update(g *Game) error {
 	if !g.Banana.Active && !g.Explosion.Active {
 		if g.enteringAng || g.enteringPow {
+			for _, r := range ebiten.AppendInputChars(nil) {
+				if r == '*' {
+					if g.enteringAng && len(g.angleInput) == 0 {
+						g.angleInput = "*"
+					} else if g.enteringPow && len(g.powerInput) == 0 {
+						g.powerInput = "*"
+					}
+					continue
+				}
+				if r >= '0' && r <= '9' {
+					if g.enteringAng && len(g.angleInput) < 3 {
+						g.angleInput += string(r)
+					} else if g.enteringPow && len(g.powerInput) < 3 {
+						g.powerInput += string(r)
+					}
+				}
+			}
 			for _, k := range inpututil.AppendJustPressedKeys(nil) {
 				switch k {
 				case ebiten.KeyEnter:
 					if g.enteringAng {
-						if v, err := strconv.Atoi(g.angleInput); err == nil {
+						if strings.HasPrefix(g.angleInput, "*") {
+							g.Angle = g.LastAngle[g.Current]
+						} else if v, err := strconv.Atoi(g.angleInput); err == nil {
 							if v < 0 {
 								v = 0
 							} else if v > 360 {
@@ -33,7 +53,9 @@ func (playState) Update(g *Game) error {
 						g.angleInput = ""
 						g.enteringPow = true
 					} else {
-						if v, err := strconv.Atoi(g.powerInput); err == nil {
+						if strings.HasPrefix(g.powerInput, "*") {
+							g.Power = g.LastPower[g.Current]
+						} else if v, err := strconv.Atoi(g.powerInput); err == nil {
 							if v < 0 {
 								v = 0
 							} else if v > 200 {
@@ -72,6 +94,18 @@ func (playState) Update(g *Game) error {
 				}
 			}
 			return nil
+		}
+		for _, r := range ebiten.AppendInputChars(nil) {
+			if r == '*' {
+				g.enteringAng = true
+				g.angleInput = "*"
+				return nil
+			}
+			if r >= '0' && r <= '9' {
+				g.enteringAng = true
+				g.angleInput = string(r)
+				return nil
+			}
 		}
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			if k >= ebiten.Key0 && k <= ebiten.Key9 {
