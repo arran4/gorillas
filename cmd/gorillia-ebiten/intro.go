@@ -203,11 +203,11 @@ func (g *introScreenGame) Draw(screen *ebiten.Image) {
 	}
 	ebitenutil.DebugPrintAt(screen, "GORILLAS", (g.width-8*charW)/2, cy-2*charH)
 	if g.stage == 1 {
-		line := "V - View Intro"
+		line := "V/X - View Intro"
 		ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, cy+3*charH)
-		line = "P - Play Game"
+		line = "P/Start - Play Game"
 		ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, cy+4*charH)
-		line = "Q - Quit"
+		line = "Q/B - Quit"
 		ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, cy+5*charH)
 	}
 }
