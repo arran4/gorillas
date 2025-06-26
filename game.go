@@ -178,6 +178,8 @@ type Game struct {
 const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
 const defaultLeagueFile = "gorillas.lge"
+const groundBounceFactor = 0.4
+const groundBounceThreshold = 5.0
 
 func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
@@ -428,9 +430,20 @@ func (g *Game) Step() ShotEvent {
 	// default behaviour uses DefaultGravity which equals Gravity initially
 	g.Banana.VY += g.Gravity / 34
 	g.Banana.VX += g.Wind / 20
+	if g.Banana.Y > float64(g.Height) {
+		if g.Banana.VY > groundBounceThreshold {
+			g.Banana.Y = float64(g.Height)
+			g.Banana.VY = -g.Banana.VY * groundBounceFactor
+		} else {
+			g.Banana.Active = false
+			g.evaluateMiss()
+			g.Current = (g.Current + 1) % 2
+			return g.LastEvent
+		}
+	}
 	bw := float64(g.Width) / float64(g.BuildingCount)
 	idx := int(g.Banana.X / bw)
-	if idx >= 0 && idx < g.BuildingCount {
+	if idx >= 0 && idx < g.BuildingCount && g.Banana.Y < float64(g.Height) {
 		if g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
 			// shorten the building to the impact point to simulate
 			// simple environmental destruction
