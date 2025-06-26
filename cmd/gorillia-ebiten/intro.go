@@ -4,11 +4,13 @@ package main
 
 import (
 	"image/color"
+	"strings"
 	"time"
 
 	"github.com/arran4/gorillas"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 var gorillaFrames = [][]string{
@@ -150,4 +152,81 @@ func showIntroMovie(useSound, sliding bool) {
 		next:     time.Now(),
 	}
 	_ = ebiten.RunGame(ig)
+	SparklePause(nil, 0)
+}
+
+// sparkleGame shows twinkling '*' borders and optional lines of text.
+type sparkleGame struct {
+	lines   []string
+	width   int
+	height  int
+	timeout time.Duration
+	start   time.Time
+	phase   int
+	next    time.Time
+}
+
+func (g *sparkleGame) Update() error {
+	if g.start.IsZero() {
+		g.start = time.Now()
+		g.next = g.start.Add(50 * time.Millisecond)
+		return nil
+	}
+	if g.timeout > 0 && time.Since(g.start) > g.timeout {
+		return ebiten.Termination
+	}
+	if len(inpututil.AppendJustPressedKeys(nil)) > 0 {
+		return ebiten.Termination
+	}
+	if time.Now().After(g.next) {
+		g.phase = (g.phase + 1) % 5
+		g.next = time.Now().Add(50 * time.Millisecond)
+	}
+	return nil
+}
+
+func (g *sparkleGame) Draw(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{0, 0, 0, 255})
+	pattern := []rune("*    ")
+	cols := g.width / charW
+	rows := g.height / charH
+	for x := 0; x < cols; x++ {
+		ch1 := pattern[(g.phase+x)%5]
+		ch2 := pattern[(4-g.phase+x)%5]
+		ebitenutil.DebugPrintAt(screen, string(ch1), x*charW, 0)
+		ebitenutil.DebugPrintAt(screen, string(ch2), x*charW, (rows-1)*charH)
+	}
+	for y := 1; y < rows-1; y++ {
+		ch := ' '
+		if (g.phase+y)%5 == 0 {
+			ch = '*'
+		}
+		ebitenutil.DebugPrintAt(screen, string(ch), (cols-1)*charW, y*charH)
+		ebitenutil.DebugPrintAt(screen, string(ch), 0, (rows-1-y)*charH)
+	}
+	if len(g.lines) > 0 {
+		y0 := rows/2 - len(g.lines)/2
+		for i, line := range g.lines {
+			ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, (y0+i)*charH)
+		}
+	}
+}
+
+func (g *sparkleGame) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return g.width, g.height
+}
+
+// SparklePause displays a star border for the specified duration. If lines are
+// provided they are shown centred on the screen.
+func SparklePause(lines []string, dur time.Duration) {
+	w, h := ebiten.WindowSize()
+	if w == 0 || h == 0 {
+		w, h = 800, 600
+	}
+	sg := &sparkleGame{lines: lines, width: w, height: h, timeout: dur}
+	_ = ebiten.RunGame(sg)
+}
+
+func showStats(stats string) {
+	SparklePause(strings.Split(stats, "\n"), 0)
 }
