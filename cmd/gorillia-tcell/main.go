@@ -124,38 +124,41 @@ func (g *Game) throw() {
 	g.Throw()
 }
 
-func (g *Game) run(s tcell.Screen) error {
+func (g *Game) run(s tcell.Screen, ai bool) error {
 	g.screen = s
 
 	ticker := time.NewTicker(50 * time.Millisecond)
 	for {
 		g.draw()
-		select {
-		case <-ticker.C:
-			if g.Banana.Active || g.Explosion.Active {
-				g.Step()
-				if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
-					g.sunHitTicks = 10
-				}
+		if g.Banana.Active || g.Explosion.Active {
+			<-ticker.C
+			g.Step()
+			if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
+				g.sunHitTicks = 10
 			}
-		default:
-			ev := s.PollEvent()
-			switch e := ev.(type) {
-			case *tcell.EventKey:
-				switch e.Key() {
-				case tcell.KeyEscape:
-					return nil
-				case tcell.KeyLeft:
-					g.Angle += 1
-				case tcell.KeyRight:
-					g.Angle -= 1
-				case tcell.KeyUp:
-					g.Power += 1
-				case tcell.KeyDown:
-					g.Power -= 1
-				case tcell.KeyEnter:
-					g.throw()
-				}
+			continue
+		}
+
+		if ai && g.Current == 1 {
+			g.AutoShot()
+			continue
+		}
+
+		ev := s.PollEvent()
+		if key, ok := ev.(*tcell.EventKey); ok {
+			switch key.Key() {
+			case tcell.KeyEscape:
+				return nil
+			case tcell.KeyLeft:
+				g.Angle += 1
+			case tcell.KeyRight:
+				g.Angle -= 1
+			case tcell.KeyUp:
+				g.Power += 1
+			case tcell.KeyDown:
+				g.Power -= 1
+			case tcell.KeyEnter:
+				g.throw()
 			}
 		}
 	}
@@ -173,6 +176,7 @@ func main() {
 
 	settings := gorillas.LoadSettings()
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
+	ai := flag.Bool("ai", false, "enable computer opponent")
 	flag.Parse()
 
 	if !introScreen(s, settings.UseSound) {
@@ -180,7 +184,7 @@ func main() {
 	}
 
 	g := newGame(settings)
-	if err := g.run(s); err != nil {
+	if err := g.run(s, *ai); err != nil {
 		panic(err)
 	}
 	g.SaveScores()

@@ -245,3 +245,31 @@ func (g *Game) Step() {
 		g.Current = (g.Current + 1) % 2
 	}
 }
+func (g *Game) testShot(angle, power float64) bool {
+	sim := *g
+	sim.Angle = angle
+	sim.Power = power
+	sim.Throw()
+	for i := 0; i < 500 && (sim.Banana.Active || sim.Explosion.Active); i++ {
+		sim.Step()
+	}
+	return sim.Wins[g.Current] > g.Wins[g.Current]
+}
+
+// FindShot searches for an angle and power likely to hit the opponent.
+func (g *Game) FindShot() (angle, power float64) {
+	for a := 15.0; a <= 75; a += 1 {
+		for p := 20.0; p <= 100; p += 2 {
+			if g.testShot(a, p) {
+				return a, p
+			}
+		}
+	}
+	return 45, 50
+}
+
+// AutoShot selects a shot using FindShot and throws the banana.
+func (g *Game) AutoShot() {
+	g.Angle, g.Power = g.FindShot()
+	g.Throw()
+}
