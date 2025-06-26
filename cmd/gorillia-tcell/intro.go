@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -175,6 +176,24 @@ func showStats(s tcell.Screen, stats string) {
 	w, h := s.Size()
 	y := h/2 - len(lines)/2
 	for i, line := range lines {
+		drawString(s, (w-len(line))/2, y+i, line)
+	}
+	s.Show()
+	SparklePause(s, 0)
+}
+
+func showLeague(s tcell.Screen, l *gorillas.League) {
+	if l == nil {
+		return
+	}
+	rows := []string{"Player           Rounds Wins Accuracy"}
+	for _, st := range l.Standings() {
+		rows = append(rows, fmt.Sprintf("%-15s %6d %4d %8.1f", st.Name, st.Rounds, st.Wins, st.Accuracy))
+	}
+	s.Clear()
+	w, h := s.Size()
+	y := h/2 - len(rows)/2
+	for i, line := range rows {
 		drawString(s, (w-len(line))/2, y+i, line)
 	}
 	s.Show()
