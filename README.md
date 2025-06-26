@@ -7,7 +7,7 @@ Friday evening gorillas tournaments and beers form a cornerstone of GorillaStack
 ### Development Roadmap
 
 * Optional wind fluctuations on each throw
-* Optional winner's throw first
+* Optional winner's throw first via `-winnerfirst` flag or `GORILLAS_WINNER_FIRST` setting
 * Option to save throw and replay 'Greatest Hits'
 
 
@@ -26,5 +26,6 @@ command-line flags:
   -gravity    gravitational constant
   -rounds     number of rounds to play
   -buildings  how many buildings appear in the skyline
+  -winnerfirst winner of a round starts next
 ```
 

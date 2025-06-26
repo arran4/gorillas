@@ -11,9 +11,10 @@ import (
 // The flag package can override these values using its BoolVar API.
 // Recognised variables:
 //
-//	GORILLAS_SOUND - set to 'true' or 'false' to enable or disable sound.
-//	GORILLAS_OLD_EXPLOSIONS - 'true' to use the old explosion style.
-//	GORILLAS_EXPLOSION_RADIUS - floating point radius for new explosions.
+//		GORILLAS_SOUND - set to 'true' or 'false' to enable or disable sound.
+//		GORILLAS_OLD_EXPLOSIONS - 'true' to use the old explosion style.
+//	     GORILLAS_WINNER_FIRST - 'true' if round winner starts the next round.
+//		GORILLAS_EXPLOSION_RADIUS - floating point radius for new explosions.
 func loadSettingsFile(path string, s *Settings) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -61,6 +62,14 @@ func loadSettingsFile(path string, s *Settings) {
 			if n, err := strconv.Atoi(val); err == nil && n > 0 {
 				s.DefaultRoundQty = n
 			}
+		case "WINNERFIRST":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.WinnerFirst = b
+			} else if strings.EqualFold(val, "YES") {
+				s.WinnerFirst = true
+			} else if strings.EqualFold(val, "NO") {
+				s.WinnerFirst = false
+			}
 		}
 	}
 }
@@ -91,6 +100,11 @@ func LoadSettings() Settings {
 	if v, ok := os.LookupEnv("GORILLAS_ROUNDS"); ok {
 		if n, err := strconv.Atoi(v); err == nil {
 			s.DefaultRoundQty = n
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_WINNER_FIRST"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.WinnerFirst = b
 		}
 	}
 	return s

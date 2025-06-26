@@ -14,7 +14,8 @@ func TestLoadSettingsFile(t *testing.T) {
 		"UseOldExplosions=yes\n" +
 		"NewExplosionRadius=20.5\n" +
 		"DefaultGravity=30\n" +
-		"DefaultRoundQty=7\n")
+		"DefaultRoundQty=7\n" +
+		"WinnerFirst=yes\n")
 	if err := os.WriteFile(ini, data, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -34,5 +35,8 @@ func TestLoadSettingsFile(t *testing.T) {
 	}
 	if s.DefaultRoundQty != 7 {
 		t.Errorf("unexpected round qty %d", s.DefaultRoundQty)
+	}
+	if !s.WinnerFirst {
+		t.Errorf("expected WinnerFirst=true")
 	}
 }
