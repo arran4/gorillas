@@ -9,8 +9,13 @@ import (
 	"os"
 )
 
+type DamageRect struct {
+	X, Y, W, H float64
+}
+
 type Building struct {
 	X, W, H float64
+	Damage  []DamageRect
 }
 
 type Gorilla struct {
@@ -167,7 +172,7 @@ type Game struct {
 	lastStartX float64
 	lastOtherX float64
 	lastVX     float64
-	ResetHook     func()
+	ResetHook  func()
 }
 
 const DefaultBuildingCount = 10
@@ -271,6 +276,23 @@ func basicWind() float64 {
 	return w
 }
 
+func (g *Game) recordExplosionDamage(x, y, r float64) {
+	for i := range g.Buildings {
+		b := &g.Buildings[i]
+		bx1 := b.X
+		bx2 := b.X + b.W
+		by1 := float64(g.Height) - b.H
+		by2 := float64(g.Height)
+		left := math.Max(bx1, x-r)
+		right := math.Min(bx2, x+r)
+		top := math.Max(by1, y-r)
+		bottom := math.Min(by2, y+r)
+		if left < right && top < bottom {
+			b.Damage = append(b.Damage, DamageRect{left, top, right - left, bottom - top})
+		}
+	}
+}
+
 func (g *Game) startGorillaExplosion(idx int) {
 	base := g.Settings.NewExplosionRadius
 	if base <= 0 {
@@ -312,6 +334,7 @@ func (g *Game) startGorillaExplosion(idx int) {
 		}
 	}
 	g.Explosion.Active = true
+	g.recordExplosionDamage(g.Explosion.X, g.Explosion.Y, base)
 }
 
 func (g *Game) startVictoryDance(idx int) {

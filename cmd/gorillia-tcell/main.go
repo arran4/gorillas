@@ -16,9 +16,12 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+type damageRect struct{ x, y, w, h int }
+
 type building struct {
 	h       int
 	windows []int
+	damage  []damageRect
 }
 
 type Game struct {
@@ -164,6 +167,15 @@ func (g *Game) draw() {
 	g.screen.Clear()
 	for i := range g.buildings {
 		g.buildings[i].h = int(g.Buildings[i].H)
+		g.buildings[i].damage = g.buildings[i].damage[:0]
+		for _, d := range g.Buildings[i].Damage {
+			g.buildings[i].damage = append(g.buildings[i].damage, damageRect{
+				x: int(d.X),
+				y: int(d.Y),
+				w: int(d.W),
+				h: int(d.H),
+			})
+		}
 	}
 	for i, b := range g.buildings {
 		x := i*buildingWidth + 4
@@ -172,6 +184,13 @@ func (g *Game) draw() {
 		}
 		for _, wy := range b.windows {
 			g.screen.SetContent(x, wy, 'o', nil, tcell.StyleDefault)
+		}
+		for _, d := range b.damage {
+			for dx := 0; dx < d.w; dx++ {
+				for dy := 0; dy < d.h; dy++ {
+					g.screen.SetContent(d.x+dx, d.y+dy, ' ', nil, tcell.StyleDefault)
+				}
+			}
 		}
 	}
 	g.drawGorilla(0)
