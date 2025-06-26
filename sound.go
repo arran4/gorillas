@@ -60,3 +60,35 @@ func PlayIntroMusic() {
 		time.Sleep(100 * time.Millisecond)
 	}
 }
+
+func playTone(freq float64, dur time.Duration) {
+	audioOnce.Do(initAudio)
+	if audioCtx != nil {
+		n := int(sampleRate*dur/time.Second) + 1
+		buf := make([]byte, n*4)
+		for i := 0; i < n; i++ {
+			v := math.Sin(2 * math.Pi * freq * float64(i) / sampleRate)
+			s := int16(v * 0.3 * 32767)
+			buf[i*4] = byte(s)
+			buf[i*4+1] = byte(s >> 8)
+			buf[i*4+2] = byte(s)
+			buf[i*4+3] = byte(s >> 8)
+		}
+		p, err := audioCtx.NewPlayer(bytes.NewReader(buf))
+		if err != nil {
+			panic(fmt.Errorf("new player: %w", err))
+		}
+		p.Play()
+	} else {
+		fmt.Print("\a")
+	}
+	time.Sleep(dur)
+}
+
+// PlayDanceMelody plays the short tune used during the victory dance.
+func PlayDanceMelody() {
+	notes := []float64{329.63, 349.23, 392.00, 329.63, 349.23, 293.66, 261.63}
+	for _, f := range notes {
+		playTone(f, 100*time.Millisecond)
+	}
+}

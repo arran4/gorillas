@@ -249,9 +249,6 @@ func (g *Game) startVictoryDance(idx int) {
 		Active: true,
 	}
 	g.Dance.frame = 0
-	if g.Settings.UseSound {
-		PlayBeep()
-	}
 }
 
 func (g *Game) stepVictoryDance() {
@@ -267,7 +264,7 @@ func (g *Game) stepVictoryDance() {
 	g.Gorillas[g.Dance.idx].Y = g.Dance.baseY + offset
 	g.Dance.frame++
 	if g.Settings.UseSound {
-		PlayBeep()
+		PlayDanceMelody()
 	}
 }
 
