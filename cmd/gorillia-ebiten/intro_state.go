@@ -9,6 +9,7 @@ import (
 	"github.com/arran4/gorillas"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 // introMovieState replicates the original ASCII intro animation.
@@ -35,6 +36,11 @@ func newIntroMovieState(useSound, sliding bool) *introMovieState {
 
 func (s *introMovieState) Update(g *Game) error {
 	if s.done {
+		g.State = newMenuState(s.useSound, s.sliding)
+		return nil
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		s.done = true
 		g.State = newMenuState(s.useSound, s.sliding)
 		return nil
 	}

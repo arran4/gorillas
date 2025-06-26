@@ -30,8 +30,12 @@ type introGame struct {
 }
 
 func (g *introGame) Update() error {
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		g.done = true
+		return ebiten.Termination
+	}
 	if g.done {
-		return nil
+		return ebiten.Termination
 	}
 	now := time.Now()
 	switch g.stage {
