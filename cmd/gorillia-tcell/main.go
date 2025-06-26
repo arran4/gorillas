@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -361,8 +362,16 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 func main() {
 	s, err := tcell.NewScreen()
 	if err != nil {
-		log.Printf("Error: %s", err.Error())
-		panic(fmt.Errorf("new screen: %w", err))
+		// When TERM is unset or tcell cannot figure out the terminal
+		// capabilities, NewScreen() returns ErrTermNotFound with the
+		// underlying error from infocmp. Provide a hint for the user
+		// in this case as the error message isn't very descriptive.
+		if errors.Is(err, tcell.ErrTermNotFound) {
+			log.Printf("Unable to detect terminal. Ensure $TERM is set and 'infocmp' is installed")
+		} else {
+			log.Printf("Error: %s", err.Error())
+		}
+		panic(err)
 	}
 	if err = s.Init(); err != nil {
 		panic(fmt.Errorf("screen init: %w", err))
