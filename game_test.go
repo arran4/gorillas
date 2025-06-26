@@ -402,3 +402,14 @@ func TestGroundBounceReflectsVelocity(t *testing.T) {
 		t.Fatal("banana should remain active after bounce")
 	}
 }
+
+func TestResetPreservesShotsFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "shots.json")
+	g := newTestGame()
+	g.ShotsFile = path
+	g.Reset()
+	if g.ShotsFile != path {
+		t.Fatalf("expected ShotsFile %q after reset, got %q", path, g.ShotsFile)
+	}
+}
