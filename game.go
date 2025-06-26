@@ -47,6 +47,34 @@ type Explosion struct {
 	Active  bool
 }
 
+// ShotEvent indicates special outcomes for a banana throw.
+type ShotEvent int
+
+const (
+	EventNone ShotEvent = iota
+	EventWeak
+	EventBackwards
+	EventSelf
+)
+
+// EventMessage returns the display text for a given ShotEvent.
+func EventMessage(e ShotEvent) string {
+	switch e {
+	case EventWeak:
+		msgs := []string{
+			"Your little muscles not strong enough?",
+			"Now that was feeble.",
+			"You can do better than that!",
+		}
+		return msgs[rand.Intn(len(msgs))]
+	case EventBackwards:
+		return "Don't throw it that way!"
+	case EventSelf:
+		return "Now that was pretty dumb."
+	}
+	return ""
+}
+
 // Dance holds temporary state for the winner's victory animation.
 type Dance struct {
 	idx    int
@@ -132,6 +160,13 @@ type Game struct {
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
+
+	// LastEvent records the outcome of the most recent shot.
+	LastEvent ShotEvent
+
+	lastStartX float64
+	lastOtherX float64
+	lastVX     float64
 	ResetHook     func()
 }
 
@@ -323,6 +358,8 @@ func (g *Game) Throw() {
 	g.LastPower[g.Current] = g.Power
 	g.Shots[g.Current]++
 	start := g.Gorillas[g.Current]
+	g.lastStartX = start.X
+	g.lastOtherX = g.Gorillas[(g.Current+1)%2].X
 	radians := g.Angle * math.Pi / 180
 	speed := g.Power / 2
 	g.Banana.X = start.X
@@ -333,10 +370,12 @@ func (g *Game) Throw() {
 		g.Banana.VX = math.Cos(radians) * speed
 	}
 	g.Banana.VY = -math.Sin(radians) * speed
+	g.lastVX = g.Banana.VX
+	g.LastEvent = EventNone
 	g.Banana.Active = true
 }
 
-func (g *Game) Step() {
+func (g *Game) Step() ShotEvent {
 	g.stepVictoryDance()
 	if g.Explosion.Active {
 		if g.Explosion.Frame < len(g.Explosion.Radii)-1 {
@@ -354,11 +393,11 @@ func (g *Game) Step() {
 				g.Current = (cur + 1) % 2
 			}
 		}
-		return
+		return EventNone
 	}
 
 	if !g.Banana.Active {
-		return
+		return EventNone
 	}
 	g.Banana.X += g.Banana.VX
 	g.Banana.Y += g.Banana.VY
@@ -380,29 +419,45 @@ func (g *Game) Step() {
 				g.Buildings[idx].H = newH
 			}
 			g.Banana.Active = false
+			// evaluate shot quality on miss
+			g.evaluateMiss()
 			g.Current = (g.Current + 1) % 2
 		}
 	}
 	for i, gr := range g.Gorillas {
 		if math.Abs(gr.X-g.Banana.X) < 5 && math.Abs(gr.Y-g.Banana.Y) < 10 {
 			g.Banana.Active = false
-			g.Wins[g.Current]++
-			g.TotalWins[g.Current]++
+			shooter := g.Current
+			winner := shooter
+			event := EventNone
+			if i == shooter {
+				winner = (shooter + 1) % 2
+				event = EventSelf
+				g.LastEvent = event
+			}
+			g.Wins[winner]++
+			g.TotalWins[winner]++
 			if g.League != nil {
-				g.League.RecordRound(g.Players[0], g.Players[1], g.Current, g.Shots[g.Current])
+				g.League.RecordRound(g.Players[0], g.Players[1], winner, g.Shots[shooter])
 				g.League.Save()
 			}
 			g.Shots = [2]int{}
 			g.SaveScores()
 			g.startGorillaExplosion(i)
-			g.startVictoryDance(g.Current)
-			return
+			g.startVictoryDance(winner)
+			g.Current = winner
+			if g.Settings.UseSound && event != EventNone {
+				PlayBeep()
+			}
+			return event
 		}
 	}
 	if g.Banana.Y > float64(g.Height) || g.Banana.X < 0 || g.Banana.X >= float64(g.Width) {
 		g.Banana.Active = false
+		g.evaluateMiss()
 		g.Current = (g.Current + 1) % 2
 	}
+	return g.LastEvent
 }
 func (g *Game) testShot(angle, power float64) bool {
 	sim := *g
@@ -431,4 +486,23 @@ func (g *Game) FindShot() (angle, power float64) {
 func (g *Game) AutoShot() {
 	g.Angle, g.Power = g.FindShot()
 	g.Throw()
+}
+
+// evaluateMiss analyses a non-scoring shot and sets LastEvent if it was weak or backwards.
+func (g *Game) evaluateMiss() {
+	dxToOther := g.lastOtherX - g.lastStartX
+	dxShot := g.Banana.X - g.lastStartX
+	if g.lastVX*dxToOther < 0 {
+		g.LastEvent = EventBackwards
+		if g.Settings.UseSound {
+			PlayBeep()
+		}
+		return
+	}
+	if math.Abs(dxShot) < math.Abs(dxToOther)/3 {
+		g.LastEvent = EventWeak
+		if g.Settings.UseSound {
+			PlayBeep()
+		}
+	}
 }

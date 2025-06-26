@@ -304,5 +304,10 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height/2 - charH/2
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
+	} else if g.LastEvent != EventNone {
+		msg := gorillas.EventMessage(g.LastEvent)
+		x := (g.Width - len(msg)*charW) / 2
+		y := g.Height / 3
+		ebitenutil.DebugPrintAt(screen, msg, x, y)
 	}
 }
