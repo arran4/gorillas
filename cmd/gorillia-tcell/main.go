@@ -741,6 +741,44 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 				continue
 			}
 
+			// Automatically enter editing mode when typing or
+			// pressing backspace on a selected field or player.
+			if key.Key() == tcell.KeyBackspace || key.Key() == tcell.KeyBackspace2 || key.Rune() != 0 {
+				if cur < len(fields) {
+					editing = true
+					editingPlayer = -1
+					if key.Key() == tcell.KeyBackspace || key.Key() == tcell.KeyBackspace2 {
+						if len(fields[cur]) > 0 {
+							fields[cur] = fields[cur][:len(fields[cur])-1]
+						}
+					} else {
+						r := key.Rune()
+						if cur >= 2 {
+							if r >= '0' && r <= '9' {
+								fields[cur] += string(r)
+							}
+						} else {
+							fields[cur] += string(r)
+						}
+					}
+					continue
+				} else if cur >= len(fields) && cur < len(fields)+len(players) {
+					editing = true
+					editingPlayer = cur - len(fields)
+					oldName = players[editingPlayer]
+					newPlayer = false
+					selectedPlayer = editingPlayer
+					if key.Key() == tcell.KeyBackspace || key.Key() == tcell.KeyBackspace2 {
+						if len(players[editingPlayer]) > 0 {
+							players[editingPlayer] = players[editingPlayer][:len(players[editingPlayer])-1]
+						}
+					} else {
+						players[editingPlayer] += string(key.Rune())
+					}
+					continue
+				}
+			}
+
 			switch key.Key() {
 			case tcell.KeyEsc:
 				r, _ := strconv.Atoi(fields[2])

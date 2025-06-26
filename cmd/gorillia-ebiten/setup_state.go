@@ -123,6 +123,45 @@ func (s *setupState) Update(g *Game) error {
 			return nil
 		}
 
+		// Automatically start editing when typing or pressing backspace
+		// on the selected field or player.
+		if k != ebiten.KeyN && k != ebiten.KeyD && k != ebiten.KeyR {
+			if k == ebiten.KeyBackspace || keyToRune(k) != 0 {
+				if s.cur < len(s.fields) {
+					s.editing = true
+					s.editingPlayer = -1
+					if k == ebiten.KeyBackspace {
+						if len(s.fields[s.cur]) > 0 {
+							s.fields[s.cur] = s.fields[s.cur][:len(s.fields[s.cur])-1]
+						}
+					} else {
+						r := keyToRune(k)
+						if s.cur >= 2 {
+							if (r >= '0' && r <= '9') || (s.cur == 3 && r == '.') {
+								s.fields[s.cur] += string(r)
+							}
+						} else {
+							s.fields[s.cur] += string(r)
+						}
+					}
+					continue
+				} else if s.cur >= len(s.fields) && s.cur < len(s.fields)+len(s.players) {
+					s.editing = true
+					s.editingPlayer = s.cur - len(s.fields)
+					s.oldName = s.players[s.editingPlayer]
+					s.newPlayer = false
+					if k == ebiten.KeyBackspace {
+						if len(s.players[s.editingPlayer]) > 0 {
+							s.players[s.editingPlayer] = s.players[s.editingPlayer][:len(s.players[s.editingPlayer])-1]
+						}
+					} else {
+						s.players[s.editingPlayer] += string(keyToRune(k))
+					}
+					continue
+				}
+			}
+		}
+
 		switch k {
 		case ebiten.KeyEscape:
 			r, _ := strconv.Atoi(s.fields[2])
