@@ -182,6 +182,8 @@ func main() {
 	gravity := flag.Float64("gravity", settings.DefaultGravity, "gravity")
 	rounds := flag.Int("rounds", settings.DefaultRoundQty, "round count")
 	buildings := flag.Int("buildings", gorillas.DefaultBuildingCount, "building count")
+	p1 := flag.String("player1", "Player 1", "name of player 1")
+	p2 := flag.String("player2", "Player 2", "name of player 2")
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
 	flag.BoolVar(&settings.WinnerFirst, "winnerfirst", settings.WinnerFirst, "winner starts next round")
 	ai := flag.Bool("ai", false, "enable computer opponent")
@@ -198,6 +200,7 @@ func main() {
 	}
 
 	g := newGame(settings, *buildings, *wind)
+	g.Players = [2]string{*p1, *p2}
 	if err := g.run(s, *ai); err != nil {
 		panic(err)
 	}
