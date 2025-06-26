@@ -240,6 +240,20 @@ func TestWinnerFirstDisabled(t *testing.T) {
 	}
 }
 
+func TestExplosionKillsNearbyGorilla(t *testing.T) {
+	g := newTestGame()
+	g.Current = 0
+	x := g.Gorillas[1].X
+	y := g.Gorillas[1].Y
+	g.startExplosion(x, y)
+	if !g.roundOver {
+		t.Fatal("round should end when gorilla caught in explosion")
+	}
+	if g.Wins[0] != 1 {
+		t.Fatalf("expected player 1 to score, wins: %v", g.Wins)
+	}
+}
+
 func TestSecondPlayerThrowDirection(t *testing.T) {
 	g := newTestGame()
 	g.Current = 1

@@ -365,7 +365,7 @@ func (g *Game) pointInDamage(idx int, x, y float64) bool {
 	return false
 }
 
-func (g *Game) startExplosion(x, y float64) {
+func (g *Game) explosionBase() float64 {
 	base := g.Settings.NewExplosionRadius
 	if base <= 0 {
 		base = 16
@@ -373,6 +373,50 @@ func (g *Game) startExplosion(x, y float64) {
 	if g.Settings.ForceCGA {
 		base /= 2
 	}
+	return base
+}
+
+func (g *Game) handleGorillaKill(idx int) {
+	shooter := g.Current
+	winner := shooter
+	event := EventNone
+	if idx == shooter {
+		winner = (shooter + 1) % 2
+		event = EventSelf
+		g.LastEvent = event
+		g.LastEventTicks = eventDisplayTicks
+		g.LastEventMsg = EventMessage(event)
+	}
+	g.Wins[winner]++
+	g.TotalWins[winner]++
+	if g.League != nil {
+		g.League.RecordRound(g.Players[0], g.Players[1], winner, g.Shots[shooter])
+		g.League.Save()
+	}
+	g.Shots = [2]int{}
+	g.SaveScores()
+	g.startVictoryDance(winner)
+	g.setCurrent(winner)
+	if g.Settings.UseSound && event != EventNone {
+		PlayBeep()
+	}
+	g.roundOver = true
+}
+
+func (g *Game) killGorillaIfInRadius(x, y, r float64) bool {
+	for i, gr := range g.Gorillas {
+		dx := gr.X - x
+		dy := gr.Y - y
+		if dx*dx+dy*dy <= r*r {
+			g.handleGorillaKill(i)
+			return true
+		}
+	}
+	return false
+}
+
+func (g *Game) startExplosion(x, y float64) {
+	base := g.explosionBase()
 	if g.Settings.UseSound {
 		PlayExplosionMelody()
 	}
@@ -406,7 +450,11 @@ func (g *Game) startExplosion(x, y float64) {
 		}
 	}
 	g.Explosion.Active = true
-	g.roundOver = false
+	if g.killGorillaIfInRadius(x, y, base) {
+		// handleGorillaKill sets roundOver and other state
+	} else {
+		g.roundOver = false
+	}
 	g.recordExplosionDamage(x, y, base)
 }
 
@@ -577,6 +625,9 @@ func (g *Game) Step() ShotEvent {
 		if !g.pointInDamage(idx, g.Banana.X, g.Banana.Y) {
 			g.Banana.Active = false
 			g.startExplosion(g.Banana.X, g.Banana.Y)
+			if g.roundOver {
+				return g.LastEvent
+			}
 			g.evaluateMiss()
 			g.setCurrent((g.Current + 1) % 2)
 			return g.LastEvent
