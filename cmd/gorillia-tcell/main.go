@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -171,7 +172,15 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 func main() {
 	s, err := tcell.NewScreen()
 	if err != nil {
-		log.Printf("Error: %s", err.Error())
+		// When TERM is unset or tcell cannot figure out the terminal
+		// capabilities, NewScreen() returns ErrTermNotFound with the
+		// underlying error from infocmp. Provide a hint for the user
+		// in this case as the error message isn't very descriptive.
+		if errors.Is(err, tcell.ErrTermNotFound) {
+			log.Printf("Unable to detect terminal. Ensure $TERM is set and 'infocmp' is installed")
+		} else {
+			log.Printf("Error: %s", err.Error())
+		}
 		panic(err)
 	}
 	if err = s.Init(); err != nil {

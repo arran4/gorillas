@@ -37,6 +37,7 @@ command-line flags:
 - Go toolchain installed (`go` 1.20 or newer).
 - Module downloads require internet access on first build.
 - `gorillia-ebiten` needs a graphical desktop environment.
+- `gorillia-tcell` requires a valid `$TERM` setting and the `infocmp` command.
 
 #### Build commands
 
