@@ -6,7 +6,7 @@ Friday evening gorillas tournaments and beers form a cornerstone of GorillaStack
 
 ### Development Roadmap
 
-* Optional wind fluctuations on each throw
+* Optional wind fluctuations on each throw via `GORILLAS_WIND_FLUCT` setting
 * Optional winner's throw first via `-winnerfirst` flag or `GORILLAS_WINNER_FIRST` setting
 * BASIC-style wind each round via `GORILLAS_VARIABLE_WIND` setting
 * Option to save throw and replay 'Greatest Hits'

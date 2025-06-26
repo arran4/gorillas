@@ -74,8 +74,8 @@ func TestBananaTrajectoryAndOutOfBounds(t *testing.T) {
 
 func TestBuildingCollisionEndsTurn(t *testing.T) {
 	g := newTestGame()
-	// make building 2 tall so banana will collide
-	g.Buildings[2].H = 50
+	// make building 2 tall enough to block the banana
+	g.Buildings[2].H = float64(g.Height) - g.Gorillas[0].Y + 5
 
 	g.Angle = 0
 	g.Power = 20
@@ -105,6 +105,20 @@ func TestWindInfluencesVelocity(t *testing.T) {
 	expectedVX := initialVX + g.Wind/20
 	if !almostEqual(g.Banana.VX, expectedVX) {
 		t.Fatalf("expected vx %f got %f", expectedVX, g.Banana.VX)
+	}
+}
+
+func TestThrowAppliesWindFluctuation(t *testing.T) {
+	g := newTestGame()
+	g.Settings.WindFluctuations = true
+	g.Wind = 5
+	rand.Seed(2)
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+	g.Throw()
+	if g.Wind != 4 {
+		t.Fatalf("expected wind 4 got %f", g.Wind)
 	}
 }
 
@@ -217,6 +231,17 @@ func TestExplosionProgressAndReset(t *testing.T) {
 	}
 }
 
+func TestExplosionColorsMatchRadii(t *testing.T) {
+	g := newTestGame()
+	g.startGorillaExplosion(0)
+	if g.Settings.UseOldExplosions {
+		t.Skip("old explosions have no colours")
+	}
+	if len(g.Explosion.Colors) != len(g.Explosion.Radii) {
+		t.Fatalf("colour frames %d do not match radii %d", len(g.Explosion.Colors), len(g.Explosion.Radii))
+	}
+}
+
 func TestSaveAndLoadScores(t *testing.T) {
 	tmp := filepath.Join(t.TempDir(), "scores.json")
 	g1 := newTestGame()
@@ -283,5 +308,32 @@ func TestVictoryDanceStartsOnHit(t *testing.T) {
 	}
 	if g.Gorillas[0].Y != baseY {
 		t.Fatalf("gorilla should return to base position")
+	}
+}
+
+func TestNewGameWindUsesBasicAlgorithm(t *testing.T) {
+	rand.Seed(1)
+	g := NewGame(100, 100, DefaultBuildingCount)
+	if g.Wind != -11 {
+		t.Fatalf("expected wind -11 got %f", g.Wind)
+	}
+}
+
+func TestVariableWindChangesEachRound(t *testing.T) {
+	rand.Seed(1)
+	g := NewGame(100, 100, DefaultBuildingCount)
+	g.Settings = DefaultSettings()
+	g.Settings.VariableWind = true
+	initial := g.Wind
+	// trigger round end immediately
+	g.Explosion = Explosion{Active: true, Radii: []float64{1}}
+	for g.Explosion.Active {
+		g.Step()
+	}
+	if g.Wind == initial {
+		t.Fatalf("wind should change each round")
+	}
+	if g.Wind != 10 {
+		t.Fatalf("expected wind 10 got %f", g.Wind)
 	}
 }

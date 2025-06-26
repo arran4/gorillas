@@ -3,6 +3,7 @@ package gorillas
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"math"
 	"math/rand"
 	"os"
@@ -33,11 +34,13 @@ type Settings struct {
 	ForceCGA           bool
 	WinnerFirst        bool
 	VariableWind       bool
+	WindFluctuations   bool
 }
 
 type Explosion struct {
 	X, Y   float64
 	Radii  []float64
+	Colors []color.Color
 	Frame  int
 	Active bool
 }
@@ -62,6 +65,7 @@ func DefaultSettings() Settings {
 		ForceCGA:           false,
 		WinnerFirst:        false,
 		VariableWind:       false,
+		WindFluctuations:   false,
 	}
 }
 
@@ -134,7 +138,7 @@ func NewGame(width, height, buildingCount int) *Game {
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
-	g.Wind = float64(rand.Intn(21) - 10)
+	g.Wind = basicWind()
 	bw := float64(width) / float64(g.BuildingCount)
 
 	// create a sloping skyline similar to the original BASIC version
@@ -203,13 +207,17 @@ func (g *Game) Reset() {
 	g.Gravity = gravity
 }
 
+func fnRan(x int) int {
+	return rand.Intn(x) + 1
+}
+
 func basicWind() float64 {
-	w := float64(rand.Intn(10) + 1 - 5)
-	if rand.Intn(3) == 0 {
+	w := float64(fnRan(10) - 5)
+	if fnRan(3) == 1 {
 		if w > 0 {
-			w += float64(rand.Intn(10) + 1)
+			w += float64(fnRan(10))
 		} else {
-			w -= float64(rand.Intn(10) + 1)
+			w -= float64(fnRan(10))
 		}
 	}
 	return w
@@ -235,7 +243,15 @@ func (g *Game) startGorillaExplosion(idx int) {
 			g.Explosion.Radii = append(g.Explosion.Radii, float64(i))
 		}
 	} else {
-		g.Explosion.Radii = append(g.Explosion.Radii, base*1.175, base, base*0.9, base*0.6, base*0.45, 0)
+		g.Explosion.Radii = []float64{base * 1.175, base, base * 0.9, base * 0.6, base * 0.45, 0}
+		g.Explosion.Colors = []color.Color{
+			color.RGBA{128, 128, 128, 255},
+			color.RGBA{255, 0, 0, 255},
+			color.RGBA{255, 165, 0, 255},
+			color.RGBA{255, 255, 0, 255},
+			color.RGBA{255, 255, 255, 255},
+			color.Black,
+		}
 	}
 	g.Explosion.Active = true
 }
@@ -249,9 +265,6 @@ func (g *Game) startVictoryDance(idx int) {
 		Active: true,
 	}
 	g.Dance.frame = 0
-	if g.Settings.UseSound {
-		PlayBeep()
-	}
 }
 
 func (g *Game) stepVictoryDance() {
@@ -267,13 +280,21 @@ func (g *Game) stepVictoryDance() {
 	g.Gorillas[g.Dance.idx].Y = g.Dance.baseY + offset
 	g.Dance.frame++
 	if g.Settings.UseSound {
-		PlayBeep()
+		PlayDanceMelody()
 	}
 }
 
 func (g *Game) Throw() {
 	if g.Settings.UseSound {
 		PlayBeep()
+	}
+	if g.Settings.WindFluctuations {
+		g.Wind += float64(rand.Intn(5) - 2)
+		if g.Wind > 10 {
+			g.Wind = 10
+		} else if g.Wind < -10 {
+			g.Wind = -10
+		}
 	}
 	g.Shots[g.Current]++
 	start := g.Gorillas[g.Current]
