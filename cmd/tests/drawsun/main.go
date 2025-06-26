@@ -1,17 +1,17 @@
 package main
 
 import (
+	"image"
 	"image/color"
 	"image/png"
 	"os"
 
-	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
-	"github.com/hajimehoshi/ebiten/v2"
+	imgdraw "github.com/arran4/gorillas/drawings/img"
 )
 
 func main() {
-	img := ebiten.NewImage(100, 100)
-	ebdraw.DrawBASSun(img, 50, 50, 40, false, color.RGBA{255, 255, 0, 255})
+	img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	imgdraw.DrawBASSun(img, 50, 50, 40, false, color.RGBA{255, 255, 0, 255})
 	f, err := os.Create("sun.png")
 	if err != nil {
 		panic(err)
