@@ -111,7 +111,7 @@ func defaultGorillaSprite() *ebiten.Image {
 	size := int(30 * gorillaScale)
 	img := ebiten.NewImage(size, size)
 	clr := color.RGBA{150, 75, 0, 255}
-	drawBASGorilla(img, 15*gorillaScale, gorillaScale, gorillaScale, clr)
+	drawBASGorilla(img, 15*gorillaScale, gorillaScale, gorillaScale, armsDown, clr)
 	return img
 }
 
@@ -282,8 +282,8 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 		return
 	}
 	length := g.Wind * 3 * float64(g.Width) / 320
-       // Position arrow near the top instead of the bottom
-       y := float64(g.Height) / 40
+	// Position arrow near the top instead of the bottom
+	y := float64(g.Height) / 40
 	x := float64(g.Width) / 2
 	end := x + length
 	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})
