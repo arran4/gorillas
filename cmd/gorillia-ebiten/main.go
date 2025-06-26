@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"image/color"
+	"math"
 	"math/rand"
 	"time"
 
@@ -37,13 +38,16 @@ type Game struct {
 	buildings []building
 }
 
-func newGame(settings gorillas.Settings) *Game {
-	g := &Game{Game: gorillas.NewGame(800, 600)}
+func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
+	g := &Game{Game: gorillas.NewGame(800, 600, buildings)}
+	if !math.IsNaN(wind) {
+		g.Game.Wind = wind
+	}
 	g.Game.Settings = settings
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
-	bw := float64(g.Width) / gorillas.BuildingCount
-	for i := 0; i < gorillas.BuildingCount; i++ {
+	bw := float64(g.Width) / float64(g.Game.BuildingCount)
+	for i := 0; i < g.Game.BuildingCount; i++ {
 		h := g.Buildings[i].H
 		b := building{
 			x:     float64(i) * bw,
@@ -133,9 +137,15 @@ func main() {
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Gorillas Ebiten")
 	settings := gorillas.LoadSettings()
+	wind := flag.Float64("wind", math.NaN(), "initial wind")
+	gravity := flag.Float64("gravity", settings.DefaultGravity, "gravity")
+	rounds := flag.Int("rounds", settings.DefaultRoundQty, "round count")
+	buildings := flag.Int("buildings", gorillas.DefaultBuildingCount, "building count")
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
 	flag.Parse()
-	game := newGame(settings)
+	settings.DefaultGravity = *gravity
+	settings.DefaultRoundQty = *rounds
+	game := newGame(settings, *buildings, *wind)
 	if err := ebiten.RunGame(game); err != nil {
 		panic(err)
 	}

@@ -18,4 +18,13 @@ A minimal Go implementation of Gorillas is provided under `cmd/gorillia-ebiten` 
 Both ports are simplified remakes, sharing core gameplay logic in the
 `github.com/arran4/gorillas` module. The tcell version uses ASCII graphics
 reminiscent of the original QBasic game and keeps score between rounds.
+When launching either port you can override some gameplay settings using
+command-line flags:
+
+```
+  -wind       starting wind speed
+  -gravity    gravitational constant
+  -rounds     number of rounds to play
+  -buildings  how many buildings appear in the skyline
+```
 
