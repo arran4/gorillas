@@ -41,14 +41,29 @@ func drawGorillaFrame(s tcell.Screen, x, y int, frame []string) {
 	}
 }
 
+func waitEsc(s tcell.Screen, dur time.Duration) bool {
+	end := time.Now().Add(dur)
+	for time.Now().Before(end) {
+		time.Sleep(50 * time.Millisecond)
+		if s.HasPendingEvent() {
+			if ev, ok := s.PollEvent().(*tcell.EventKey); ok {
+				if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyEsc {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // scrollText animates msg across the screen on row y when enabled.
 // When disabled, it simply prints the message centred.
-func scrollText(s tcell.Screen, y int, msg string, enabled bool) {
+func scrollText(s tcell.Screen, y int, msg string, enabled bool) bool {
 	w, _ := s.Size()
 	if !enabled {
 		drawString(s, (w-len(msg))/2, y, msg)
 		s.Show()
-		return
+		return false
 	}
 	pad := strings.Repeat(" ", w)
 	text := pad + msg + pad
@@ -56,7 +71,15 @@ func scrollText(s tcell.Screen, y int, msg string, enabled bool) {
 		drawString(s, 0, y, text[i:i+w])
 		s.Show()
 		time.Sleep(50 * time.Millisecond)
+		if s.HasPendingEvent() {
+			if ev, ok := s.PollEvent().(*tcell.EventKey); ok {
+				if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyEsc {
+					return true
+				}
+			}
+		}
 	}
+	return false
 }
 
 func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
@@ -72,7 +95,9 @@ func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 			for j := 1; j <= len(line); j++ {
 				drawString(s, (w-len(line))/2, h/2-1+i, line[:j])
 				s.Show()
-				time.Sleep(30 * time.Millisecond)
+				if waitEsc(s, 30*time.Millisecond) {
+					return
+				}
 			}
 		}
 	} else {
@@ -84,16 +109,26 @@ func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 	if useSound {
 		gorillas.PlayIntroMusic()
 	}
-	time.Sleep(1500 * time.Millisecond)
+	if waitEsc(s, 1500*time.Millisecond) {
+		return
+	}
 	for i := 0; i < 4; i++ {
 		drawGorillaFrame(s, w/2-10, h/2+2, gorillaFrames[i%len(gorillaFrames)])
 		drawGorillaFrame(s, w/2+2, h/2+2, gorillaFrames[(i+1)%len(gorillaFrames)])
 		s.Show()
-		time.Sleep(300 * time.Millisecond)
+		if waitEsc(s, 300*time.Millisecond) {
+			return
+		}
 	}
-	time.Sleep(700 * time.Millisecond)
-	scrollText(s, h-1, "Get ready to throw bananas!", sliding)
-	time.Sleep(500 * time.Millisecond)
+	if waitEsc(s, 700*time.Millisecond) {
+		return
+	}
+	if scrollText(s, h-1, "Get ready to throw bananas!", sliding) {
+		return
+	}
+	if waitEsc(s, 500*time.Millisecond) {
+		return
+	}
 	SparklePause(s, 0)
 }
 
