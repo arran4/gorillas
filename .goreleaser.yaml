@@ -1,0 +1,11 @@
+project_name: gorillas
+builds:
+  - id: gorillia-ebiten
+    main: ./cmd/gorillia-ebiten
+  - id: gorillia-tcell
+    main: ./cmd/gorillia-tcell
+release:
+  github:
+    owner: arran4
+    name: gorillas
+
