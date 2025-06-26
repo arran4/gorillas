@@ -193,14 +193,16 @@ func (g *Game) Reset() {
 	file := g.ScoreFile
 	players := g.Players
 	league := g.League
+	settings := g.Settings
+	gravity := g.Gravity
 	*g = *NewGame(g.Width, g.Height, g.BuildingCount)
-	g.Settings = DefaultSettings()
-	g.Gravity = g.Settings.DefaultGravity
 	g.Wins = wins
 	g.TotalWins = totals
 	g.ScoreFile = file
 	g.Players = players
 	g.League = league
+	g.Settings = settings
+	g.Gravity = gravity
 }
 
 func basicWind() float64 {
@@ -242,8 +244,9 @@ func (g *Game) startGorillaExplosion(idx int) {
 
 func (g *Game) startVictoryDance(idx int) {
 	g.Dance = Dance{
-		idx:    idx,
-		frames: []float64{0, -3, 0, -3, 0},
+		idx: idx,
+		// start with a jump and finish before the explosion ends
+		frames: []float64{-3, 0, -3, 0},
 		baseY:  g.Gorillas[idx].Y,
 		Active: true,
 	}
@@ -315,7 +318,9 @@ func (g *Game) Step() {
 	}
 	g.Banana.X += g.Banana.VX
 	g.Banana.Y += g.Banana.VY
-	g.Banana.VY += 0.5 * (g.Settings.DefaultGravity / 17)
+	// apply gravity scaled to the configured constant
+	// default behaviour uses DefaultGravity which equals Gravity initially
+	g.Banana.VY += g.Gravity / 34
 	g.Banana.VX += g.Wind / 20
 	idx := int(g.Banana.X / (float64(g.Width) / float64(g.BuildingCount)))
 	if idx >= 0 && idx < g.BuildingCount {
