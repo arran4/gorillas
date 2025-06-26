@@ -21,33 +21,6 @@ type window struct {
 	x, y, w, h float64
 }
 
-type wrapper struct {
-	intro *introGame
-	main  *Game
-}
-
-func (w *wrapper) Update() error {
-	if w.intro != nil && !w.intro.done {
-		return w.intro.Update()
-	}
-	return w.main.Update()
-}
-
-func (w *wrapper) Draw(screen *ebiten.Image) {
-	if w.intro != nil && !w.intro.done {
-		w.intro.Draw(screen)
-	} else {
-		w.main.Draw(screen)
-	}
-}
-
-func (w *wrapper) Layout(outsideWidth, outsideHeight int) (int, int) {
-	if w.intro != nil && !w.intro.done {
-		return w.intro.Layout(outsideWidth, outsideHeight)
-	}
-	return w.main.Layout(outsideWidth, outsideHeight)
-}
-
 func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 	for dx := -r; dx <= r; dx++ {
 		for dy := -r; dy <= r; dy++ {
@@ -224,14 +197,14 @@ func main() {
 	flag.Parse()
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
-	var ig *introGame
 	if settings.ShowIntro {
-		w, h := ebiten.WindowSize()
-		ig = newIntroGame(w, h, settings.UseSound, settings.UseSlidingText)
+		if !introScreen(settings.UseSound, settings.UseSlidingText) {
+			return
+		}
 	}
 	game := newGame(settings, *buildings, *wind)
 	game.Players = [2]string{*p1, *p2}
-	if err := ebiten.RunGame(&wrapper{intro: ig, main: game}); err != nil {
+	if err := ebiten.RunGame(game); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
 	}
 	game.SaveScores()

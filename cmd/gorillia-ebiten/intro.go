@@ -157,6 +157,97 @@ func newIntroGame(w, h int, useSound, sliding bool) *introGame {
 	}
 }
 
+// showIntroMovie runs the introductory animation.
+func showIntroMovie(useSound, sliding bool) {
+	w, h := ebiten.WindowSize()
+	ig := newIntroGame(w, h, useSound, sliding)
+	_ = ebiten.RunGame(ig)
+}
+
+// introScreenGame implements ebiten.Game for the initial menu.
+type introScreenGame struct {
+	useSound bool
+	sliding  bool
+	width    int
+	height   int
+	stage    int
+	frame    int
+	next     time.Time
+	play     bool
+}
+
+func (g *introScreenGame) Update() error {
+	now := time.Now()
+	switch g.stage {
+	case 0:
+		if now.After(g.next) {
+			g.frame++
+			g.next = now.Add(300 * time.Millisecond)
+			if g.frame >= 4 {
+				g.stage = 1
+				g.frame = 0
+			}
+		}
+	case 1:
+		for _, k := range inpututil.AppendJustPressedKeys(nil) {
+			switch k {
+			case ebiten.KeyQ:
+				return ebiten.Termination
+			case ebiten.KeyP:
+				g.play = true
+				return ebiten.Termination
+			case ebiten.KeyV:
+				showIntroMovie(g.useSound, g.sliding)
+			}
+		}
+	}
+	return nil
+}
+
+func (g *introScreenGame) Draw(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{0, 0, 0, 255})
+	cx := g.width/2 - 10*charW
+	cy := g.height/2 - 2*charH
+	var f1, f2 []string
+	if g.stage == 0 {
+		f1 = gorillaFrames[g.frame%len(gorillaFrames)]
+		f2 = gorillaFrames[(g.frame+1)%len(gorillaFrames)]
+	} else {
+		f1 = gorillaFrames[0]
+		f2 = gorillaFrames[0]
+	}
+	for i, l := range f1 {
+		ebitenutil.DebugPrintAt(screen, l, cx, cy+i*charH)
+	}
+	for i, l := range f2 {
+		ebitenutil.DebugPrintAt(screen, l, cx+12*charW, cy+i*charH)
+	}
+	ebitenutil.DebugPrintAt(screen, "GORILLAS", (g.width-8*charW)/2, cy-2*charH)
+	if g.stage == 1 {
+		line := "V - View Intro"
+		ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, cy+3*charH)
+		line = "P - Play Game"
+		ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, cy+4*charH)
+		line = "Q - Quit"
+		ebitenutil.DebugPrintAt(screen, line, (g.width-len(line)*charW)/2, cy+5*charH)
+	}
+}
+
+func (g *introScreenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return g.width, g.height
+}
+
+// introScreen runs the intro menu and returns true if the player chose to play.
+func introScreen(useSound, sliding bool) bool {
+	w, h := ebiten.WindowSize()
+	if w == 0 || h == 0 {
+		w, h = 800, 600
+	}
+	ig := &introScreenGame{useSound: useSound, sliding: sliding, width: w, height: h, next: time.Now().Add(300 * time.Millisecond)}
+	_ = ebiten.RunGame(ig)
+	return ig.play
+}
+
 // sparkleGame shows twinkling '*' borders and optional lines of text.
 type sparkleGame struct {
 	lines   []string
