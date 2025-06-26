@@ -2,6 +2,7 @@ package gorillas
 
 import (
 	"math"
+	"path/filepath"
 	"testing"
 )
 
@@ -159,5 +160,31 @@ func TestExplosionProgressAndReset(t *testing.T) {
 	g.Step()
 	if g.Explosion.Active {
 		t.Fatal("explosion should finish and deactivate")
+  }
+}
+
+func TestSaveAndLoadScores(t *testing.T) {
+	tmp := filepath.Join(t.TempDir(), "scores.json")
+	g1 := newTestGame()
+	g1.ScoreFile = tmp
+	g1.TotalWins = [2]int{2, 3}
+	g1.SaveScores()
+
+	g2 := newTestGame()
+	g2.ScoreFile = tmp
+	g2.LoadScores()
+
+	if g2.TotalWins != g1.TotalWins {
+		t.Fatalf("expected %v, got %v", g1.TotalWins, g2.TotalWins)
+	}
+}
+
+func TestStatsString(t *testing.T) {
+	g := newTestGame()
+	g.Wins = [2]int{1, 2}
+	g.TotalWins = [2]int{3, 4}
+	expected := "Session - P1:1 P2:2\nOverall - P1:3 P2:4"
+	if s := g.StatsString(); s != expected {
+		t.Fatalf("unexpected stats string: %q", s)
 	}
 }
