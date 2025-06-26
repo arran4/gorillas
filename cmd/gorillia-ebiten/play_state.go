@@ -299,16 +299,17 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {
 		h := g.Buildings[i].H
+		intH := int(h)
 		img := g.buildingImg[i]
 		img.Fill(color.RGBA{})
 		img.DrawImage(g.buildingBase[i], nil)
 		for _, d := range g.Buildings[i].Damage {
 			rx := int(d.X - float64(i)*bw)
-			ry := int(d.Y - (float64(g.Height) - h))
+			ry := int(d.Y - float64(g.Height-intH))
 			clearCircle(img, rx, ry, d.R)
 		}
 		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(i)*bw, float64(g.Height)-h)
+		op.GeoM.Translate(float64(i)*bw, float64(g.Height-intH))
 		screen.DrawImage(img, op)
 	}
 	for i := range g.Gorillas {

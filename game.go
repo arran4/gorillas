@@ -216,6 +216,9 @@ type Game struct {
 	lastVX     float64
 	ResetHook  func()
 
+	// roundOver indicates whether the current explosion ends the round.
+	roundOver bool
+
 	// Aborted indicates whether the game was aborted mid-play.
 	Aborted bool
 }
@@ -233,6 +236,7 @@ func NewGame(width, height, buildingCount int) *Game {
 		buildingCount = DefaultBuildingCount
 	}
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, ShotsFile: defaultShotsFile, BuildingCount: buildingCount, Aborted: false}
+	g.roundOver = true
 	g.Angles = [2]float64{45, 45}
 	g.Powers = [2]float64{50, 50}
 	g.League = LoadLeague(defaultLeagueFile)
@@ -402,6 +406,7 @@ func (g *Game) startExplosion(x, y float64) {
 		}
 	}
 	g.Explosion.Active = true
+	g.roundOver = false
 	g.recordExplosionDamage(x, y, base)
 }
 
@@ -446,6 +451,7 @@ func (g *Game) startGorillaExplosion(idx int) {
 		}
 	}
 	g.Explosion.Active = true
+	g.roundOver = true
 	g.recordExplosionDamage(g.Explosion.X, g.Explosion.Y, base)
 }
 
@@ -528,15 +534,17 @@ func (g *Game) Step() ShotEvent {
 			g.Explosion.Frame++
 		} else {
 			g.Explosion.Active = false
-			cur := g.Current
-			g.Reset()
-			if g.Settings.VariableWind {
-				g.Wind = basicWind()
-			}
-			if g.Settings.WinnerFirst {
-				g.setCurrent(cur)
-			} else {
-				g.setCurrent((cur + 1) % 2)
+			if g.roundOver {
+				cur := g.Current
+				g.Reset()
+				if g.Settings.VariableWind {
+					g.Wind = basicWind()
+				}
+				if g.Settings.WinnerFirst {
+					g.setCurrent(cur)
+				} else {
+					g.setCurrent((cur + 1) % 2)
+				}
 			}
 		}
 		return EventNone
@@ -564,18 +572,14 @@ func (g *Game) Step() ShotEvent {
 	}
 	bw := float64(g.Width) / float64(g.BuildingCount)
 	idx := int(g.Banana.X / bw)
-	if idx >= 0 && idx < g.BuildingCount && g.Banana.Y < float64(g.Height) {
-		if g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
-			if !g.pointInDamage(idx, g.Banana.X, g.Banana.Y) {
-				g.Banana.Active = false
-				g.startExplosion(g.Banana.X, g.Banana.Y)
-				g.evaluateMiss()
-				g.Current = (g.Current + 1) % 2
-			}
+	if idx >= 0 && idx < g.BuildingCount && g.Banana.Y < float64(g.Height) &&
+		g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
+		if !g.pointInDamage(idx, g.Banana.X, g.Banana.Y) {
 			g.Banana.Active = false
-			// evaluate shot quality on miss
+			g.startExplosion(g.Banana.X, g.Banana.Y)
 			g.evaluateMiss()
 			g.setCurrent((g.Current + 1) % 2)
+			return g.LastEvent
 		}
 	}
 	for i, gr := range g.Gorillas {
