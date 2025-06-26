@@ -33,6 +33,7 @@ type Settings struct {
 	ShowIntro          bool
 	ForceCGA           bool
 	WinnerFirst        bool
+	VariableWind       bool
 }
 
 type Explosion struct {
@@ -52,6 +53,7 @@ func DefaultSettings() Settings {
 		ShowIntro:          true,
 		ForceCGA:           false,
 		WinnerFirst:        false,
+		VariableWind:       false,
 	}
 }
 
@@ -178,6 +180,18 @@ func (g *Game) Reset() {
 	g.ScoreFile = file
 }
 
+func basicWind() float64 {
+	w := float64(rand.Intn(10) + 1 - 5)
+	if rand.Intn(3) == 0 {
+		if w > 0 {
+			w += float64(rand.Intn(10) + 1)
+		} else {
+			w -= float64(rand.Intn(10) + 1)
+		}
+	}
+	return w
+}
+
 func (g *Game) startGorillaExplosion(idx int) {
 	base := g.Settings.NewExplosionRadius
 	if base <= 0 {
@@ -229,6 +243,9 @@ func (g *Game) Step() {
 			g.Explosion.Active = false
 			cur := g.Current
 			g.Reset()
+			if g.Settings.VariableWind {
+				g.Wind = basicWind()
+			}
 			if g.Settings.WinnerFirst {
 				g.Current = cur
 			} else {
