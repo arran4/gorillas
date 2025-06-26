@@ -210,6 +210,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	increaseRLimit()
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Gorillas Ebiten")
 	settings := gorillas.LoadSettings()
