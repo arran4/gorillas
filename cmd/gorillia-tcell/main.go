@@ -17,15 +17,10 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings []building
-	screen             tcell.Screen
-	buildings          []building
-	gorillas           [2]int
-	bananaX, bananaY   float64
-	bananaVX, bananaVY float64
-	bananaActive       bool
-	sunX, sunY         int
-	sunHitTicks        int
+	buildings   []building
+	screen      tcell.Screen
+	sunX, sunY  int
+	sunHitTicks int
 }
 
 const buildingWidth = 8
@@ -43,8 +38,6 @@ func newGame() *Game {
 		}
 		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins})
 	}
-	g.gorillas[0] = 1
-	g.gorillas[1] = len(g.buildings) - 2
 	g.sunX = g.Width - 4
 	g.sunY = 1
 	return g
@@ -87,7 +80,23 @@ func (g *Game) draw() {
 	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
 	if g.Banana.Active {
 		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), 'o', nil, tcell.StyleDefault)
-  }
+	}
+	if g.Explosion.Active {
+		r := int(g.Explosion.radii[g.Explosion.frame])
+		ex := int(g.Explosion.X)
+		ey := int(g.Explosion.Y)
+		for dx := -r; dx <= r; dx++ {
+			for dy := -r; dy <= r; dy++ {
+				if dx*dx+dy*dy <= r*r {
+					x := ex + dx
+					y := ey + dy
+					if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
+						g.screen.SetContent(x, y, '*', nil, tcell.StyleDefault)
+					}
+				}
+			}
+		}
+	}
 	g.drawSun()
 	s := fmt.Sprintf("A:%2.0f P:%2.0f P%d %d-%d", g.Angle, g.Power, g.Current+1, g.Wins[0], g.Wins[1])
 	for i, r := range s {
@@ -120,33 +129,10 @@ func (g *Game) run(s tcell.Screen) error {
 		g.draw()
 		select {
 		case <-ticker.C:
-			if g.Banana.Active {
+			if g.Banana.Active || g.Explosion.Active {
 				g.Step()
-				g.bananaX += g.bananaVX
-				g.bananaY += g.bananaVY
-				g.bananaVY += 0.2
-				if int(g.bananaX) >= g.sunX && int(g.bananaX) < g.sunX+3 && int(g.bananaY) >= g.sunY && int(g.bananaY) < g.sunY+3 {
+				if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
 					g.sunHitTicks = 10
-				}
-				idx := int(g.bananaX) / buildingWidth
-				if idx >= 0 && idx < len(g.buildings) {
-					if int(g.bananaY) >= g.Height-g.buildings[idx].h {
-						g.bananaActive = false
-						g.Current = (g.Current + 1) % 2
-					}
-					for _, gidx := range g.gorillas {
-						if idx == gidx && int(g.bananaY) >= g.Height-g.buildings[gidx].h-2 {
-							g.bananaActive = false
-							g.Wins[g.Current]++
-							next := g.Current
-							g.Reset()
-							g.Current = next
-						}
-					}
-				}
-				if int(g.bananaY) >= g.Height || int(g.bananaX) < 0 || int(g.bananaX) >= g.Width {
-					g.bananaActive = false
-					g.Current = (g.Current + 1) % 2
 				}
 			}
 		default:

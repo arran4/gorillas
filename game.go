@@ -20,11 +20,29 @@ type Banana struct {
 	Active bool
 }
 
+type Settings struct {
+	UseOldExplosions   bool
+	NewExplosionRadius float64
+}
+
+type Explosion struct {
+	X, Y   float64
+	radii  []float64
+	frame  int
+	Active bool
+}
+
+func DefaultSettings() Settings {
+	return Settings{NewExplosionRadius: 40}
+}
+
 type Game struct {
 	Width, Height int
 	Buildings     []Building
 	Gorillas      [2]Gorilla
 	Banana        Banana
+	Explosion     Explosion
+	Settings      Settings
 	Angle         float64
 	Power         float64
 	Current       int
@@ -35,6 +53,7 @@ const BuildingCount = 10
 
 func NewGame(width, height int) *Game {
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50}
+	g.Settings = DefaultSettings()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(width) / BuildingCount
 
@@ -89,7 +108,27 @@ func NewGame(width, height int) *Game {
 func (g *Game) Reset() {
 	wins := g.Wins
 	*g = *NewGame(g.Width, g.Height)
+	g.Settings = DefaultSettings()
 	g.Wins = wins
+}
+
+func (g *Game) startGorillaExplosion(idx int) {
+	base := g.Settings.NewExplosionRadius
+	if base <= 0 {
+		base = 16
+	}
+	g.Explosion = Explosion{X: g.Gorillas[idx].X, Y: g.Gorillas[idx].Y}
+	if g.Settings.UseOldExplosions {
+		for i := 1; i <= int(base); i++ {
+			g.Explosion.radii = append(g.Explosion.radii, float64(i))
+		}
+		for i := int(base * 1.5); i >= 1; i-- {
+			g.Explosion.radii = append(g.Explosion.radii, float64(i))
+		}
+	} else {
+		g.Explosion.radii = append(g.Explosion.radii, base*1.175, base, base*0.9, base*0.6, base*0.45, 0)
+	}
+	g.Explosion.Active = true
 }
 
 func (g *Game) Throw() {
@@ -108,6 +147,18 @@ func (g *Game) Throw() {
 }
 
 func (g *Game) Step() {
+	if g.Explosion.Active {
+		if g.Explosion.frame < len(g.Explosion.radii)-1 {
+			g.Explosion.frame++
+		} else {
+			g.Explosion.Active = false
+			cur := g.Current
+			g.Reset()
+			g.Current = cur
+		}
+		return
+	}
+
 	if !g.Banana.Active {
 		return
 	}
@@ -125,10 +176,8 @@ func (g *Game) Step() {
 		if math.Abs(gr.X-g.Banana.X) < 5 && math.Abs(gr.Y-g.Banana.Y) < 10 {
 			g.Banana.Active = false
 			g.Wins[g.Current]++
-			cur := g.Current
-			g.Reset()
-			g.Current = cur
-			_ = i // to avoid unused variable if not used
+			g.startGorillaExplosion(i)
+			return
 		}
 	}
 	if g.Banana.Y > float64(g.Height) || g.Banana.X < 0 || g.Banana.X >= float64(g.Width) {
