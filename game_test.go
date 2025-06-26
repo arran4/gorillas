@@ -129,6 +129,40 @@ func TestGorillaHitIncrementsWin(t *testing.T) {
 	}
 }
 
+func TestSecondPlayerThrowDirection(t *testing.T) {
+	g := newTestGame()
+	g.Current = 1
+	g.Angle = 30
+	g.Power = 40
+	g.Throw()
+	if g.Banana.VX >= 0 {
+		t.Fatalf("player 2 banana should move left, got vx=%f", g.Banana.VX)
+	}
+}
+
+func TestExplosionProgressAndReset(t *testing.T) {
+	g := newTestGame()
+	g.startGorillaExplosion(0)
+	g.Explosion.radii = []float64{1, 2}
+	if !g.Explosion.Active {
+		t.Fatal("explosion should start active")
+	}
+
+	if g.Explosion.frame != 0 {
+		t.Fatalf("initial explosion frame should be 0, got %d", g.Explosion.frame)
+	}
+
+	g.Step()
+	if g.Explosion.frame != 1 {
+		t.Fatalf("explosion frame should advance, got %d", g.Explosion.frame)
+	}
+
+	g.Step()
+	if g.Explosion.Active {
+		t.Fatal("explosion should finish and deactivate")
+  }
+}
+
 func TestSaveAndLoadScores(t *testing.T) {
 	tmp := filepath.Join(t.TempDir(), "scores.json")
 	g1 := newTestGame()
