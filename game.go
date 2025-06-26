@@ -121,6 +121,8 @@ type Game struct {
 	Wins          [2]int
 	TotalWins     [2]int
 	Shots         [2]int
+	LastAngle     [2]float64
+	LastPower     [2]float64
 	Players       [2]string
 	League        *League
 	ScoreFile     string
@@ -300,6 +302,8 @@ func (g *Game) Throw() {
 			g.Wind = -10
 		}
 	}
+	g.LastAngle[g.Current] = g.Angle
+	g.LastPower[g.Current] = g.Power
 	g.Shots[g.Current]++
 	start := g.Gorillas[g.Current]
 	radians := g.Angle * math.Pi / 180
