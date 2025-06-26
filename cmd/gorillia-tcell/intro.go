@@ -149,12 +149,14 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 <<<<<<< codex/add-instructionsstate-for-ebiten-and-tcell-ports
 		drawString(s, w/2-9, cy+3, "V - View Intro")
 		drawString(s, w/2-9, cy+4, "I - Instructions")
-		drawString(s, w/2-9, cy+5, "P - Play Game")
-		drawString(s, w/2-9, cy+6, "Q - Quit")
+               drawString(s, w/2-9, cy+5, "P - Play Game")
+               drawString(s, w/2-9, cy+6, "R - Replays")
+               drawString(s, w/2-9, cy+7, "Q - Quit")
 =======
 		drawString(s, w/2-9, cy+3, "V/X - View Intro")
-		drawString(s, w/2-9, cy+4, "P/Start - Play Game")
-		drawString(s, w/2-9, cy+5, "Q/B - Quit")
+               drawString(s, w/2-9, cy+4, "P/Start - Play Game")
+               drawString(s, w/2-9, cy+5, "R - Replays")
+               drawString(s, w/2-9, cy+6, "Q/B - Quit")
 >>>>>>> master
 		s.Show()
 		ev := s.PollEvent()
@@ -164,11 +166,15 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 				return false
 			case 'p', 'P':
 				return true
-			case 'v', 'V':
-				showIntroMovie(s, useSound, sliding)
-			case 'i', 'I':
-				showInstructions(s, sliding)
-			}
+                       case 'v', 'V':
+                               showIntroMovie(s, useSound, sliding)
+                       case 'i', 'I':
+                               showInstructions(s, sliding)
+                       case 'r', 'R':
+                               rg := gorillas.NewGame(80, 24, gorillas.DefaultBuildingCount)
+                               rg.LoadShots()
+                               showReplays(s, rg)
+                       }
 		}
 	}
 }
@@ -244,5 +250,29 @@ func showLeague(s tcell.Screen, l *gorillas.League) {
 	msg := "Press any key to continue"
 	drawString(s, (w-len(msg))/2, y+len(rows)+1, msg)
 	s.Show()
-	SparklePause(s, 0)
+       SparklePause(s, 0)
+}
+
+func showReplays(s tcell.Screen, g *gorillas.Game) {
+       rows := []string{"Stored Shots:"}
+       for i, sh := range g.ShotHistory {
+               orig := g.Wind
+               g.Wind = sh.Wind
+               res := g.testShot(sh.Angle, sh.Power)
+               g.Wind = orig
+               rows = append(rows, fmt.Sprintf("%2d: %.0f %.0f wind %.1f -> %v", i+1, sh.Angle, sh.Power, sh.Wind, res))
+       }
+       if len(rows) == 1 {
+               rows = append(rows, "No shots recorded")
+       }
+       s.Clear()
+       w, h := s.Size()
+       y := h/2 - len(rows)/2
+       for i, line := range rows {
+               drawString(s, (w-len(line))/2, y+i, line)
+       }
+       msg := "Press any key to continue"
+       drawString(s, (w-len(msg))/2, y+len(rows)+1, msg)
+       s.Show()
+       SparklePause(s, 0)
 }

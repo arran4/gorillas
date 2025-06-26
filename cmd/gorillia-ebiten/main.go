@@ -149,7 +149,7 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	gamepads    []ebiten.GamepadID
+	gamepads     []ebiten.GamepadID
 	buildings    []building
 	sunX, sunY   float64
 	sunHitTicks  int
@@ -183,6 +183,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.gorillaImg = defaultGorillaSprite()
 	g.LoadScores()
+	g.LoadShots()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {

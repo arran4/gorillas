@@ -95,6 +95,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
 	g.LoadScores()
+	g.LoadShots()
 	rand.Seed(time.Now().UnixNano())
 	for _, b := range g.Buildings {
 		var wins []int

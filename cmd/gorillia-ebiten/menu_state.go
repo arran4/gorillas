@@ -50,6 +50,9 @@ func (m *menuState) Update(g *Game) error {
 			case ebiten.KeyI:
 				g.State = newInstructionsState(m.sliding)
 				return nil
+			case ebiten.KeyR:
+				g.State = newReplayState(g)
+				return nil
 			}
 		}
 	}
@@ -78,17 +81,13 @@ func (m *menuState) Draw(g *Game, screen *ebiten.Image) {
 	if m.stage == 1 {
 		line := "V/X - View Intro"
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+3*charH)
-<<<<<<< codex/add-instructionsstate-for-ebiten-and-tcell-ports
 		line = "I - Instructions"
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+4*charH)
 		line = "P - Play Game"
-=======
-		line = "P/Start - Play Game"
-		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+4*charH)
-		line = "Q/B - Quit"
->>>>>>> master
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+5*charH)
-		line = "Q - Quit"
+		line = "R - Replays"
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+6*charH)
+		line = "Q - Quit"
+		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+7*charH)
 	}
 }

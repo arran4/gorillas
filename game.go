@@ -84,6 +84,14 @@ type Dance struct {
 	Active bool
 }
 
+// Shot records the parameters and outcome of a throw.
+type Shot struct {
+	Angle  float64 `json:"angle"`
+	Power  float64 `json:"power"`
+	Wind   float64 `json:"wind"`
+	Result bool    `json:"result"`
+}
+
 func DefaultSettings() Settings {
 	return Settings{
 		UseSound:            true,
@@ -128,6 +136,34 @@ func (g *Game) SaveScores() {
 	}
 }
 
+// LoadShots reads stored successful shots from disk.
+func (g *Game) LoadShots() {
+	file := g.ShotsFile
+	if file == "" {
+		file = defaultShotsFile
+	}
+	b, err := os.ReadFile(file)
+	if err == nil {
+		if err := json.Unmarshal(b, &g.ShotHistory); err != nil {
+			fmt.Fprintf(os.Stderr, "load shots: %v\n", err)
+		}
+	}
+}
+
+// SaveShots writes the shot history to disk.
+func (g *Game) SaveShots() {
+	file := g.ShotsFile
+	if file == "" {
+		file = defaultShotsFile
+	}
+	b, err := json.Marshal(g.ShotHistory)
+	if err == nil {
+		if err := os.WriteFile(file, b, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "save shots: %v\n", err)
+		}
+	}
+}
+
 // StatsString returns a printable summary of wins this session and overall.
 func (g *Game) StatsString() string {
 	session := fmt.Sprintf("Session - P1:%d P2:%d", g.Wins[0], g.Wins[1])
@@ -157,6 +193,8 @@ type Game struct {
 	Players       [2]string
 	League        *League
 	ScoreFile     string
+	ShotsFile     string
+	ShotHistory   []Shot
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
@@ -167,18 +205,19 @@ type Game struct {
 	lastStartX float64
 	lastOtherX float64
 	lastVX     float64
-	ResetHook     func()
+	ResetHook  func()
 }
 
 const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
 const defaultLeagueFile = "gorillas.lge"
+const defaultShotsFile = "gorillas_shots.json"
 
 func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
 		buildingCount = DefaultBuildingCount
 	}
-	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount}
+	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, ShotsFile: defaultShotsFile, BuildingCount: buildingCount}
 	g.League = LoadLeague(defaultLeagueFile)
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
@@ -441,6 +480,8 @@ func (g *Game) Step() ShotEvent {
 				g.League.RecordRound(g.Players[0], g.Players[1], winner, g.Shots[shooter])
 				g.League.Save()
 			}
+			g.ShotHistory = append(g.ShotHistory, Shot{Angle: g.LastAngle[shooter], Power: g.LastPower[shooter], Wind: g.Wind, Result: true})
+			g.SaveShots()
 			g.Shots = [2]int{}
 			g.SaveScores()
 			g.startGorillaExplosion(i)
