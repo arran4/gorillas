@@ -3,17 +3,17 @@
 package main
 
 import (
-        "fmt"
-        "image/color"
-        "math"
-        "strconv"
-        "strings"
+	"fmt"
+	"image/color"
+	"math"
+	"strconv"
+	"strings"
 
-        "github.com/hajimehoshi/ebiten/v2"
-        "github.com/hajimehoshi/ebiten/v2/ebitenutil"
-        "github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
-        gorillas "github.com/arran4/gorillas"
+	gorillas "github.com/arran4/gorillas"
 )
 
 // playState implements the main gameplay loop.
@@ -162,16 +162,16 @@ func (playState) Update(g *Game) error {
 			g.Throw()
 		}
 
-                g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
-                for _, id := range g.gamepads {
-                        if ebiten.IsStandardGamepadLayoutAvailable(id) {
-                                lx := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickHorizontal)
-                                ly := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickVertical)
-                                if lx < -0.2 {
-                                        g.Angle += 1
-                                }
-                                if lx > 0.2 {
-                                        g.Angle -= 1
+		g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
+		for _, id := range g.gamepads {
+			if ebiten.IsStandardGamepadLayoutAvailable(id) {
+				lx := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickHorizontal)
+				ly := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickVertical)
+				if lx < -0.2 {
+					g.Angle += 1
+				}
+				if lx > 0.2 {
+					g.Angle -= 1
 				}
 				if ly < -0.2 {
 					g.Power += 1
@@ -209,27 +209,20 @@ func (playState) Update(g *Game) error {
 
 func (playState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	for i := range g.buildings {
-		g.buildings[i].h = g.Buildings[i].H
-		g.buildings[i].damage = g.buildings[i].damage[:0]
+	bw := float64(g.Width) / float64(g.Game.BuildingCount)
+	for i := 0; i < g.Game.BuildingCount; i++ {
+		h := g.Buildings[i].H
+		img := g.buildingImg[i]
+		img.Fill(color.RGBA{})
+		img.DrawImage(g.buildingBase[i], nil)
 		for _, d := range g.Buildings[i].Damage {
-			g.buildings[i].damage = append(g.buildings[i].damage, damageRect{
-				x: d.X,
-				y: d.Y,
-				w: d.W,
-				h: d.H,
-			})
+			rx := int(d.X - float64(i)*bw)
+			ry := int(d.Y - (float64(g.Height) - h))
+			clearCircle(img, rx, ry, d.R)
 		}
-	}
-	for i, b := range g.buildings {
-		ebitenutil.DrawRect(screen, b.x, float64(g.Height)-b.h, b.w-1, b.h, b.color)
-		for _, w := range b.windows {
-			ebitenutil.DrawRect(screen, w.x, w.y, w.w, w.h, color.RGBA{255, 255, 0, 255})
-		}
-		for _, d := range b.damage {
-			ebitenutil.DrawRect(screen, d.x, d.y, d.w, d.h, color.Black)
-		}
-		_ = i
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(i)*bw, float64(g.Height)-h)
+		screen.DrawImage(img, op)
 	}
 	for i := range g.Gorillas {
 		g.drawGorilla(screen, i)
@@ -305,8 +298,8 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height/2 - charH/2
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
-        } else if g.LastEvent != gorillas.EventNone {
-                msg := gorillas.EventMessage(g.LastEvent)
+	} else if g.LastEvent != gorillas.EventNone {
+		msg := gorillas.EventMessage(g.LastEvent)
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height / 3
 		ebitenutil.DebugPrintAt(screen, msg, x, y)

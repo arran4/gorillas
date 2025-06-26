@@ -19,10 +19,6 @@ import (
 const sunRadius = 20
 const sunMaxIntegrity = 4
 
-type window struct {
-	x, y, w, h float64
-}
-
 func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 	for dx := -r; dx <= r; dx++ {
 		for dy := -r; dy <= r; dy++ {
@@ -141,19 +137,59 @@ func defaultGorillaSprite() *ebiten.Image {
 	return createGorillaSprite(mask, color.RGBA{150, 75, 0, 255})
 }
 
-type damageRect struct{ x, y, w, h float64 }
+func createBuildingSprite(w, h float64, clr color.Color) *ebiten.Image {
+	iw := int(w)
+	ih := int(h)
+	img := ebiten.NewImage(iw, ih)
+	img.Fill(clr)
+	winClr := color.RGBA{255, 255, 0, 255}
+	for x := 3; x < iw-3; x += 6 {
+		for y := ih - 3; y > 3; y -= 6 {
+			if rand.Intn(3) != 0 {
+				for dx := 0; dx < 3; dx++ {
+					for dy := 0; dy < 3; dy++ {
+						img.Set(x+dx, y+dy, winClr)
+					}
+				}
+			}
+		}
+	}
+	return img
+}
 
-type building struct {
-	x, w, h float64
-	color   color.Color
-	windows []window
-	damage  []damageRect
+func clearRect(img *ebiten.Image, x, y, w, h int) {
+	for dx := 0; dx < w; dx++ {
+		for dy := 0; dy < h; dy++ {
+			ix := x + dx
+			iy := y + dy
+			if ix >= 0 && ix < img.Bounds().Dx() && iy >= 0 && iy < img.Bounds().Dy() {
+				img.Set(ix, iy, color.RGBA{})
+			}
+		}
+	}
+}
+
+func clearCircle(img *ebiten.Image, cx, cy int, r float64) {
+	ir := int(r)
+	r2 := r * r
+	for dx := -ir; dx <= ir; dx++ {
+		for dy := -ir; dy <= ir; dy++ {
+			if float64(dx*dx+dy*dy) <= r2 {
+				ix := cx + dx
+				iy := cy + dy
+				if ix >= 0 && ix < img.Bounds().Dx() && iy >= 0 && iy < img.Bounds().Dy() {
+					img.Set(ix, iy, color.RGBA{})
+				}
+			}
+		}
+	}
 }
 
 type Game struct {
 	*gorillas.Game
 	gamepads     []ebiten.GamepadID
-	buildings    []building
+	buildingBase []*ebiten.Image
+	buildingImg  []*ebiten.Image
 	sunX, sunY   float64
 	sunHitTicks  int
 	sunIntegrity int
@@ -191,26 +227,28 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {
 		h := g.Buildings[i].H
-		b := building{
-			x:     float64(i) * bw,
-			w:     bw,
-			h:     h,
-			color: color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255},
-		}
-		for wx := b.x + 3; wx < b.x+b.w-3; wx += 6 {
-			for wy := float64(g.Height) - 3; wy > float64(g.Height)-b.h+3; wy -= 6 {
-				if rand.Intn(3) != 0 {
-					b.windows = append(b.windows, window{wx, wy, 3, 3})
-				}
-			}
-		}
-		g.buildings = append(g.buildings, b)
+		clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+		base := createBuildingSprite(bw-1, h, clr)
+		g.buildingBase = append(g.buildingBase, base)
+		img := ebiten.NewImage(int(bw-1), int(h))
+		g.buildingImg = append(g.buildingImg, img)
 	}
 	g.sunX = float64(g.Width) - 40
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
 		g.sunIntegrity = sunMaxIntegrity
+		g.buildingBase = g.buildingBase[:0]
+		g.buildingImg = g.buildingImg[:0]
+		bw := float64(g.Width) / float64(g.Game.BuildingCount)
+		for i := 0; i < g.Game.BuildingCount; i++ {
+			h := g.Buildings[i].H
+			clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+			base := createBuildingSprite(bw-1, h, clr)
+			g.buildingBase = append(g.buildingBase, base)
+			img := ebiten.NewImage(int(bw-1), int(h))
+			g.buildingImg = append(g.buildingImg, img)
+		}
 	}
 	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites()
 	g.gamepads = ebiten.AppendGamepadIDs(nil)
