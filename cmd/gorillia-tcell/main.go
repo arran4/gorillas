@@ -390,30 +390,61 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 		}
 	}
 	updateAssignField()
+	labels := []string{"Player 1:", "Player 2:", "Rounds:", "Gravity:"}
+	selectedPlayer := -1
 	for {
 		s.Clear()
 		_, h := s.Size()
 		baseY := h/2 - 2
-		drawString(s, 2, baseY-2, "Game Setup (Esc to start)")
-		labels := []string{"Player 1:", "Player 2:", "Rounds:", "Gravity:"}
+		opts := []string{"New Player", "Rename Player", "Delete Player", "Start"}
+		total := len(fields) + len(players) + len(opts)
+		newIdx := len(fields) + len(players)
+		renameIdx := newIdx + 1
+		deleteIdx := renameIdx + 1
+		startIdx := deleteIdx + 1
+		drawString(s, 2, baseY-2, "Game Setup")
 		for i, lbl := range labels {
 			style := tcell.StyleDefault
 			if i == cur {
 				style = style.Reverse(true)
 			}
-			line := fmt.Sprintf("%s %s", lbl, fields[i])
+			line := fmt.Sprintf("%s [%s]", lbl, fields[i])
 			for x, r := range line {
 				s.SetContent(2+x, baseY+i, r, nil, style)
 			}
 		}
 		py := baseY + len(labels) + 1
-		drawString(s, 2, py, "Players (n=new r=rename d=del):")
+		drawString(s, 2, py, "Players:")
 		for i, name := range players {
 			style := tcell.StyleDefault
 			if cur == len(fields)+i {
 				style = style.Reverse(true)
 			}
-			drawString(s, 4, py+1+i, name)
+			drawString(s, 4, py+1+i, fmt.Sprintf("[%s]", name))
+		}
+		optY := py + 1 + len(players)
+		newIdx = len(fields) + len(players)
+		for i, opt := range opts {
+			style := tcell.StyleDefault
+			if cur == newIdx+i {
+				style = style.Reverse(true)
+			}
+			drawString(s, 2, optY+i, opt)
+		}
+
+		if editing {
+			var cx, cy int
+			if editingPlayer >= 0 {
+				cx = 4 + len(players[editingPlayer])
+				cy = py + 1 + editingPlayer
+			} else {
+				lbl := labels[cur]
+				cx = 2 + len(lbl) + 1 + len(fields[cur])
+				cy = baseY + cur
+			}
+			s.ShowCursor(cx, cy)
+		} else {
+			s.HideCursor()
 		}
 		s.Show()
 
@@ -436,16 +467,21 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 							}
 						}
 						league.Save()
+						selectedPlayer = editingPlayer
 						editingPlayer = -1
 						newPlayer = false
 					}
 					editing = false
+					cur = (cur + 1) % total
+					updateAssignField()
 				case tcell.KeyEsc:
 					if editingPlayer >= 0 {
 						if newPlayer {
 							players = players[:len(players)-1]
+							selectedPlayer = -1
 						} else {
 							players[editingPlayer] = oldName
+							selectedPlayer = editingPlayer
 						}
 						editingPlayer = -1
 						newPlayer = false
@@ -490,14 +526,58 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 				if cur > 0 {
 					cur--
 				} else {
-					cur = len(fields) + len(players) - 1
+					cur = total - 1
 				}
 				updateAssignField()
+				if cur >= len(fields) && cur < len(fields)+len(players) {
+					selectedPlayer = cur - len(fields)
+				}
 			case tcell.KeyDown, tcell.KeyTab:
-				cur = (cur + 1) % (len(fields) + len(players))
+				cur = (cur + 1) % total
 				updateAssignField()
+				if cur >= len(fields) && cur < len(fields)+len(players) {
+					selectedPlayer = cur - len(fields)
+				}
 			case tcell.KeyEnter:
-				if cur >= len(fields) && assignField >= 0 {
+				if cur == startIdx {
+					r, _ := strconv.Atoi(fields[2])
+					g, _ := strconv.ParseFloat(fields[3], 64)
+					return fields[0], fields[1], r, g, true
+				} else if cur == newIdx {
+					players = append(players, "")
+					cur = len(fields) + len(players) - 1
+					editing = true
+					editingPlayer = len(players) - 1
+					newPlayer = true
+					selectedPlayer = editingPlayer
+				} else if cur == renameIdx {
+					if selectedPlayer >= 0 {
+						editing = true
+						editingPlayer = selectedPlayer
+						oldName = players[selectedPlayer]
+						newPlayer = false
+						cur = len(fields) + selectedPlayer
+					}
+				} else if cur == deleteIdx {
+					if selectedPlayer >= 0 {
+						name := players[selectedPlayer]
+						league.DeletePlayer(name)
+						league.Save()
+						players = append(players[:selectedPlayer], players[selectedPlayer+1:]...)
+						if fields[0] == name {
+							fields[0] = ""
+						}
+						if fields[1] == name {
+							fields[1] = ""
+						}
+						if selectedPlayer >= len(players) {
+							selectedPlayer = len(players) - 1
+						}
+						if cur >= total-1 {
+							cur--
+						}
+					}
+				} else if cur >= len(fields) && cur < len(fields)+len(players) && assignField >= 0 {
 					name := players[cur-len(fields)]
 					other := 1 - assignField
 					if fields[other] == name {
@@ -512,38 +592,43 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 					editing = true
 					editingPlayer = cur - len(fields)
 					oldName = players[editingPlayer]
+					selectedPlayer = editingPlayer
 				}
 			case tcell.KeyRune:
 				switch key.Rune() {
 				case 'n':
 					players = append(players, "")
-					cur = len(fields) + len(players) - 1
 					editing = true
-					editingPlayer = cur - len(fields)
+					editingPlayer = len(players) - 1
 					newPlayer = true
+					selectedPlayer = editingPlayer
+					cur = len(fields) + editingPlayer
 				case 'd':
-					if cur >= len(fields) {
-						idx := cur - len(fields)
-						name := players[idx]
+					if selectedPlayer >= 0 {
+						name := players[selectedPlayer]
 						league.DeletePlayer(name)
 						league.Save()
-						players = append(players[:idx], players[idx+1:]...)
+						players = append(players[:selectedPlayer], players[selectedPlayer+1:]...)
 						if fields[0] == name {
 							fields[0] = ""
 						}
 						if fields[1] == name {
 							fields[1] = ""
 						}
-						if cur >= len(fields)+len(players) {
+						if selectedPlayer >= len(players) {
+							selectedPlayer = len(players) - 1
+						}
+						if cur >= startIdx {
 							cur--
 						}
 					}
 				case 'r':
-					if cur >= len(fields) {
+					if selectedPlayer >= 0 {
 						editing = true
-						editingPlayer = cur - len(fields)
+						editingPlayer = selectedPlayer
 						oldName = players[editingPlayer]
 						newPlayer = false
+						cur = len(fields) + editingPlayer
 					}
 				}
 			}
