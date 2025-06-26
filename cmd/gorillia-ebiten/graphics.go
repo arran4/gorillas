@@ -33,10 +33,10 @@ func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 func drawArc(img *ebiten.Image, cx, cy, r float64, startDeg, endDeg float64, clr color.Color) {
 	step := 2.0
 	prevX := cx + r*math.Cos(startDeg*math.Pi/180)
-	prevY := cy + r*math.Sin(startDeg*math.Pi/180)
+	prevY := cy - r*math.Sin(startDeg*math.Pi/180)
 	for a := startDeg + step; a <= endDeg; a += step {
 		x := cx + r*math.Cos(a*math.Pi/180)
-		y := cy + r*math.Sin(a*math.Pi/180)
+		y := cy - r*math.Sin(a*math.Pi/180)
 		ebitenutil.DrawLine(img, prevX, prevY, x, y, clr)
 		prevX, prevY = x, y
 	}

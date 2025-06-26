@@ -252,7 +252,7 @@ func NewGame(width, height, buildingCount int) *Game {
 	if slope == 2 || slope == 6 {
 		newHt = float64(height) * 0.6
 	}
-	htInc := float64(height) / 25
+	htInc := float64(height) / 35
 
 	for i := 0; i < g.BuildingCount; i++ {
 		x := float64(i) * bw
@@ -275,12 +275,12 @@ func NewGame(width, height, buildingCount int) *Game {
 			}
 		}
 
-		h := newHt + rand.Float64()*float64(height)/4
-		if h < float64(height)*0.1 {
-			h = float64(height) * 0.1
+		h := newHt + rand.Float64()*float64(height)/6 - float64(height)/12
+		if h < float64(height)*0.15 {
+			h = float64(height) * 0.15
 		}
-		if h > float64(height)*0.8 {
-			h = float64(height) * 0.8
+		if h > float64(height)*0.6 {
+			h = float64(height) * 0.6
 		}
 
 		g.Buildings = append(g.Buildings, Building{
