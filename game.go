@@ -134,7 +134,7 @@ func NewGame(width, height, buildingCount int) *Game {
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
-	g.Wind = float64(rand.Intn(21) - 10)
+	g.Wind = basicWind()
 	bw := float64(width) / float64(g.BuildingCount)
 
 	// create a sloping skyline similar to the original BASIC version
@@ -203,13 +203,17 @@ func (g *Game) Reset() {
 	g.Gravity = gravity
 }
 
+func fnRan(x int) int {
+	return rand.Intn(x) + 1
+}
+
 func basicWind() float64 {
-	w := float64(rand.Intn(10) + 1 - 5)
-	if rand.Intn(3) == 0 {
+	w := float64(fnRan(10) - 5)
+	if fnRan(3) == 1 {
 		if w > 0 {
-			w += float64(rand.Intn(10) + 1)
+			w += float64(fnRan(10))
 		} else {
-			w -= float64(rand.Intn(10) + 1)
+			w -= float64(fnRan(10))
 		}
 	}
 	return w
