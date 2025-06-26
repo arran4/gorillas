@@ -188,11 +188,15 @@ func main() {
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
 
-	if !introScreen(s, settings.UseSound) {
+	if settings.ShowIntro {
+		showIntroMovie(s, settings.UseSound, settings.UseSlidingText)
+	}
+
+	if !introScreen(s, settings.UseSound, settings.UseSlidingText) {
 		return
 	}
 
-	g := newGame(settings)
+	g := newGame(settings, *buildings, *wind)
 	if err := g.run(s, *ai); err != nil {
 		panic(err)
 	}

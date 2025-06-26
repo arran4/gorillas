@@ -37,7 +37,7 @@ func drawGorillaFrame(s tcell.Screen, x, y int, frame []string) {
 	}
 }
 
-func showIntroMovie(s tcell.Screen, useSound bool) {
+func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 	w, h := s.Size()
 	lines := []string{
 		"QBasic GORILLAS",
@@ -45,10 +45,20 @@ func showIntroMovie(s tcell.Screen, useSound bool) {
 		"Starring two gorillas",
 	}
 	s.Clear()
-	for i, line := range lines {
-		drawString(s, (w-len(line))/2, h/2-1+i, line)
+	if sliding {
+		for i, line := range lines {
+			for j := 1; j <= len(line); j++ {
+				drawString(s, (w-len(line))/2, h/2-1+i, line[:j])
+				s.Show()
+				time.Sleep(30 * time.Millisecond)
+			}
+		}
+	} else {
+		for i, line := range lines {
+			drawString(s, (w-len(line))/2, h/2-1+i, line)
+		}
+		s.Show()
 	}
-	s.Show()
 	if useSound {
 		gorillas.PlayIntroMusic()
 	}
@@ -62,7 +72,7 @@ func showIntroMovie(s tcell.Screen, useSound bool) {
 	time.Sleep(700 * time.Millisecond)
 }
 
-func introScreen(s tcell.Screen, useSound bool) bool {
+func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 	w, h := s.Size()
 	cx := w/2 - 10
 	cy := h/2 - 2
@@ -91,7 +101,7 @@ func introScreen(s tcell.Screen, useSound bool) bool {
 			case 'p', 'P':
 				return true
 			case 'v', 'V':
-				showIntroMovie(s, useSound)
+				showIntroMovie(s, useSound, sliding)
 			}
 		}
 	}
