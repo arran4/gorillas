@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"time"
 
 	"github.com/arran4/gorillas"
@@ -37,6 +38,24 @@ func drawGorillaFrame(s tcell.Screen, x, y int, frame []string) {
 	}
 }
 
+// scrollText animates msg across the screen on row y when enabled.
+// When disabled, it simply prints the message centred.
+func scrollText(s tcell.Screen, y int, msg string, enabled bool) {
+	w, _ := s.Size()
+	if !enabled {
+		drawString(s, (w-len(msg))/2, y, msg)
+		s.Show()
+		return
+	}
+	pad := strings.Repeat(" ", w)
+	text := pad + msg + pad
+	for i := 0; i <= len(msg)+w; i++ {
+		drawString(s, 0, y, text[i:i+w])
+		s.Show()
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
 func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 	w, h := s.Size()
 	lines := []string{
@@ -70,6 +89,8 @@ func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 		time.Sleep(300 * time.Millisecond)
 	}
 	time.Sleep(700 * time.Millisecond)
+	scrollText(s, h-1, "Get ready to throw bananas!", sliding)
+	time.Sleep(500 * time.Millisecond)
 }
 
 func introScreen(s tcell.Screen, useSound, sliding bool) bool {
