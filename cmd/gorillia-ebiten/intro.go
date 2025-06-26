@@ -321,7 +321,9 @@ func SparklePause(lines []string, dur time.Duration) {
 }
 
 func showStats(stats string) {
-	SparklePause(strings.Split(stats, "\n"), 0)
+	lines := strings.Split(stats, "\n")
+	lines = append(lines, "", "Press any key to continue")
+	SparklePause(lines, 0)
 }
 
 func showLeague(l *gorillas.League) {
@@ -332,5 +334,6 @@ func showLeague(l *gorillas.League) {
 	for _, s := range l.Standings() {
 		lines = append(lines, fmt.Sprintf("%-15s %6d %4d %8.1f", s.Name, s.Rounds, s.Wins, s.Accuracy))
 	}
+	lines = append(lines, "", "Press any key to continue")
 	SparklePause(lines, 0)
 }
