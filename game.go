@@ -89,6 +89,12 @@ type Dance struct {
 	Active bool
 }
 
+// ShotRecord stores the angle and power for a single throw.
+type ShotRecord struct {
+	Angle float64 `json:"angle"`
+	Power float64 `json:"power"`
+}
+
 func DefaultSettings() Settings {
 	return Settings{
 		UseSound:            true,
@@ -133,6 +139,34 @@ func (g *Game) SaveScores() {
 	}
 }
 
+// LoadShots reads the shot history from disk.
+func (g *Game) LoadShots() {
+	file := g.ShotsFile
+	if file == "" {
+		file = defaultShotsFile
+	}
+	b, err := os.ReadFile(file)
+	if err == nil {
+		if err := json.Unmarshal(b, &g.ShotHistory); err != nil {
+			fmt.Fprintf(os.Stderr, "load shots: %v\n", err)
+		}
+	}
+}
+
+// SaveShots writes the shot history to disk.
+func (g *Game) SaveShots() {
+	file := g.ShotsFile
+	if file == "" {
+		file = defaultShotsFile
+	}
+	b, err := json.Marshal(g.ShotHistory)
+	if err == nil {
+		if err := os.WriteFile(file, b, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "save shots: %v\n", err)
+		}
+	}
+}
+
 // StatsString returns a printable summary of wins this session and overall.
 func (g *Game) StatsString() string {
 	session := fmt.Sprintf("Session - P1:%d P2:%d", g.Wins[0], g.Wins[1])
@@ -163,6 +197,7 @@ type Game struct {
 	League        *League
 	ScoreFile     string
 	ShotsFile     string
+	ShotHistory   []ShotRecord
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
@@ -183,6 +218,7 @@ const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
 const defaultShotsFile = "gorillas_shots.json"
 const defaultLeagueFile = "gorillas.lge"
+const defaultShotsFile = "gorillas_shots.json"
 const groundBounceFactor = 0.4
 const groundBounceThreshold = 5.0
 
