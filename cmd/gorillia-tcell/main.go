@@ -208,4 +208,5 @@ func main() {
 	}
 	g.SaveScores()
 	fmt.Println(g.StatsString())
+	showExtro(s)
 }
