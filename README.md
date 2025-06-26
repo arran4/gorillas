@@ -66,6 +66,13 @@ go build -o gorillia-tcell ./cmd/gorillia-tcell
 ./gorillia-tcell -ai
 ```
 
+### Controls
+
+Use the arrow keys or a gamepad to adjust angle and power in 0.5-unit steps.
+You can also type numbers directly. After a short pause the value is accepted,
+or press `,` while typing to switch from angle entry to power entry (and again
+to confirm and throw).
+
 ### Replays
 
 Your best shots are now stored for later. Select "R - Replays" from the menu to watch any saved throws.

@@ -16,8 +16,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
-const sunRadius = 20
-const sunMaxIntegrity = 4
+const (
+	sunRadius          = 20
+	sunMaxIntegrity    = 4
+	digitFinalizeDelay = 500 * time.Millisecond
+	digitBufferTimeout = 3 * time.Second
+)
 
 type window struct {
 	x, y, w, h float64
@@ -172,6 +176,7 @@ type Game struct {
 	gorillaArt   [][]string
 	AI           bool
 	State        State
+	lastDigit    time.Time
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
