@@ -188,4 +188,5 @@ func main() {
 	}
 	game.SaveScores()
 	fmt.Println(game.StatsString())
+	showExtro()
 }
