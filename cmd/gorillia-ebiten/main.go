@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	sunRadius          = 20
+	sunRadius          = 20 * sunScale
 	sunMaxIntegrity    = 4
 	digitFinalizeDelay = 500 * time.Millisecond
 	digitBufferTimeout = 3 * time.Second
@@ -100,7 +100,10 @@ func (g *Game) drawSun(img *ebiten.Image) {
 		drawFilledCircle(img, g.sunX, g.sunY+5*scale, 2.9*scale, color.Black)
 	} else {
 		drawArc(img, g.sunX, g.sunY, 8*scale, 210, 330, color.Black)
+
 	}
+  ebitenutil.DrawRect(img, g.sunX-6*sunScale, g.sunY-4*sunScale, 3*sunScale, 3*sunScale, color.Black)
+	ebitenutil.DrawRect(img, g.sunX+3*sunScale, g.sunY-4*sunScale, 3*sunScale, 3*sunScale, color.Black)
 }
 
 func createBananaSprite(mask []string) *ebiten.Image {
@@ -328,7 +331,8 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 		return
 	}
 	frame := g.gorillaArt[0]
-	baseX := int(g.Gorillas[idx].X) - len(frame[0])*gorillaScale/2
+	width := gorillas.FrameWidth(frame)
+	baseX := int(g.Gorillas[idx].X) - width*gorillaScale/2
 	baseY := int(g.Gorillas[idx].Y) - len(frame)*gorillaScale
 	for dy, line := range frame {
 		for dx, ch := range line {
