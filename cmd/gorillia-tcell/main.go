@@ -23,20 +23,29 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings   []building
-	screen      tcell.Screen
-	sunX, sunY  int
-	sunHitTicks int
-	angleInput  string
-	powerInput  string
-	enteringAng bool
-	enteringPow bool
-	abortPrompt bool
-	resumeAng   bool
-	resumePow   bool
-	gorillaArt  [][]string
-	js          *joystick
+	buildings    []building
+	screen       tcell.Screen
+	sunX, sunY   int
+	sunHitTicks  int
+	angleInput   string
+	powerInput   string
+	enteringAng  bool
+	enteringPow  bool
+	abortPrompt  bool
+	resumeAng    bool
+	resumePow    bool
+	gorillaArt   [][]string
+	js           *joystick
+	gorillaFrame [2]int
+	throwTicks   int
+	thrower      int
 }
+
+const (
+	frameArmsDown = iota
+	frameRightUp
+	frameLeftUp
+)
 
 const buildingWidth = 8
 const sunMaxIntegrity = 4
@@ -94,6 +103,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
+	g.gorillaFrame[0] = frameArmsDown
+	g.gorillaFrame[1] = frameArmsDown
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	for _, b := range g.Buildings {
@@ -286,11 +297,24 @@ func (g *Game) drawWindArrow() {
 	}
 }
 
+func (g *Game) updateThrowFrame() {
+	if g.throwTicks > 0 {
+		g.throwTicks--
+		if g.throwTicks == 0 {
+			g.gorillaFrame[g.thrower] = frameArmsDown
+		}
+	}
+}
+
 func (g *Game) drawGorilla(idx int) {
 	if len(g.gorillaArt) == 0 {
 		return
 	}
-	frame := g.gorillaArt[0]
+	f := g.gorillaFrame[idx]
+	if f < 0 || f >= len(g.gorillaArt) {
+		f = 0
+	}
+	frame := g.gorillaArt[f]
 	x := int(g.Gorillas[idx].X) - len(frame[0])/2
 	y := int(g.Gorillas[idx].Y) - len(frame)
 	style := tcell.StyleDefault
@@ -304,6 +328,13 @@ func (g *Game) drawGorilla(idx int) {
 }
 
 func (g *Game) throw() {
+	if g.Current == 0 {
+		g.gorillaFrame[0] = frameRightUp
+	} else {
+		g.gorillaFrame[1] = frameLeftUp
+	}
+	g.thrower = g.Current
+	g.throwTicks = 2
 	g.Throw()
 }
 
@@ -312,6 +343,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 
 	ticker := time.NewTicker(50 * time.Millisecond)
 	for {
+		g.updateThrowFrame()
 		g.draw()
 		if g.Banana.Active || g.Explosion.Active {
 			<-ticker.C

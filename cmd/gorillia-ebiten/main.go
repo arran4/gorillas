@@ -125,8 +125,8 @@ func createGorillaSprite(mask []string, clr color.Color) *ebiten.Image {
 	return img
 }
 
-func defaultGorillaSprite() *ebiten.Image {
-	mask := []string{
+func createGorillaSprites() []*ebiten.Image {
+	base := []string{
 		"..##..",
 		".####.",
 		"######",
@@ -138,7 +138,15 @@ func defaultGorillaSprite() *ebiten.Image {
 		".#..#.",
 		".####.",
 	}
-	return createGorillaSprite(mask, color.RGBA{150, 75, 0, 255})
+	left := append([]string{}, base...)
+	left[0] = "###.."
+	right := append([]string{}, base...)
+	right[0] = "..###"
+	imgs := make([]*ebiten.Image, 3)
+	imgs[frameLeftUp] = createGorillaSprite(left, color.RGBA{150, 75, 0, 255})
+	imgs[frameRightUp] = createGorillaSprite(right, color.RGBA{150, 75, 0, 255})
+	imgs[frameArmsDown] = createGorillaSprite(base, color.RGBA{150, 75, 0, 255})
+	return imgs
 }
 
 type building struct {
@@ -149,7 +157,7 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	gamepads    []ebiten.GamepadID
+	gamepads     []ebiten.GamepadID
 	buildings    []building
 	sunX, sunY   float64
 	sunHitTicks  int
@@ -165,7 +173,10 @@ type Game struct {
 	bananaRight  *ebiten.Image
 	bananaUp     *ebiten.Image
 	bananaDown   *ebiten.Image
-	gorillaImg   *ebiten.Image
+	gorillaImgs  []*ebiten.Image
+	gorillaFrame [2]int
+	throwTicks   int
+	thrower      int
 	gorillaArt   [][]string
 	State        State
 }
@@ -181,7 +192,9 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
-	g.gorillaImg = defaultGorillaSprite()
+	g.gorillaImgs = createGorillaSprites()
+	g.gorillaFrame[0] = frameArmsDown
+	g.gorillaFrame[1] = frameArmsDown
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
@@ -227,19 +240,30 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
-	if g.gorillaImg != nil {
-		op := &ebiten.DrawImageOptions{}
-		w, h := g.gorillaImg.Size()
-		op.GeoM.Translate(g.Gorillas[idx].X-float64(w)/2, g.Gorillas[idx].Y-float64(h))
-		img.DrawImage(g.gorillaImg, op)
-		return
+	if len(g.gorillaImgs) > 0 {
+		f := g.gorillaFrame[idx]
+		if f < 0 || f >= len(g.gorillaImgs) {
+			f = frameArmsDown
+		}
+		sprite := g.gorillaImgs[f]
+		if sprite != nil {
+			op := &ebiten.DrawImageOptions{}
+			w, h := sprite.Size()
+			op.GeoM.Translate(g.Gorillas[idx].X-float64(w)/2, g.Gorillas[idx].Y-float64(h))
+			img.DrawImage(sprite, op)
+			return
+		}
 	}
 	if len(g.gorillaArt) == 0 {
 		gr := g.Gorillas[idx]
 		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
 		return
 	}
-	frame := g.gorillaArt[0]
+	f := g.gorillaFrame[idx]
+	if f < 0 || f >= len(g.gorillaArt) {
+		f = 0
+	}
+	frame := g.gorillaArt[f]
 	baseX := int(g.Gorillas[idx].X) - len(frame[0])/2
 	baseY := int(g.Gorillas[idx].Y) - len(frame)
 	for dy, line := range frame {
@@ -267,6 +291,15 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 	} else {
 		ebitenutil.DrawLine(img, end, y, end+head, y-3, color.RGBA{255, 255, 0, 255})
 		ebitenutil.DrawLine(img, end, y, end+head, y+3, color.RGBA{255, 255, 0, 255})
+	}
+}
+
+func (g *Game) updateThrowFrame() {
+	if g.throwTicks > 0 {
+		g.throwTicks--
+		if g.throwTicks == 0 {
+			g.gorillaFrame[g.thrower] = frameArmsDown
+		}
 	}
 }
 

@@ -7,6 +7,12 @@ const (
 	charH = 16
 )
 
+const (
+	frameArmsDown = iota
+	frameRightUp
+	frameLeftUp
+)
+
 // gorillaFrames represents the ASCII gorilla animation frames shared by
 // the intro movie and menu state.
 var gorillaFrames = [][]string{

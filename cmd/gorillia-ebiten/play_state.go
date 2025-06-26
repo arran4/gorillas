@@ -17,7 +17,19 @@ import (
 // playState implements the main gameplay loop.
 type playState struct{}
 
+func (g *Game) throw() {
+	if g.Current == 0 {
+		g.gorillaFrame[0] = frameRightUp
+	} else {
+		g.gorillaFrame[1] = frameLeftUp
+	}
+	g.thrower = g.Current
+	g.throwTicks = 2
+	g.Throw()
+}
+
 func (playState) Update(g *Game) error {
+	g.updateThrowFrame()
 	if g.abortPrompt {
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			switch k {
@@ -88,7 +100,7 @@ func (playState) Update(g *Game) error {
 						}
 						g.enteringPow = false
 						g.powerInput = ""
-						g.Throw()
+						g.throw()
 					}
 				case ebiten.KeyEscape:
 					if g.enteringAng || g.enteringPow {
@@ -154,7 +166,7 @@ func (playState) Update(g *Game) error {
 				g.Power -= 1
 			}
 			if ebiten.IsKeyPressed(ebiten.KeySpace) {
-				g.Throw()
+				g.throw()
 			}
 		} else {
 			if ebiten.IsKeyPressed(ebiten.KeyA) {
@@ -170,7 +182,7 @@ func (playState) Update(g *Game) error {
 				g.Power -= 1
 			}
 			if ebiten.IsKeyPressed(ebiten.KeyF) {
-				g.Throw()
+				g.throw()
 			}
 		}
 
@@ -191,11 +203,11 @@ func (playState) Update(g *Game) error {
 					g.Power -= 1
 				}
 				if inpututil.IsStandardGamepadButtonJustPressed(id, ebiten.StandardGamepadButtonRightBottom) {
-					g.Throw()
+					g.throw()
 				}
 			} else {
 				if inpututil.IsGamepadButtonJustPressed(id, ebiten.GamepadButton0) {
-					g.Throw()
+					g.throw()
 				}
 			}
 		}
