@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	sunRadius          = 20
+	sunRadius          = 20 * sunScale
 	sunMaxIntegrity    = 4
 	digitFinalizeDelay = 500 * time.Millisecond
 	digitBufferTimeout = 3 * time.Second
@@ -54,13 +54,13 @@ func (g *Game) drawSun(img *ebiten.Image) {
 	}
 	r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
 	drawFilledCircle(img, g.sunX, g.sunY, r, clr)
-	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
-	ebitenutil.DrawRect(img, g.sunX+3, g.sunY-4, 3, 3, color.Black)
+	ebitenutil.DrawRect(img, g.sunX-6*sunScale, g.sunY-4*sunScale, 3*sunScale, 3*sunScale, color.Black)
+	ebitenutil.DrawRect(img, g.sunX+3*sunScale, g.sunY-4*sunScale, 3*sunScale, 3*sunScale, color.Black)
 	if g.sunHitTicks > 0 {
-		drawFilledCircle(img, g.sunX, g.sunY+6, 5, color.Black)
-		drawFilledCircle(img, g.sunX, g.sunY+6, 3, clr)
+		drawFilledCircle(img, g.sunX, g.sunY+6*sunScale, 5*sunScale, color.Black)
+		drawFilledCircle(img, g.sunX, g.sunY+6*sunScale, 3*sunScale, clr)
 	} else {
-		ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+		ebitenutil.DrawRect(img, g.sunX-4*sunScale, g.sunY+4*sunScale, 8*sunScale, 2*sunScale, color.Black)
 	}
 }
 
