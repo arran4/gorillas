@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"os"
 	"sync"
 	"time"
 
@@ -21,6 +22,12 @@ var (
 )
 
 func initAudio() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "audio initialization failed: %v\n", r)
+			audioCtx = nil
+		}
+	}()
 	audioCtx = audio.NewContext(sampleRate)
 	n := sampleRate / 10
 	beepSample = make([]byte, n*4)
