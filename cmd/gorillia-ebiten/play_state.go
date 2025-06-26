@@ -1,3 +1,5 @@
+//go:build !test
+
 package main
 
 import (
@@ -169,6 +171,32 @@ func (playState) Update(g *Game) error {
 			}
 			if ebiten.IsKeyPressed(ebiten.KeyF) {
 				g.Throw()
+			}
+		}
+
+		g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
+		for _, id := range g.gamepads {
+			if ebiten.IsStandardGamepadLayoutAvailable(id) {
+				lx, ly := ebiten.StandardGamepadLayout(id).LeftStickPosition()
+				if lx < -0.2 {
+					g.Angle += 1
+				}
+				if lx > 0.2 {
+					g.Angle -= 1
+				}
+				if ly < -0.2 {
+					g.Power += 1
+				}
+				if ly > 0.2 {
+					g.Power -= 1
+				}
+				if inpututil.IsStandardGamepadButtonJustPressed(id, ebiten.StandardGamepadButtonRightBottom) {
+					g.Throw()
+				}
+			} else {
+				if inpututil.IsGamepadButtonJustPressed(id, ebiten.GamepadButton0) {
+					g.Throw()
+				}
 			}
 		}
 	} else {

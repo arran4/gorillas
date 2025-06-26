@@ -35,6 +35,7 @@ type Game struct {
 	resumeAng   bool
 	resumePow   bool
 	gorillaArt  [][]string
+	js          *joystick
 }
 
 const buildingWidth = 8
@@ -64,6 +65,9 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.sunX = g.Width - 4
 	g.sunY = 1
+	if js, err := openJoystick(); err == nil {
+		g.js = js
+	}
 	return g
 }
 
@@ -236,6 +240,25 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				g.sunHitTicks = 10
 			}
 			continue
+		}
+
+		if g.js != nil {
+			g.js.poll()
+			if g.js.axis[0] < -10000 {
+				g.Angle += 1
+			}
+			if g.js.axis[0] > 10000 {
+				g.Angle -= 1
+			}
+			if g.js.axis[1] < -10000 {
+				g.Power += 1
+			}
+			if g.js.axis[1] > 10000 {
+				g.Power -= 1
+			}
+			if g.js.btn[0] {
+				g.throw()
+			}
 		}
 
 		if ai && g.Current == 1 {

@@ -150,6 +150,7 @@ type Game struct {
 	gorillaImg  *ebiten.Image
 	gorillaArt  [][]string
 	State       State
+	gamepads    []ebiten.GamepadID
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -187,6 +188,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g.sunX = float64(g.Width) - 40
 	g.sunY = 40
 	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites()
+	g.gamepads = ebiten.AppendGamepadIDs(nil)
 	return g
 }
 
