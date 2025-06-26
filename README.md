@@ -9,7 +9,7 @@ Friday evening gorillas tournaments and beers form a cornerstone of GorillaStack
 * Optional wind fluctuations on each throw via `GORILLAS_WIND_FLUCT` setting
 * Optional winner's throw first via `-winnerfirst` flag or `GORILLAS_WINNER_FIRST` setting
 * BASIC-style wind each round via `GORILLAS_VARIABLE_WIND` setting
-* Option to save throw and replay 'Greatest Hits'
+* Save your best shots and replay them later from the new Replays menu
 
 
 ## Go Ports
@@ -65,6 +65,10 @@ go build -o gorillia-tcell ./cmd/gorillia-tcell
 # Play in the terminal with a computer opponent
 ./gorillia-tcell -ai
 ```
+
+### Replays
+
+Your best shots are now stored for later. Select "R - Replays" from the menu to watch any saved throws.
 
 ### Running Tests
 
