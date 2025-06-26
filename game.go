@@ -93,6 +93,7 @@ type Game struct {
 	ScoreFile     string
 	Wind          float64
 	BuildingCount int
+	Gravity       float64
 }
 
 const DefaultBuildingCount = 10
@@ -104,6 +105,7 @@ func NewGame(width, height, buildingCount int) *Game {
 	}
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount}
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	rand.Seed(time.Now().UnixNano())
 	g.Wind = float64(rand.Intn(21) - 10)
 	bw := float64(width) / float64(g.BuildingCount)
@@ -162,6 +164,7 @@ func (g *Game) Reset() {
 	file := g.ScoreFile
 	*g = *NewGame(g.Width, g.Height, g.BuildingCount)
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	g.Wins = wins
 	g.TotalWins = totals
 	g.ScoreFile = file

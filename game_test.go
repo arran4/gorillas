@@ -9,6 +9,7 @@ import (
 func newTestGame() *Game {
 	g := NewGame(100, 100, DefaultBuildingCount)
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	g.Wind = 0
 	return g
 }
@@ -100,6 +101,20 @@ func TestWindInfluencesVelocity(t *testing.T) {
 	expectedVX := initialVX + g.Wind/20
 	if !almostEqual(g.Banana.VX, expectedVX) {
 		t.Fatalf("expected vx %f got %f", expectedVX, g.Banana.VX)
+	}
+}
+
+func TestGravityInfluencesVelocity(t *testing.T) {
+	g := newTestGame()
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+	g.Gravity = 34
+
+	g.Throw()
+	g.Step()
+	if !almostEqual(g.Banana.VY, g.Gravity/34) {
+		t.Fatalf("expected vy %f got %f", g.Gravity/34, g.Banana.VY)
 	}
 }
 
