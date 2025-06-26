@@ -204,6 +204,10 @@ type Game struct {
 
 	// LastEvent records the outcome of the most recent shot.
 	LastEvent ShotEvent
+	// LastEventTicks counts down the display duration of LastEvent.
+	LastEventTicks int
+	// LastEventMsg stores the random message associated with LastEvent.
+	LastEventMsg string
 
 	lastStartX float64
 	lastOtherX float64
@@ -220,6 +224,7 @@ const defaultShotsFile = "gorillas_shots.json"
 const defaultLeagueFile = "gorillas.lge"
 const groundBounceFactor = 0.4
 const groundBounceThreshold = 5.0
+const eventDisplayTicks = 40
 
 func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
@@ -439,11 +444,20 @@ func (g *Game) Throw() {
 	g.Banana.VY = -math.Sin(radians) * speed
 	g.lastVX = g.Banana.VX
 	g.LastEvent = EventNone
+	g.LastEventTicks = 0
+	g.LastEventMsg = ""
 	g.Banana.Active = true
 }
 
 func (g *Game) Step() ShotEvent {
 	g.stepVictoryDance()
+	if g.LastEventTicks > 0 {
+		g.LastEventTicks--
+		if g.LastEventTicks == 0 {
+			g.LastEvent = EventNone
+			g.LastEventMsg = ""
+		}
+	}
 	if g.Explosion.Active {
 		if g.Explosion.Frame < len(g.Explosion.Radii)-1 {
 			g.Explosion.Frame++
@@ -512,6 +526,8 @@ func (g *Game) Step() ShotEvent {
 				winner = (shooter + 1) % 2
 				event = EventSelf
 				g.LastEvent = event
+				g.LastEventTicks = eventDisplayTicks
+				g.LastEventMsg = EventMessage(event)
 			}
 			g.Wins[winner]++
 			g.TotalWins[winner]++
@@ -572,6 +588,8 @@ func (g *Game) evaluateMiss() {
 	dxShot := g.Banana.X - g.lastStartX
 	if g.lastVX*dxToOther < 0 {
 		g.LastEvent = EventBackwards
+		g.LastEventTicks = eventDisplayTicks
+		g.LastEventMsg = EventMessage(EventBackwards)
 		if g.Settings.UseSound {
 			PlayBeep()
 		}
@@ -579,6 +597,8 @@ func (g *Game) evaluateMiss() {
 	}
 	if math.Abs(dxShot) < math.Abs(dxToOther)/3 {
 		g.LastEvent = EventWeak
+		g.LastEventTicks = eventDisplayTicks
+		g.LastEventMsg = EventMessage(EventWeak)
 		if g.Settings.UseSound {
 			PlayBeep()
 		}
