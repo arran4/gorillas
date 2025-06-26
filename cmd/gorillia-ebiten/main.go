@@ -149,7 +149,7 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	gamepads    []ebiten.GamepadID
+	gamepads     []ebiten.GamepadID
 	buildings    []building
 	sunX, sunY   float64
 	sunHitTicks  int
@@ -303,6 +303,14 @@ func main() {
 		panic(fmt.Errorf("run game: %w", err))
 	}
 	game.SaveScores()
+	if err := showStats(game.StatsString()); err != nil {
+		panic(fmt.Errorf("show stats: %w", err))
+	}
+	if game.League != nil {
+		if err := showLeague(game.League); err != nil {
+			panic(fmt.Errorf("show league: %w", err))
+		}
+	}
 	fmt.Println(game.StatsString())
 	showExtro()
 }
