@@ -251,3 +251,33 @@ func TestForceCGAHalvesExplosionRadius(t *testing.T) {
 		t.Fatalf("expected radius 10 got %f", g.Explosion.radii[1])
 	}
 }
+
+func TestVictoryDanceStartsOnHit(t *testing.T) {
+	g := newTestGame()
+	g.Angle = 45
+	g.Power = 100
+	g.Current = 0
+
+	startX := g.Gorillas[0].X
+	startY := g.Gorillas[0].Y
+	vx := math.Cos(g.Angle*math.Pi/180) * (g.Power / 2)
+	vy := -math.Sin(g.Angle*math.Pi/180) * (g.Power / 2)
+	g.Gorillas[1] = Gorilla{X: startX + vx, Y: startY + vy}
+
+	g.Throw()
+	g.Step()
+	if !g.Dance.Active || g.Dance.idx != 0 {
+		t.Fatal("victory dance should start for player 1")
+	}
+	baseY := g.Dance.baseY
+	g.Step()
+	if g.Gorillas[0].Y == baseY {
+		t.Fatalf("expected gorilla Y to change during dance")
+	}
+	for g.Dance.Active {
+		g.Step()
+	}
+	if g.Gorillas[0].Y != baseY {
+		t.Fatalf("gorilla should return to base position")
+	}
+}
