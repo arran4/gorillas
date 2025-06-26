@@ -58,6 +58,16 @@ go build -o gorillia-tcell ./cmd/gorillia-tcell
 ./gorillia-tcell -ai
 ```
 
+### Running Tests
+
+The core library depends on Ebiten for sound effects, which requires system
+libraries that may not be available in all environments. When running tests you
+can use stub implementations to avoid these dependencies:
+
+```bash
+go test -tags test ./...
+```
+
 ### Known limitations
 
 - The Ebiten version currently has no computer controlled opponent.
