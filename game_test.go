@@ -9,6 +9,7 @@ import (
 func newTestGame() *Game {
 	g := &Game{Width: 100, Height: 100}
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	g.Wind = 0
 	bw := float64(g.Width) / BuildingCount
 	for i := 0; i < BuildingCount; i++ {
@@ -51,7 +52,7 @@ func TestBananaTrajectoryAndOutOfBounds(t *testing.T) {
 	if !almostEqual(g.Banana.X, startX+vx) || !almostEqual(g.Banana.Y, startY+vy) {
 		t.Fatalf("unexpected position after first step: (%f,%f)", g.Banana.X, g.Banana.Y)
 	}
-	if !almostEqual(g.Banana.VY, vy+0.5) {
+	if !almostEqual(g.Banana.VY, vy+g.Gravity/34) {
 		t.Fatalf("unexpected vy after first step: %f", g.Banana.VY)
 	}
 	if !g.Banana.Active {
@@ -105,6 +106,20 @@ func TestWindInfluencesVelocity(t *testing.T) {
 	expectedVX := initialVX + g.Wind/20
 	if !almostEqual(g.Banana.VX, expectedVX) {
 		t.Fatalf("expected vx %f got %f", expectedVX, g.Banana.VX)
+	}
+}
+
+func TestGravityInfluencesVelocity(t *testing.T) {
+	g := newTestGame()
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+	g.Gravity = 34
+
+	g.Throw()
+	g.Step()
+	if !almostEqual(g.Banana.VY, g.Gravity/34) {
+		t.Fatalf("expected vy %f got %f", g.Gravity/34, g.Banana.VY)
 	}
 }
 
@@ -177,7 +192,7 @@ func TestExplosionProgressAndReset(t *testing.T) {
 	g.Step()
 	if g.Explosion.Active {
 		t.Fatal("explosion should finish and deactivate")
-  }
+	}
 }
 
 func TestSaveAndLoadScores(t *testing.T) {
