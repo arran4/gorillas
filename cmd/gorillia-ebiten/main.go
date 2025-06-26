@@ -206,7 +206,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		}
 		g.buildings = append(g.buildings, b)
 	}
-	g.sunX = float64(g.Width) - 40
+	// centre the sun horizontally
+	g.sunX = float64(g.Width) / 2
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
