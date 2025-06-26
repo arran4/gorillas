@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/arran4/gorillas"
@@ -168,6 +169,81 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 	}
 }
 
+// setupScreen presents an interactive form allowing the player names,
+// round count and gravity to be edited. It returns the updated values
+// once the user presses Escape to start the game.
+func setupScreen(s tcell.Screen, p1, p2 string, rounds int, gravity float64) (string, string, int, float64, bool) {
+	fields := []string{p1, p2, strconv.Itoa(rounds), fmt.Sprintf("%.0f", gravity)}
+	cur := 0
+	editing := false
+	for {
+		s.Clear()
+		_, h := s.Size()
+		baseY := h/2 - 2
+		drawString(s, 2, baseY-2, "Game Setup (Esc to start)")
+		labels := []string{"Player 1:", "Player 2:", "Rounds:", "Gravity:"}
+		for i, lbl := range labels {
+			style := tcell.StyleDefault
+			if i == cur {
+				style = style.Reverse(true)
+			}
+			line := fmt.Sprintf("%s %s", lbl, fields[i])
+			for x, r := range line {
+				s.SetContent(2+x, baseY+i, r, nil, style)
+			}
+		}
+		s.Show()
+
+		ev := s.PollEvent()
+		if key, ok := ev.(*tcell.EventKey); ok {
+			if editing {
+				switch key.Key() {
+				case tcell.KeyEnter:
+					editing = false
+				case tcell.KeyEsc:
+					editing = false
+				case tcell.KeyBackspace, tcell.KeyBackspace2:
+					if len(fields[cur]) > 0 {
+						fields[cur] = fields[cur][:len(fields[cur])-1]
+					}
+				default:
+					if key.Rune() != 0 {
+						if cur >= 2 {
+							if key.Rune() >= '0' && key.Rune() <= '9' {
+								fields[cur] += string(key.Rune())
+							}
+						} else {
+							fields[cur] += string(key.Rune())
+						}
+					}
+				}
+				continue
+			}
+
+			switch key.Key() {
+			case tcell.KeyEsc:
+				r, _ := strconv.Atoi(fields[2])
+				g, _ := strconv.ParseFloat(fields[3], 64)
+				return fields[0], fields[1], r, g, true
+			case tcell.KeyCtrlC:
+				r, _ := strconv.Atoi(fields[2])
+				g, _ := strconv.ParseFloat(fields[3], 64)
+				return fields[0], fields[1], r, g, false
+			case tcell.KeyUp:
+				if cur > 0 {
+					cur--
+				} else {
+					cur = len(fields) - 1
+				}
+			case tcell.KeyDown, tcell.KeyTab:
+				cur = (cur + 1) % len(fields)
+			case tcell.KeyEnter:
+				editing = true
+			}
+		}
+	}
+}
+
 func main() {
 	s, err := tcell.NewScreen()
 	if err != nil {
@@ -201,6 +277,14 @@ func main() {
 		return
 	}
 
+	var ok bool
+	*p1, *p2, *rounds, *gravity, ok = setupScreen(s, *p1, *p2, *rounds, *gravity)
+	if !ok {
+		return
+	}
+	settings.DefaultGravity = *gravity
+	settings.DefaultRoundQty = *rounds
+
 	g := newGame(settings, *buildings, *wind)
 	g.Players = [2]string{*p1, *p2}
 	if err := g.run(s, *ai); err != nil {
@@ -209,4 +293,5 @@ func main() {
 	g.SaveScores()
 	showStats(s, g.StatsString())
 	fmt.Println(g.StatsString())
+	showExtro(s)
 }
