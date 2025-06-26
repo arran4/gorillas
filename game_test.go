@@ -193,18 +193,18 @@ func TestSecondPlayerThrowDirection(t *testing.T) {
 func TestExplosionProgressAndReset(t *testing.T) {
 	g := newTestGame()
 	g.startGorillaExplosion(0)
-	g.Explosion.radii = []float64{1, 2}
+	g.Explosion.Radii = []float64{1, 2}
 	if !g.Explosion.Active {
 		t.Fatal("explosion should start active")
 	}
 
-	if g.Explosion.frame != 0 {
-		t.Fatalf("initial explosion frame should be 0, got %d", g.Explosion.frame)
+	if g.Explosion.Frame != 0 {
+		t.Fatalf("initial explosion Frame should be 0, got %d", g.Explosion.Frame)
 	}
 
 	g.Step()
-	if g.Explosion.frame != 1 {
-		t.Fatalf("explosion frame should advance, got %d", g.Explosion.frame)
+	if g.Explosion.Frame != 1 {
+		t.Fatalf("explosion Frame should advance, got %d", g.Explosion.Frame)
 	}
 
 	g.Step()
@@ -244,11 +244,11 @@ func TestForceCGAHalvesExplosionRadius(t *testing.T) {
 	g.Settings.ForceCGA = true
 	g.Settings.NewExplosionRadius = 20
 	g.startGorillaExplosion(0)
-	if len(g.Explosion.radii) < 2 {
+	if len(g.Explosion.Radii) < 2 {
 		t.Fatal("not enough explosion frames")
 	}
-	if g.Explosion.radii[1] != 10 {
-		t.Fatalf("expected radius 10 got %f", g.Explosion.radii[1])
+	if g.Explosion.Radii[1] != 10 {
+		t.Fatalf("expected radius 10 got %f", g.Explosion.Radii[1])
 	}
 }
 

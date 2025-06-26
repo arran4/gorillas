@@ -88,7 +88,7 @@ func (g *Game) draw() {
 		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), 'o', nil, tcell.StyleDefault)
 	}
 	if g.Explosion.Active {
-		r := int(g.Explosion.radii[g.Explosion.frame])
+		r := int(g.Explosion.Radii[g.Explosion.frame])
 		ex := int(g.Explosion.X)
 		ey := int(g.Explosion.Y)
 		for dx := -r; dx <= r; dx++ {

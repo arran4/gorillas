@@ -38,8 +38,8 @@ type Settings struct {
 
 type Explosion struct {
 	X, Y   float64
-	radii  []float64
-	frame  int
+	Radii  []float64
+	Frame  int
 	Active bool
 }
 
@@ -229,13 +229,13 @@ func (g *Game) startGorillaExplosion(idx int) {
 	g.Explosion = Explosion{X: g.Gorillas[idx].X, Y: g.Gorillas[idx].Y}
 	if g.Settings.UseOldExplosions {
 		for i := 1; i <= int(base); i++ {
-			g.Explosion.radii = append(g.Explosion.radii, float64(i))
+			g.Explosion.Radii = append(g.Explosion.Radii, float64(i))
 		}
 		for i := int(base * 1.5); i >= 1; i-- {
-			g.Explosion.radii = append(g.Explosion.radii, float64(i))
+			g.Explosion.Radii = append(g.Explosion.Radii, float64(i))
 		}
 	} else {
-		g.Explosion.radii = append(g.Explosion.radii, base*1.175, base, base*0.9, base*0.6, base*0.45, 0)
+		g.Explosion.Radii = append(g.Explosion.Radii, base*1.175, base, base*0.9, base*0.6, base*0.45, 0)
 	}
 	g.Explosion.Active = true
 }
@@ -292,8 +292,8 @@ func (g *Game) Throw() {
 func (g *Game) Step() {
 	g.stepVictoryDance()
 	if g.Explosion.Active {
-		if g.Explosion.frame < len(g.Explosion.radii)-1 {
-			g.Explosion.frame++
+		if g.Explosion.Frame < len(g.Explosion.Radii)-1 {
+			g.Explosion.Frame++
 		} else {
 			g.Explosion.Active = false
 			cur := g.Current

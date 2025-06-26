@@ -1,6 +1,7 @@
 package gorillas
 
 import (
+	"bufio"
 	"os"
 	"strconv"
 	"strings"

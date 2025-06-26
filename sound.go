@@ -37,7 +37,10 @@ func initAudio() {
 func PlayBeep() {
 	audioOnce.Do(initAudio)
 	if audioCtx != nil {
-		p := audioCtx.NewPlayer(bytes.NewReader(beepSample))
+		p, err := audioCtx.NewPlayer(bytes.NewReader(beepSample))
+		if err != nil {
+			panic(err)
+		}
 		p.Play()
 	} else {
 		fmt.Print("\a")
