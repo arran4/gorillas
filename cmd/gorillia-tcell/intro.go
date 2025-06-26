@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/arran4/gorillas"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -36,7 +37,7 @@ func drawGorillaFrame(s tcell.Screen, x, y int, frame []string) {
 	}
 }
 
-func showIntroMovie(s tcell.Screen) {
+func showIntroMovie(s tcell.Screen, useSound bool) {
 	w, h := s.Size()
 	lines := []string{
 		"QBasic GORILLAS",
@@ -48,6 +49,9 @@ func showIntroMovie(s tcell.Screen) {
 		drawString(s, (w-len(line))/2, h/2-1+i, line)
 	}
 	s.Show()
+	if useSound {
+		gorillas.PlayIntroMusic()
+	}
 	time.Sleep(1500 * time.Millisecond)
 	for i := 0; i < 4; i++ {
 		drawGorillaFrame(s, w/2-10, h/2+2, gorillaFrames[i%len(gorillaFrames)])
@@ -58,7 +62,7 @@ func showIntroMovie(s tcell.Screen) {
 	time.Sleep(700 * time.Millisecond)
 }
 
-func introScreen(s tcell.Screen) bool {
+func introScreen(s tcell.Screen, useSound bool) bool {
 	w, h := s.Size()
 	cx := w/2 - 10
 	cy := h/2 - 2
@@ -87,7 +91,7 @@ func introScreen(s tcell.Screen) bool {
 			case 'p', 'P':
 				return true
 			case 'v', 'V':
-				showIntroMovie(s)
+				showIntroMovie(s, useSound)
 			}
 		}
 	}

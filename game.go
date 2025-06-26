@@ -21,6 +21,7 @@ type Banana struct {
 }
 
 type Settings struct {
+	UseSound           bool
 	UseOldExplosions   bool
 	NewExplosionRadius float64
 }
@@ -33,7 +34,7 @@ type Explosion struct {
 }
 
 func DefaultSettings() Settings {
-	return Settings{NewExplosionRadius: 40}
+	return Settings{UseSound: true, NewExplosionRadius: 40}
 }
 
 type Game struct {
@@ -117,6 +118,9 @@ func (g *Game) startGorillaExplosion(idx int) {
 	if base <= 0 {
 		base = 16
 	}
+	if g.Settings.UseSound {
+		PlayBeep()
+	}
 	g.Explosion = Explosion{X: g.Gorillas[idx].X, Y: g.Gorillas[idx].Y}
 	if g.Settings.UseOldExplosions {
 		for i := 1; i <= int(base); i++ {
@@ -132,6 +136,9 @@ func (g *Game) startGorillaExplosion(idx int) {
 }
 
 func (g *Game) Throw() {
+	if g.Settings.UseSound {
+		PlayBeep()
+	}
 	start := g.Gorillas[g.Current]
 	radians := g.Angle * math.Pi / 180
 	speed := g.Power / 2

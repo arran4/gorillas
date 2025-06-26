@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math"
 	"math/rand"
@@ -25,8 +26,9 @@ type Game struct {
 
 const buildingWidth = 8
 
-func newGame() *Game {
+func newGame(settings gorillas.Settings) *Game {
 	g := &Game{Game: gorillas.NewGame(80, 24)}
+	g.Game.Settings = settings
 	rand.Seed(time.Now().UnixNano())
 	for _, b := range g.Buildings {
 		var wins []int
@@ -168,11 +170,15 @@ func main() {
 	}
 	defer s.Fini()
 
-	if !introScreen(s) {
+	settings := gorillas.LoadSettings()
+	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
+	flag.Parse()
+
+	if !introScreen(s, settings.UseSound) {
 		return
 	}
 
-	g := newGame()
+	g := newGame(settings)
 	if err := g.run(s); err != nil {
 		panic(err)
 	}

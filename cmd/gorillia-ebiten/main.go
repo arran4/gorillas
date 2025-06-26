@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image/color"
 	"math/rand"
@@ -36,8 +37,9 @@ type Game struct {
 	buildings []building
 }
 
-func newGame() *Game {
+func newGame(settings gorillas.Settings) *Game {
 	g := &Game{Game: gorillas.NewGame(800, 600)}
+	g.Game.Settings = settings
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / gorillas.BuildingCount
 	for i := 0; i < gorillas.BuildingCount; i++ {
@@ -129,7 +131,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func main() {
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Gorillas Ebiten")
-	game := newGame()
+	settings := gorillas.LoadSettings()
+	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
+	flag.Parse()
+	game := newGame(settings)
 	if err := ebiten.RunGame(game); err != nil {
 		panic(err)
 	}
