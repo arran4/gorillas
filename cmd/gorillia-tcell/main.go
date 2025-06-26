@@ -171,6 +171,9 @@ func (g *Game) draw() {
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
 		drawString(g.screen, (g.Width-len(msg))/2, 1, msg)
+	} else if g.LastEvent != gorillas.EventNone {
+		msg := gorillas.EventMessage(g.LastEvent)
+		drawString(g.screen, (g.Width-len(msg))/2, g.Height/3, msg)
 	}
 	g.screen.Show()
 }
