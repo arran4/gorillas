@@ -211,7 +211,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		}
 		g.buildings = append(g.buildings, b)
 	}
-	g.sunX = float64(g.Width) - 40
+	// centre the sun horizontally
+	g.sunX = float64(g.Width) / 2
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
@@ -239,22 +240,25 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 	if g.gorillaImg != nil {
 		op := &ebiten.DrawImageOptions{}
 		w, h := g.gorillaImg.Size()
-		op.GeoM.Translate(g.Gorillas[idx].X-float64(w)/2, g.Gorillas[idx].Y-float64(h))
+		op.GeoM.Scale(gorillaScale, gorillaScale)
+		op.GeoM.Translate(g.Gorillas[idx].X-float64(w)*gorillaScale/2, g.Gorillas[idx].Y-float64(h)*gorillaScale)
 		img.DrawImage(g.gorillaImg, op)
 		return
 	}
 	if len(g.gorillaArt) == 0 {
 		gr := g.Gorillas[idx]
-		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
+		ebitenutil.DrawRect(img, gr.X-5*gorillaScale, gr.Y-10*gorillaScale, 10*gorillaScale, 10*gorillaScale, color.RGBA{255, 0, 0, 255})
 		return
 	}
 	frame := g.gorillaArt[0]
-	baseX := int(g.Gorillas[idx].X) - len(frame[0])/2
-	baseY := int(g.Gorillas[idx].Y) - len(frame)
+	baseX := int(g.Gorillas[idx].X) - len(frame[0])*gorillaScale/2
+	baseY := int(g.Gorillas[idx].Y) - len(frame)*gorillaScale
 	for dy, line := range frame {
 		for dx, ch := range line {
 			if ch != ' ' {
-				ebitenutil.DrawRect(img, float64(baseX+dx), float64(baseY+dy), 1, 1, color.RGBA{255, 0, 0, 255})
+				x := float64(baseX + dx*gorillaScale)
+				y := float64(baseY + dy*gorillaScale)
+				ebitenutil.DrawRect(img, x, y, gorillaScale, gorillaScale, color.RGBA{255, 0, 0, 255})
 			}
 		}
 	}

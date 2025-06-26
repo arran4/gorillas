@@ -7,6 +7,8 @@ package main
 const (
 	charW = 6
 	charH = 16
+	// gorillaScale controls how large the gorilla sprite appears in game
+	gorillaScale = 4
 )
 
 // gorillaFrames represents the ASCII gorilla animation frames shared by
