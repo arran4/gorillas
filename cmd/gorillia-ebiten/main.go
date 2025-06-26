@@ -149,7 +149,7 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	gamepads    []ebiten.GamepadID
+	gamepads     []ebiten.GamepadID
 	buildings    []building
 	sunX, sunY   float64
 	sunHitTicks  int
@@ -167,6 +167,7 @@ type Game struct {
 	bananaDown   *ebiten.Image
 	gorillaImg   *ebiten.Image
 	gorillaArt   [][]string
+	AI           bool
 	State        State
 }
 
@@ -287,12 +288,14 @@ func main() {
 	buildings := flag.Int("buildings", gorillas.DefaultBuildingCount, "building count")
 	p1 := flag.String("player1", "Player 1", "name of player 1")
 	p2 := flag.String("player2", "Player 2", "name of player 2")
+	ai := flag.Bool("ai", false, "enable computer opponent")
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
 	flag.BoolVar(&settings.WinnerFirst, "winnerfirst", settings.WinnerFirst, "winner starts next round")
 	flag.Parse()
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
 	game := newGame(settings, *buildings, *wind)
+	game.AI = *ai
 	game.Players = [2]string{*p1, *p2}
 	if settings.ShowIntro {
 		game.State = newIntroMovieState(settings.UseSound, settings.UseSlidingText)
