@@ -15,6 +15,16 @@ type window struct {
 	x, y, w, h float64
 }
 
+func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
+	for dx := -r; dx <= r; dx++ {
+		for dy := -r; dy <= r; dy++ {
+			if dx*dx+dy*dy <= r*r {
+				ebitenutil.DrawRect(img, cx+dx, cy+dy, 1, 1, clr)
+			}
+		}
+	}
+}
+
 type building struct {
 	x, w, h float64
 	color   color.Color
@@ -51,7 +61,7 @@ func newGame() *Game {
 }
 
 func (g *Game) Update() error {
-	if !g.Banana.Active {
+	if !g.Banana.Active && !g.Explosion.Active {
 		if g.Current == 0 {
 			if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 				g.Angle += 1
@@ -105,6 +115,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	if g.Banana.Active {
 		ebitenutil.DrawRect(screen, g.Banana.X-2, g.Banana.Y-2, 4, 4, color.RGBA{255, 255, 0, 255})
+	}
+	if g.Explosion.Active {
+		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.radii[g.Explosion.frame], color.RGBA{255, 255, 0, 255})
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f P%d %d-%d", g.Angle, g.Power, g.Current+1, g.Wins[0], g.Wins[1]))
 }
