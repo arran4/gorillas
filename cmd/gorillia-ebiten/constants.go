@@ -17,13 +17,6 @@ const (
 	sunScale    = gorillaScale
 )
 
-// Constants describing the gorilla arm positions when drawing.
-const (
-	armsRightUp = 1
-	armsLeftUp  = 2
-	armsDown    = 3
-)
-
 // gorillaFrames represents the ASCII gorilla animation frames shared by
 // the intro movie and menu state.
 var gorillaFrames = [][]string{
