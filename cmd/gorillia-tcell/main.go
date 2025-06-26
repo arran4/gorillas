@@ -362,10 +362,10 @@ func main() {
 	s, err := tcell.NewScreen()
 	if err != nil {
 		log.Printf("Error: %s", err.Error())
-		panic(err)
+		panic(fmt.Errorf("new screen: %w", err))
 	}
 	if err = s.Init(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("screen init: %w", err))
 	}
 	defer s.Fini()
 
@@ -404,7 +404,7 @@ func main() {
 	g.Players = [2]string{*p1, *p2}
 	g.League = league
 	if err := g.run(s, *ai); err != nil {
-		panic(err)
+		panic(fmt.Errorf("run game: %w", err))
 	}
 	g.SaveScores()
 	showStats(s, g.StatsString())

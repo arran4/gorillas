@@ -232,7 +232,7 @@ func main() {
 	game := newGame(settings, *buildings, *wind)
 	game.Players = [2]string{*p1, *p2}
 	if err := ebiten.RunGame(&wrapper{intro: ig, main: game}); err != nil {
-		panic(err)
+		panic(fmt.Errorf("run game: %w", err))
 	}
 	game.SaveScores()
 	showStats(game.StatsString())
