@@ -83,6 +83,9 @@ func (g *Game) SaveScores() {
 func (g *Game) StatsString() string {
 	session := fmt.Sprintf("Session - P1:%d P2:%d", g.Wins[0], g.Wins[1])
 	total := fmt.Sprintf("Overall - P1:%d P2:%d", g.TotalWins[0], g.TotalWins[1])
+	if g.League != nil {
+		return session + "\n" + total + "\n\n" + g.League.String()
+	}
 	return session + "\n" + total
 }
 
@@ -98,6 +101,9 @@ type Game struct {
 	Current       int
 	Wins          [2]int
 	TotalWins     [2]int
+	Shots         [2]int
+	Players       [2]string
+	League        *League
 	ScoreFile     string
 	Wind          float64
 	BuildingCount int
@@ -106,12 +112,15 @@ type Game struct {
 
 const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
+const defaultLeagueFile = "gorillas.lge"
 
 func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
 		buildingCount = DefaultBuildingCount
 	}
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount}
+	g.League = LoadLeague(defaultLeagueFile)
+	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
 	rand.Seed(time.Now().UnixNano())
@@ -170,12 +179,16 @@ func (g *Game) Reset() {
 	wins := g.Wins
 	totals := g.TotalWins
 	file := g.ScoreFile
+	players := g.Players
+	league := g.League
 	*g = *NewGame(g.Width, g.Height, g.BuildingCount)
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
 	g.Wins = wins
 	g.TotalWins = totals
 	g.ScoreFile = file
+	g.Players = players
+	g.League = league
 }
 
 func (g *Game) startGorillaExplosion(idx int) {
@@ -207,6 +220,7 @@ func (g *Game) Throw() {
 	if g.Settings.UseSound {
 		PlayBeep()
 	}
+	g.Shots[g.Current]++
 	start := g.Gorillas[g.Current]
 	radians := g.Angle * math.Pi / 180
 	speed := g.Power / 2
@@ -257,6 +271,11 @@ func (g *Game) Step() {
 			g.Banana.Active = false
 			g.Wins[g.Current]++
 			g.TotalWins[g.Current]++
+			if g.League != nil {
+				g.League.RecordRound(g.Players[0], g.Players[1], g.Current, g.Shots[g.Current])
+				g.League.Save()
+			}
+			g.Shots = [2]int{}
 			g.SaveScores()
 			g.startGorillaExplosion(i)
 			return
