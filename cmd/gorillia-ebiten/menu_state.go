@@ -28,7 +28,10 @@ func (m *menuState) Update(g *Game) error {
 	now := time.Now()
 	switch m.stage {
 	case 0:
-		if now.After(m.next) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			m.stage = 1
+			m.frame = 0
+		} else if now.After(m.next) {
 			m.frame++
 			m.next = now.Add(300 * time.Millisecond)
 			if m.frame >= 4 {

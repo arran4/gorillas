@@ -161,7 +161,10 @@ func (g *introScreenGame) Update() error {
 	now := time.Now()
 	switch g.stage {
 	case 0:
-		if now.After(g.next) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			g.stage = 1
+			g.frame = 0
+		} else if now.After(g.next) {
 			g.frame++
 			g.next = now.Add(300 * time.Millisecond)
 			if g.frame >= 4 {
