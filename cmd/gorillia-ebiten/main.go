@@ -66,7 +66,12 @@ func (g *Game) drawSun(img *ebiten.Image) {
 	drawFilledCircle(img, g.sunX, g.sunY, sunRadius, clr)
 	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
 	ebitenutil.DrawRect(img, g.sunX+3, g.sunY-4, 3, 3, color.Black)
-	ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+	if g.sunHitTicks > 0 {
+		drawFilledCircle(img, g.sunX, g.sunY+6, 5, color.Black)
+		drawFilledCircle(img, g.sunX, g.sunY+6, 3, clr)
+	} else {
+		ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+	}
 }
 
 type building struct {
