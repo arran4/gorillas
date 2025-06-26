@@ -32,6 +32,7 @@ type Settings struct {
 	DefaultRoundQty    int
 	ShowIntro          bool
 	ForceCGA           bool
+	WinnerFirst        bool
 }
 
 type Explosion struct {
@@ -50,6 +51,7 @@ func DefaultSettings() Settings {
 		DefaultRoundQty:    4,
 		ShowIntro:          true,
 		ForceCGA:           false,
+		WinnerFirst:        false,
 	}
 }
 
@@ -227,7 +229,11 @@ func (g *Game) Step() {
 			g.Explosion.Active = false
 			cur := g.Current
 			g.Reset()
-			g.Current = cur
+			if g.Settings.WinnerFirst {
+				g.Current = cur
+			} else {
+				g.Current = (cur + 1) % 2
+			}
 		}
 		return
 	}

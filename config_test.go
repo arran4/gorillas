@@ -17,7 +17,8 @@ func TestLoadSettingsFile(t *testing.T) {
 		"DefaultRoundQty=7\n" +
 		"UseSlidingText=yes\n" +
 		"ShowIntro=no\n" +
-		"ForceCGA=yes\n")
+		"ForceCGA=yes\n" +
+		"WinnerFirst=yes\n")
 	if err := os.WriteFile(ini, data, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -46,5 +47,8 @@ func TestLoadSettingsFile(t *testing.T) {
 	}
 	if !s.ForceCGA {
 		t.Errorf("expected ForceCGA=true")
+  }
+	if !s.WinnerFirst {
+		t.Errorf("expected WinnerFirst=true")
 	}
 }

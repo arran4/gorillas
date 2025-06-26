@@ -120,6 +120,7 @@ func TestGravityInfluencesVelocity(t *testing.T) {
 
 func TestGorillaHitIncrementsWin(t *testing.T) {
 	g := newTestGame()
+	g.Settings.WinnerFirst = true
 	g.Angle = 45
 	g.Power = 100
 	g.Current = 0
@@ -153,6 +154,28 @@ func TestGorillaHitIncrementsWin(t *testing.T) {
 	}
 	if g.Wins[0] != 1 {
 		t.Fatalf("wins should persist after reset, got %v", g.Wins)
+	}
+}
+
+func TestWinnerFirstDisabled(t *testing.T) {
+	g := newTestGame()
+	g.Angle = 45
+	g.Power = 100
+	g.Current = 0
+
+	startX := g.Gorillas[0].X
+	startY := g.Gorillas[0].Y
+	vx := math.Cos(g.Angle*math.Pi/180) * (g.Power / 2)
+	vy := -math.Sin(g.Angle*math.Pi/180) * (g.Power / 2)
+	g.Gorillas[1] = Gorilla{X: startX + vx, Y: startY + vy}
+
+	g.Throw()
+	g.Step()
+	for g.Explosion.Active {
+		g.Step()
+	}
+	if g.Current != 1 {
+		t.Fatalf("current should switch to player 2 when WinnerFirst is off, got %d", g.Current)
 	}
 }
 

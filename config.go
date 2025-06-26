@@ -19,6 +19,7 @@ import (
 //	GORILLAS_SLIDING_TEXT - 'true' to enable sliding text effects.
 //	GORILLAS_SHOW_INTRO - 'true' to display the intro sequence.
 //	GORILLAS_FORCE_CGA - 'true' to force CGA mode graphics.
+//	     GORILLAS_WINNER_FIRST - 'true' if round winner starts the next round.
 func loadSettingsFile(path string, s *Settings) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -89,6 +90,13 @@ func loadSettingsFile(path string, s *Settings) {
 				s.ForceCGA = true
 			} else if strings.EqualFold(val, "NO") {
 				s.ForceCGA = false
+		case "WINNERFIRST":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.WinnerFirst = b
+			} else if strings.EqualFold(val, "YES") {
+				s.WinnerFirst = true
+			} else if strings.EqualFold(val, "NO") {
+				s.WinnerFirst = false
 			}
 		}
 	}
@@ -135,6 +143,11 @@ func LoadSettings() Settings {
 	if v, ok := os.LookupEnv("GORILLAS_FORCE_CGA"); ok {
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.ForceCGA = b
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_WINNER_FIRST"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.WinnerFirst = b
 		}
 	}
 	return s
