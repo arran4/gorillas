@@ -8,6 +8,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -20,6 +21,37 @@ import (
 type playState struct{}
 
 func (playState) Update(g *Game) error {
+	now := time.Now()
+	if g.enteringAng && g.angleInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
+		if strings.HasPrefix(g.angleInput, "*") {
+			g.Angle = g.LastAngle[g.Current]
+		} else if v, err := strconv.Atoi(g.angleInput); err == nil {
+			if v < 0 {
+				v = 0
+			} else if v > 360 {
+				v = 360
+			}
+			g.Angle = float64(v)
+		}
+		g.enteringAng = false
+		g.angleInput = ""
+		g.enteringPow = true
+	}
+	if g.enteringPow && g.powerInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
+		if strings.HasPrefix(g.powerInput, "*") {
+			g.Power = g.LastPower[g.Current]
+		} else if v, err := strconv.Atoi(g.powerInput); err == nil {
+			if v < 0 {
+				v = 0
+			} else if v > 200 {
+				v = 200
+			}
+			g.Power = float64(v)
+		}
+		g.enteringPow = false
+		g.powerInput = ""
+		g.Throw()
+	}
 	if g.abortPrompt {
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			switch k {
@@ -47,26 +79,69 @@ func (playState) Update(g *Game) error {
 			return nil
 		}
 		if g.enteringAng || g.enteringPow {
+			now := time.Now()
 			for _, r := range ebiten.AppendInputChars(nil) {
-				if r == '*' {
+                               if r == '*' {
 					if g.enteringAng && len(g.angleInput) == 0 {
 						g.angleInput = "*"
 					} else if g.enteringPow && len(g.powerInput) == 0 {
 						g.powerInput = "*"
 					}
+					g.lastDigit = now
 					continue
 				}
-				if r >= '0' && r <= '9' {
-					if g.enteringAng && len(g.angleInput) < 3 {
-						g.angleInput += string(r)
-					} else if g.enteringPow && len(g.powerInput) < 3 {
-						g.powerInput += string(r)
+                               if r == ',' {
+                                       if g.enteringAng {
+                                               if strings.HasPrefix(g.angleInput, "*") {
+                                                       g.Angle = g.LastAngle[g.Current]
+                                               } else if v, err := strconv.Atoi(g.angleInput); err == nil {
+                                                       if v < 0 {
+                                                               v = 0
+                                                       } else if v > 360 {
+                                                               v = 360
+                                                       }
+                                                       g.Angle = float64(v)
+                                               }
+                                               g.enteringAng = false
+                                               g.angleInput = ""
+                                               g.enteringPow = true
+                                       } else if g.enteringPow {
+                                               if strings.HasPrefix(g.powerInput, "*") {
+                                                       g.Power = g.LastPower[g.Current]
+                                               } else if v, err := strconv.Atoi(g.powerInput); err == nil {
+                                                       if v < 0 {
+                                                               v = 0
+                                                       } else if v > 200 {
+                                                               v = 200
+                                                       }
+                                                       g.Power = float64(v)
+                                               }
+                                               g.enteringPow = false
+                                               g.powerInput = ""
+                                               g.Throw()
+                                       }
+                                       continue
+                               }
+                               if r >= '0' && r <= '9' {
+					if now.Sub(g.lastDigit) > digitBufferTimeout {
+						if g.enteringAng {
+							g.angleInput = string(r)
+						} else {
+							g.powerInput = string(r)
+						}
+					} else {
+						if g.enteringAng && len(g.angleInput) < 3 {
+							g.angleInput += string(r)
+						} else if g.enteringPow && len(g.powerInput) < 3 {
+							g.powerInput += string(r)
+						}
 					}
+					g.lastDigit = now
 				}
 			}
 			for _, k := range inpututil.AppendJustPressedKeys(nil) {
-				switch k {
-				case ebiten.KeyEnter:
+                               switch k {
+                                case ebiten.KeyEnter, ebiten.KeyComma:
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
 							g.Angle = g.LastAngle[g.Current]
@@ -117,11 +192,20 @@ func (playState) Update(g *Game) error {
 				default:
 					if k >= ebiten.Key0 && k <= ebiten.Key9 {
 						r := '0' + rune(k-ebiten.Key0)
-						if g.enteringAng && len(g.angleInput) < 3 {
-							g.angleInput += string(r)
-						} else if g.enteringPow && len(g.powerInput) < 3 {
-							g.powerInput += string(r)
+						if now.Sub(g.lastDigit) > digitBufferTimeout {
+							if g.enteringAng {
+								g.angleInput = string(r)
+							} else {
+								g.powerInput = string(r)
+							}
+						} else {
+							if g.enteringAng && len(g.angleInput) < 3 {
+								g.angleInput += string(r)
+							} else if g.enteringPow && len(g.powerInput) < 3 {
+								g.powerInput += string(r)
+							}
 						}
+						g.lastDigit = now
 					}
 				}
 			}
@@ -131,11 +215,13 @@ func (playState) Update(g *Game) error {
 			if r == '*' {
 				g.enteringAng = true
 				g.angleInput = "*"
+				g.lastDigit = time.Now()
 				return nil
 			}
 			if r >= '0' && r <= '9' {
 				g.enteringAng = true
 				g.angleInput = string(r)
+				g.lastDigit = time.Now()
 				return nil
 			}
 		}
@@ -143,20 +229,21 @@ func (playState) Update(g *Game) error {
 			if k >= ebiten.Key0 && k <= ebiten.Key9 {
 				g.enteringAng = true
 				g.angleInput = string('0' + rune(k-ebiten.Key0))
+				g.lastDigit = time.Now()
 				return nil
 			}
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-			g.Angle += 1
+			g.Angle += 0.5
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyRight) {
-			g.Angle -= 1
+			g.Angle -= 0.5
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyUp) {
-			g.Power += 1
+			g.Power += 0.5
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyDown) {
-			g.Power -= 1
+			g.Power -= 0.5
 		}
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
 			g.Throw()
@@ -168,16 +255,16 @@ func (playState) Update(g *Game) error {
 				lx := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickHorizontal)
 				ly := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickVertical)
 				if lx < -0.2 {
-					g.Angle += 1
+					g.Angle += 0.5
 				}
 				if lx > 0.2 {
-					g.Angle -= 1
+					g.Angle -= 0.5
 				}
 				if ly < -0.2 {
-					g.Power += 1
+					g.Power += 0.5
 				}
 				if ly > 0.2 {
-					g.Power -= 1
+					g.Power -= 0.5
 				}
 				if inpututil.IsStandardGamepadButtonJustPressed(id, ebiten.StandardGamepadButtonRightBottom) {
 					g.Throw()
@@ -292,14 +379,21 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
 		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
-	ebitenutil.DebugPrint(screen, info)
+	x := 0
+	if g.Current == 1 {
+		x = g.Width - len(info)*charW
+		if x < 0 {
+			x = 0
+		}
+	}
+	ebitenutil.DebugPrintAt(screen, info, x, 0)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height/2 - charH/2
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
 	} else if g.LastEvent != gorillas.EventNone {
-		msg := gorillas.EventMessage(g.LastEvent)
+		msg := g.LastEventMsg
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height / 3
 		ebitenutil.DebugPrintAt(screen, msg, x, y)

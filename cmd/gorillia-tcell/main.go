@@ -1,3 +1,5 @@
+//go:build !test
+
 package main
 
 import (
@@ -40,10 +42,15 @@ type Game struct {
 	resumePow    bool
 	gorillaArt   [][]string
 	js           *joystick
+	lastDigit    time.Time
 }
 
-const buildingWidth = 8
-const sunMaxIntegrity = 4
+const (
+	buildingWidth      = 8
+	sunMaxIntegrity    = 4
+	digitFinalizeDelay = 500 * time.Millisecond
+	digitBufferTimeout = 3 * time.Second
+)
 
 func drawLine(s tcell.Screen, x0, y0, x1, y1 int, r rune) {
 	dx := abs(x1 - x0)
@@ -110,7 +117,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		}
 		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins})
 	}
-	g.sunX = g.Width - 4
+	// position the sun in the horizontal centre
+	g.sunX = g.Width/2 - 1
 	g.sunY = 1
 	if js, err := openJoystick(); err == nil {
 		g.js = js
@@ -196,8 +204,8 @@ func (g *Game) draw() {
 	}
 	g.drawGorilla(0)
 	g.drawGorilla(1)
-	// draw a simple sun
-	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
+	// draw a simple sun at the current sun location
+	g.screen.SetContent(g.sunX+1, g.sunY+1, 'O', nil, tcell.StyleDefault)
 	if g.Banana.Active {
 		ch := 'o'
 		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
@@ -268,12 +276,19 @@ func (g *Game) draw() {
 	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
 		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
-	drawString(g.screen, 0, 0, info)
+	x := 0
+	if g.Current == 1 {
+		x = g.Width - len(info)
+		if x < 0 {
+			x = 0
+		}
+	}
+	drawString(g.screen, x, 0, info)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
 		drawString(g.screen, (g.Width-len(msg))/2, 1, msg)
 	} else if g.LastEvent != gorillas.EventNone {
-		msg := gorillas.EventMessage(g.LastEvent)
+		msg := g.LastEventMsg
 		drawString(g.screen, (g.Width-len(msg))/2, g.Height/3, msg)
 	}
 	g.screen.Show()
@@ -346,6 +361,37 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 		g.draw()
 		<-ticker.C
 		g.Step()
+		now := time.Now()
+		if g.enteringAng && g.angleInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
+			if strings.HasPrefix(g.angleInput, "*") {
+				g.Angle = g.LastAngle[g.Current]
+			} else if v, err := strconv.Atoi(g.angleInput); err == nil {
+				if v < 0 {
+					v = 0
+				} else if v > 360 {
+					v = 360
+				}
+				g.Angle = float64(v)
+			}
+			g.enteringAng = false
+			g.angleInput = ""
+			g.enteringPow = true
+		}
+		if g.enteringPow && g.powerInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
+			if strings.HasPrefix(g.powerInput, "*") {
+				g.Power = g.LastPower[g.Current]
+			} else if v, err := strconv.Atoi(g.powerInput); err == nil {
+				if v < 0 {
+					v = 0
+				} else if v > 200 {
+					v = 200
+				}
+				g.Power = float64(v)
+			}
+			g.enteringPow = false
+			g.powerInput = ""
+			g.throw()
+		}
 		if !prevExplosion && g.Explosion.Active {
 			g.startVictoryDance(g.Current)
 		}
@@ -365,16 +411,16 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 		if g.js != nil {
 			g.js.poll()
 			if g.js.axis[0] < -10000 {
-				g.Angle += 1
+				g.Angle += 0.5
 			}
 			if g.js.axis[0] > 10000 {
-				g.Angle -= 1
+				g.Angle -= 0.5
 			}
 			if g.js.axis[1] < -10000 {
-				g.Power += 1
+				g.Power += 0.5
 			}
 			if g.js.axis[1] > 10000 {
-				g.Power -= 1
+				g.Power -= 0.5
 			}
 			if g.js.btn[0] {
 				g.throw()
@@ -410,8 +456,9 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				continue
 			}
 			if g.enteringAng || g.enteringPow {
-				switch key.Key() {
-				case tcell.KeyEnter:
+				now := time.Now()
+                               switch key.Key() {
+                               case tcell.KeyEnter:
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
 							g.Angle = g.LastAngle[g.Current]
@@ -461,7 +508,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 					}
 				default:
 					r := key.Rune()
-					if r == '*' {
+                                       if r == '*' {
 						if g.enteringAng {
 							if len(g.angleInput) == 0 {
 								g.angleInput = "*"
@@ -471,16 +518,56 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 								g.powerInput = "*"
 							}
 						}
-					} else if r >= '0' && r <= '9' {
-						if g.enteringAng {
-							if len(g.angleInput) < 3 {
-								g.angleInput += string(r)
+						g.lastDigit = now
+                                       } else if r == ',' {
+                                               if g.enteringAng {
+                                                       if strings.HasPrefix(g.angleInput, "*") {
+                                                               g.Angle = g.LastAngle[g.Current]
+                                                       } else if v, err := strconv.Atoi(g.angleInput); err == nil {
+                                                               if v < 0 {
+                                                                       v = 0
+                                                               } else if v > 360 {
+                                                                       v = 360
+                                                               }
+                                                               g.Angle = float64(v)
+                                                       }
+                                                       g.enteringAng = false
+                                                       g.angleInput = ""
+                                                       g.enteringPow = true
+                                               } else if g.enteringPow {
+                                                       if strings.HasPrefix(g.powerInput, "*") {
+                                                               g.Power = g.LastPower[g.Current]
+                                                       } else if v, err := strconv.Atoi(g.powerInput); err == nil {
+                                                               if v < 0 {
+                                                                       v = 0
+                                                               } else if v > 200 {
+                                                                       v = 200
+                                                               }
+                                                               g.Power = float64(v)
+                                                       }
+                                                       g.enteringPow = false
+                                                       g.powerInput = ""
+                                                       g.throw()
+                                               }
+                                       } else if r >= '0' && r <= '9' {
+						if now.Sub(g.lastDigit) > digitBufferTimeout {
+							if g.enteringAng {
+								g.angleInput = string(r)
+							} else {
+								g.powerInput = string(r)
 							}
-						} else if g.enteringPow {
-							if len(g.powerInput) < 3 {
-								g.powerInput += string(r)
+						} else {
+							if g.enteringAng {
+								if len(g.angleInput) < 3 {
+									g.angleInput += string(r)
+								}
+							} else if g.enteringPow {
+								if len(g.powerInput) < 3 {
+									g.powerInput += string(r)
+								}
 							}
 						}
+						g.lastDigit = now
 					}
 				}
 				continue
@@ -488,11 +575,13 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 			if key.Rune() == '*' {
 				g.enteringAng = true
 				g.angleInput = "*"
+				g.lastDigit = time.Now()
 				continue
 			}
 			if key.Rune() >= '0' && key.Rune() <= '9' {
 				g.enteringAng = true
 				g.angleInput = string(key.Rune())
+				g.lastDigit = time.Now()
 				continue
 			}
 			switch key.Key() {
@@ -500,13 +589,13 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				g.Aborted = true
 				return nil
 			case tcell.KeyLeft:
-				g.Angle += 1
+				g.Angle += 0.5
 			case tcell.KeyRight:
-				g.Angle -= 1
+				g.Angle -= 0.5
 			case tcell.KeyUp:
-				g.Power += 1
+				g.Power += 0.5
 			case tcell.KeyDown:
-				g.Power -= 1
+				g.Power -= 0.5
 			case tcell.KeyEnter:
 				g.throw()
 			}
@@ -657,6 +746,44 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 					}
 				}
 				continue
+			}
+
+			// Automatically enter editing mode when typing or
+			// pressing backspace on a selected field or player.
+			if key.Key() == tcell.KeyBackspace || key.Key() == tcell.KeyBackspace2 || key.Rune() != 0 {
+				if cur < len(fields) {
+					editing = true
+					editingPlayer = -1
+					if key.Key() == tcell.KeyBackspace || key.Key() == tcell.KeyBackspace2 {
+						if len(fields[cur]) > 0 {
+							fields[cur] = fields[cur][:len(fields[cur])-1]
+						}
+					} else {
+						r := key.Rune()
+						if cur >= 2 {
+							if r >= '0' && r <= '9' {
+								fields[cur] += string(r)
+							}
+						} else {
+							fields[cur] += string(r)
+						}
+					}
+					continue
+				} else if cur >= len(fields) && cur < len(fields)+len(players) {
+					editing = true
+					editingPlayer = cur - len(fields)
+					oldName = players[editingPlayer]
+					newPlayer = false
+					selectedPlayer = editingPlayer
+					if key.Key() == tcell.KeyBackspace || key.Key() == tcell.KeyBackspace2 {
+						if len(players[editingPlayer]) > 0 {
+							players[editingPlayer] = players[editingPlayer][:len(players[editingPlayer])-1]
+						}
+					} else {
+						players[editingPlayer] += string(key.Rune())
+					}
+					continue
+				}
 			}
 
 			switch key.Key() {
