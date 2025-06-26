@@ -112,7 +112,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		}
 		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins})
 	}
-	g.sunX = g.Width - 4
+	// position the sun in the horizontal centre
+	g.sunX = g.Width/2 - 1
 	g.sunY = 1
 	if js, err := openJoystick(); err == nil {
 		g.js = js
@@ -198,8 +199,8 @@ func (g *Game) draw() {
 	}
 	g.drawGorilla(0)
 	g.drawGorilla(1)
-	// draw a simple sun
-	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
+	// draw a simple sun at the current sun location
+	g.screen.SetContent(g.sunX+1, g.sunY+1, 'O', nil, tcell.StyleDefault)
 	if g.Banana.Active {
 		ch := 'o'
 		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
