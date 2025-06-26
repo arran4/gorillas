@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/arran4/gorillas"
@@ -106,11 +107,39 @@ func (g *Game) draw() {
 		}
 	}
 	g.drawSun()
+	g.drawWindArrow()
 	s := fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1])
 	for i, r := range s {
 		g.screen.SetContent(i, 0, r, nil, tcell.StyleDefault)
 	}
 	g.screen.Show()
+}
+
+func (g *Game) drawWindArrow() {
+	if g.Wind == 0 {
+		return
+	}
+	length := int(math.Round(g.Wind * 3 * float64(g.Width) / 320))
+	y := g.Height - 1
+	x := g.Width / 2
+	dir := 1
+	if length < 0 {
+		dir = -1
+	}
+	for i := dir; i != length; i += dir {
+		pos := x + i
+		if pos >= 0 && pos < g.Width {
+			g.screen.SetContent(pos, y, '-', nil, tcell.StyleDefault)
+		}
+	}
+	headX := x + length
+	if headX >= 0 && headX < g.Width {
+		head := '>'
+		if length < 0 {
+			head = '<'
+		}
+		g.screen.SetContent(headX, y, head, nil, tcell.StyleDefault)
+	}
 }
 
 func (g *Game) drawGorilla(idx int) {
@@ -169,6 +198,167 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 	}
 }
 
+// setupScreen presents an interactive form allowing the player names,
+// round count and gravity to be edited. It returns the updated values
+// once the user presses Escape to start the game.
+func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds int, gravity float64) (string, string, int, float64, bool) {
+	fields := []string{p1, p2, strconv.Itoa(rounds), fmt.Sprintf("%.0f", gravity)}
+	players := league.Names()
+	cur := 0
+	editing := false
+	editingPlayer := -1
+	newPlayer := false
+	oldName := ""
+	for {
+		s.Clear()
+		_, h := s.Size()
+		baseY := h/2 - 2
+		drawString(s, 2, baseY-2, "Game Setup (Esc to start)")
+		labels := []string{"Player 1:", "Player 2:", "Rounds:", "Gravity:"}
+		for i, lbl := range labels {
+			style := tcell.StyleDefault
+			if i == cur {
+				style = style.Reverse(true)
+			}
+			line := fmt.Sprintf("%s %s", lbl, fields[i])
+			for x, r := range line {
+				s.SetContent(2+x, baseY+i, r, nil, style)
+			}
+		}
+		py := baseY + len(labels) + 1
+		drawString(s, 2, py, "Players (n=new r=rename d=del):")
+		for i, name := range players {
+			style := tcell.StyleDefault
+			if cur == len(fields)+i {
+				style = style.Reverse(true)
+			}
+			drawString(s, 4, py+1+i, name)
+		}
+		s.Show()
+
+		ev := s.PollEvent()
+		if key, ok := ev.(*tcell.EventKey); ok {
+			if editing {
+				switch key.Key() {
+				case tcell.KeyEnter:
+					if editingPlayer >= 0 {
+						name := players[editingPlayer]
+						if newPlayer {
+							league.AddPlayer(name)
+						} else {
+							league.RenamePlayer(oldName, name)
+							if fields[0] == oldName {
+								fields[0] = name
+							}
+							if fields[1] == oldName {
+								fields[1] = name
+							}
+						}
+						league.Save()
+						editingPlayer = -1
+						newPlayer = false
+					}
+					editing = false
+				case tcell.KeyEsc:
+					if editingPlayer >= 0 {
+						if newPlayer {
+							players = players[:len(players)-1]
+						} else {
+							players[editingPlayer] = oldName
+						}
+						editingPlayer = -1
+						newPlayer = false
+					}
+					editing = false
+				case tcell.KeyBackspace, tcell.KeyBackspace2:
+					if editingPlayer >= 0 {
+						if len(players[editingPlayer]) > 0 {
+							players[editingPlayer] = players[editingPlayer][:len(players[editingPlayer])-1]
+						}
+					} else if len(fields[cur]) > 0 {
+						fields[cur] = fields[cur][:len(fields[cur])-1]
+					}
+				default:
+					if key.Rune() != 0 {
+						if editingPlayer >= 0 {
+							players[editingPlayer] += string(key.Rune())
+						} else {
+							if cur >= 2 {
+								if key.Rune() >= '0' && key.Rune() <= '9' {
+									fields[cur] += string(key.Rune())
+								}
+							} else {
+								fields[cur] += string(key.Rune())
+							}
+						}
+					}
+				}
+				continue
+			}
+
+			switch key.Key() {
+			case tcell.KeyEsc:
+				r, _ := strconv.Atoi(fields[2])
+				g, _ := strconv.ParseFloat(fields[3], 64)
+				return fields[0], fields[1], r, g, true
+			case tcell.KeyCtrlC:
+				r, _ := strconv.Atoi(fields[2])
+				g, _ := strconv.ParseFloat(fields[3], 64)
+				return fields[0], fields[1], r, g, false
+			case tcell.KeyUp:
+				if cur > 0 {
+					cur--
+				} else {
+					cur = len(fields) + len(players) - 1
+				}
+			case tcell.KeyDown, tcell.KeyTab:
+				cur = (cur + 1) % (len(fields) + len(players))
+			case tcell.KeyEnter:
+				if cur < len(fields) {
+					editing = true
+				} else {
+					editing = true
+					editingPlayer = cur - len(fields)
+					oldName = players[editingPlayer]
+				}
+			case tcell.KeyRune:
+				switch key.Rune() {
+				case 'n':
+					players = append(players, "")
+					cur = len(fields) + len(players) - 1
+					editing = true
+					editingPlayer = cur - len(fields)
+					newPlayer = true
+				case 'd':
+					if cur >= len(fields) {
+						idx := cur - len(fields)
+						name := players[idx]
+						league.DeletePlayer(name)
+						league.Save()
+						players = append(players[:idx], players[idx+1:]...)
+						if fields[0] == name {
+							fields[0] = ""
+						}
+						if fields[1] == name {
+							fields[1] = ""
+						}
+						if cur >= len(fields)+len(players) {
+							cur--
+						}
+					}
+				case 'r':
+					if cur >= len(fields) {
+						editing = true
+						editingPlayer = cur - len(fields)
+						oldName = players[editingPlayer]
+						newPlayer = false
+					}
+				}
+			}
+		}
+	}
+}
+
 func main() {
 	s, err := tcell.NewScreen()
 	if err != nil {
@@ -184,7 +374,7 @@ func main() {
 		panic(err)
 	}
 	if err = s.Init(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("screen init: %w", err))
 	}
 	defer s.Fini()
 
@@ -210,12 +400,26 @@ func main() {
 		return
 	}
 
+	league := gorillas.LoadLeague("gorillas.lge")
+	var ok bool
+	*p1, *p2, *rounds, *gravity, ok = setupScreen(s, league, *p1, *p2, *rounds, *gravity)
+	if !ok {
+		return
+	}
+	settings.DefaultGravity = *gravity
+	settings.DefaultRoundQty = *rounds
+
 	g := newGame(settings, *buildings, *wind)
 	g.Players = [2]string{*p1, *p2}
+	g.League = league
 	if err := g.run(s, *ai); err != nil {
-		panic(err)
+		panic(fmt.Errorf("run game: %w", err))
 	}
 	g.SaveScores()
+	showStats(s, g.StatsString())
+	if g.League != nil {
+		showLeague(s, g.League)
+	}
 	fmt.Println(g.StatsString())
 	showExtro(s)
 }
