@@ -46,7 +46,7 @@ func PlayBeep() {
 	if audioCtx != nil {
 		p, err := audioCtx.NewPlayer(bytes.NewReader(beepSample))
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("new player: %w", err))
 		}
 		p.Play()
 	} else {
