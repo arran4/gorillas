@@ -33,6 +33,17 @@ func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 	}
 }
 
+func drawVectorLines(img *ebiten.Image, pts []gorillas.VectorPoint, clr color.Color) {
+	if len(pts) == 0 {
+		return
+	}
+	prev := pts[0]
+	for _, p := range pts[1:] {
+		ebitenutil.DrawLine(img, prev.X, prev.Y, p.X, p.Y, clr)
+		prev = p
+	}
+}
+
 func (g *Game) drawSun(img *ebiten.Image) {
 	if g.sunIntegrity <= 0 {
 		return

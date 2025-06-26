@@ -41,6 +41,48 @@ type Game struct {
 const buildingWidth = 8
 const sunMaxIntegrity = 4
 
+func drawLine(s tcell.Screen, x0, y0, x1, y1 int, r rune) {
+	dx := abs(x1 - x0)
+	dy := -abs(y1 - y0)
+	sx := -1
+	if x0 < x1 {
+		sx = 1
+	}
+	sy := -1
+	if y0 < y1 {
+		sy = 1
+	}
+	err := dx + dy
+	for {
+		s.SetContent(x0, y0, r, nil, tcell.StyleDefault)
+		if x0 == x1 && y0 == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			if x0 == x1 {
+				break
+			}
+			err += dy
+			x0 += sx
+		}
+		if e2 <= dx {
+			if y0 == y1 {
+				break
+			}
+			err += dx
+			y0 += sy
+		}
+	}
+}
+
+func abs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
+}
+
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g := &Game{Game: gorillas.NewGame(80, 24, buildings)}
 	if !math.IsNaN(wind) {
@@ -154,9 +196,6 @@ func (g *Game) draw() {
 		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), ch, nil, tcell.StyleDefault)
 	}
 	if g.Explosion.Active {
-		r := int(g.Explosion.Radii[g.Explosion.Frame])
-		ex := int(g.Explosion.X)
-		ey := int(g.Explosion.Y)
 		char := '*'
 		if !g.Settings.UseOldExplosions {
 			chars := []rune{'#', '@', 'O', 'o', '.'}
@@ -166,13 +205,24 @@ func (g *Game) draw() {
 				char = chars[len(chars)-1]
 			}
 		}
-		for dx := -r; dx <= r; dx++ {
-			for dy := -r; dy <= r; dy++ {
-				if dx*dx+dy*dy <= r*r {
-					x := ex + dx
-					y := ey + dy
-					if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
-						g.screen.SetContent(x, y, char, nil, tcell.StyleDefault)
+		frame := g.Explosion.Frame
+		if g.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Explosion.Vectors) {
+			pts := g.Explosion.Vectors[frame-1]
+			for i := 1; i < len(pts); i++ {
+				drawLine(g.screen, int(pts[i-1].X), int(pts[i-1].Y), int(pts[i].X), int(pts[i].Y), char)
+			}
+		} else {
+			r := int(g.Explosion.Radii[frame])
+			ex := int(g.Explosion.X)
+			ey := int(g.Explosion.Y)
+			for dx := -r; dx <= r; dx++ {
+				for dy := -r; dy <= r; dy++ {
+					if dx*dx+dy*dy <= r*r {
+						x := ex + dx
+						y := ey + dy
+						if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
+							g.screen.SetContent(x, y, char, nil, tcell.StyleDefault)
+						}
 					}
 				}
 			}
