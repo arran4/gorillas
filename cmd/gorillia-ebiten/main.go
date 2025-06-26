@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -380,7 +381,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	increaseRLimit()
+	if err := increaseRLimit(); err != nil {
+		fmt.Fprintf(os.Stderr, "increase rlimit: %v\n", err)
+	}
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Gorillas Ebiten")
 	settings := gorillas.LoadSettings()
@@ -396,7 +399,11 @@ func main() {
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
 	if settings.ShowIntro {
-		if !introScreen(settings.UseSound, settings.UseSlidingText) {
+		play, err := introScreen(settings.UseSound, settings.UseSlidingText)
+		if err != nil {
+			panic(fmt.Errorf("intro screen: %w", err))
+		}
+		if !play {
 			return
 		}
 	}
@@ -406,9 +413,13 @@ func main() {
 		panic(fmt.Errorf("run game: %w", err))
 	}
 	game.SaveScores()
-	showStats(game.StatsString())
+	if err := showStats(game.StatsString()); err != nil {
+		fmt.Fprintf(os.Stderr, "show stats: %v\n", err)
+	}
 	if game.League != nil {
-		showLeague(game.League)
+		if err := showLeague(game.League); err != nil {
+			fmt.Fprintf(os.Stderr, "show league: %v\n", err)
+		}
 	}
 	fmt.Println(game.StatsString())
 	showExtro()

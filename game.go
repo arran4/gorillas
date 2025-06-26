@@ -77,7 +77,9 @@ func (g *Game) LoadScores() {
 	}
 	b, err := os.ReadFile(file)
 	if err == nil {
-		_ = json.Unmarshal(b, &g.TotalWins)
+		if err := json.Unmarshal(b, &g.TotalWins); err != nil {
+			fmt.Fprintf(os.Stderr, "load scores: %v\n", err)
+		}
 	}
 }
 
@@ -89,7 +91,9 @@ func (g *Game) SaveScores() {
 	}
 	b, err := json.Marshal(g.TotalWins)
 	if err == nil {
-		_ = os.WriteFile(file, b, 0644)
+		if err := os.WriteFile(file, b, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "save scores: %v\n", err)
+		}
 	}
 }
 
