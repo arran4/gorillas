@@ -182,7 +182,27 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], color.RGBA{255, 255, 0, 255})
 	}
 	g.drawSun(screen)
+	g.drawWindArrow(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
+}
+
+func (g *Game) drawWindArrow(img *ebiten.Image) {
+	if g.Wind == 0 {
+		return
+	}
+	length := g.Wind * 3 * float64(g.Width) / 320
+	y := float64(g.Height) - float64(g.Height)/40
+	x := float64(g.Width) / 2
+	end := x + length
+	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})
+	head := 5.0
+	if length > 0 {
+		ebitenutil.DrawLine(img, end, y, end-head, y-3, color.RGBA{255, 255, 0, 255})
+		ebitenutil.DrawLine(img, end, y, end-head, y+3, color.RGBA{255, 255, 0, 255})
+	} else {
+		ebitenutil.DrawLine(img, end, y, end+head, y-3, color.RGBA{255, 255, 0, 255})
+		ebitenutil.DrawLine(img, end, y, end+head, y+3, color.RGBA{255, 255, 0, 255})
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

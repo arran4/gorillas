@@ -106,11 +106,39 @@ func (g *Game) draw() {
 		}
 	}
 	g.drawSun()
+	g.drawWindArrow()
 	s := fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1])
 	for i, r := range s {
 		g.screen.SetContent(i, 0, r, nil, tcell.StyleDefault)
 	}
 	g.screen.Show()
+}
+
+func (g *Game) drawWindArrow() {
+	if g.Wind == 0 {
+		return
+	}
+	length := int(math.Round(g.Wind * 3 * float64(g.Width) / 320))
+	y := g.Height - 1
+	x := g.Width / 2
+	dir := 1
+	if length < 0 {
+		dir = -1
+	}
+	for i := dir; i != length; i += dir {
+		pos := x + i
+		if pos >= 0 && pos < g.Width {
+			g.screen.SetContent(pos, y, '-', nil, tcell.StyleDefault)
+		}
+	}
+	headX := x + length
+	if headX >= 0 && headX < g.Width {
+		head := '>'
+		if length < 0 {
+			head = '<'
+		}
+		g.screen.SetContent(headX, y, head, nil, tcell.StyleDefault)
+	}
 }
 
 func (g *Game) drawGorilla(idx int) {
