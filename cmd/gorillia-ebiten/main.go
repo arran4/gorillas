@@ -215,6 +215,7 @@ func main() {
 		panic(err)
 	}
 	game.SaveScores()
+	showStats(game.StatsString())
 	fmt.Println(game.StatsString())
 	showExtro()
 }

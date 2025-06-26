@@ -291,6 +291,7 @@ func main() {
 		panic(err)
 	}
 	g.SaveScores()
+	showStats(s, g.StatsString())
 	fmt.Println(g.StatsString())
 	showExtro(s)
 }

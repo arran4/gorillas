@@ -91,6 +91,7 @@ func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 	time.Sleep(700 * time.Millisecond)
 	scrollText(s, h-1, "Get ready to throw bananas!", sliding)
 	time.Sleep(500 * time.Millisecond)
+	SparklePause(s, 0)
 }
 
 func introScreen(s tcell.Screen, useSound, sliding bool) bool {
@@ -126,4 +127,56 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 			}
 		}
 	}
+}
+
+// SparklePause draws twinkling '*' borders for the given duration.  If
+// duration is zero it waits until a key is pressed.
+func SparklePause(s tcell.Screen, dur time.Duration) {
+	for s.HasPendingEvent() { // clear pending keys
+		s.PollEvent()
+	}
+	w, h := s.Size()
+	start := time.Now()
+	phase := 0
+	pattern := []rune("*    ")
+	for {
+		for x := 0; x < w; x++ {
+			ch1 := pattern[(phase+x)%5]
+			ch2 := pattern[(4-phase+x)%5]
+			s.SetContent(x, 0, ch1, nil, tcell.StyleDefault)
+			s.SetContent(x, h-1, ch2, nil, tcell.StyleDefault)
+		}
+		for y := 1; y < h-1; y++ {
+			ch := ' '
+			if (phase+y)%5 == 0 {
+				ch = '*'
+			}
+			s.SetContent(w-1, y, ch, nil, tcell.StyleDefault)
+			s.SetContent(0, h-1-y, ch, nil, tcell.StyleDefault)
+		}
+		s.Show()
+		time.Sleep(50 * time.Millisecond)
+		phase = (phase + 1) % 5
+		if dur > 0 && time.Since(start) > dur {
+			return
+		}
+		if s.HasPendingEvent() {
+			if _, ok := s.PollEvent().(*tcell.EventKey); ok {
+				return
+			}
+		}
+	}
+}
+
+// showStats prints the stats on the screen and waits for a key press.
+func showStats(s tcell.Screen, stats string) {
+	lines := strings.Split(stats, "\n")
+	s.Clear()
+	w, h := s.Size()
+	y := h/2 - len(lines)/2
+	for i, line := range lines {
+		drawString(s, (w-len(line))/2, y+i, line)
+	}
+	s.Show()
+	SparklePause(s, 0)
 }
