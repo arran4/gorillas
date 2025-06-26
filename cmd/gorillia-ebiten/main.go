@@ -289,7 +289,8 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 		return
 	}
 	frame := g.gorillaArt[0]
-	baseX := int(g.Gorillas[idx].X) - len(frame[0])*gorillaScale/2
+	width := gorillas.FrameWidth(frame)
+	baseX := int(g.Gorillas[idx].X) - width*gorillaScale/2
 	baseY := int(g.Gorillas[idx].Y) - len(frame)*gorillaScale
 	for dy, line := range frame {
 		for dx, ch := range line {

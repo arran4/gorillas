@@ -326,7 +326,8 @@ func (g *Game) drawGorilla(idx int) {
 		return
 	}
 	frame := g.gorillaArt[0]
-	x := int(g.Gorillas[idx].X) - len(frame[0])/2
+	width := gorillas.FrameWidth(frame)
+	x := int(g.Gorillas[idx].X) - width/2
 	y := int(g.Gorillas[idx].Y) - len(frame)
 	style := tcell.StyleDefault
 	for dy, line := range frame {
@@ -457,8 +458,8 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 			}
 			if g.enteringAng || g.enteringPow {
 				now := time.Now()
-                               switch key.Key() {
-                               case tcell.KeyEnter:
+				switch key.Key() {
+				case tcell.KeyEnter:
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
 							g.Angle = g.LastAngle[g.Current]
@@ -508,7 +509,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 					}
 				default:
 					r := key.Rune()
-                                       if r == '*' {
+					if r == '*' {
 						if g.enteringAng {
 							if len(g.angleInput) == 0 {
 								g.angleInput = "*"
@@ -519,37 +520,37 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							}
 						}
 						g.lastDigit = now
-                                       } else if r == ',' {
-                                               if g.enteringAng {
-                                                       if strings.HasPrefix(g.angleInput, "*") {
-                                                               g.Angle = g.LastAngle[g.Current]
-                                                       } else if v, err := strconv.Atoi(g.angleInput); err == nil {
-                                                               if v < 0 {
-                                                                       v = 0
-                                                               } else if v > 360 {
-                                                                       v = 360
-                                                               }
-                                                               g.Angle = float64(v)
-                                                       }
-                                                       g.enteringAng = false
-                                                       g.angleInput = ""
-                                                       g.enteringPow = true
-                                               } else if g.enteringPow {
-                                                       if strings.HasPrefix(g.powerInput, "*") {
-                                                               g.Power = g.LastPower[g.Current]
-                                                       } else if v, err := strconv.Atoi(g.powerInput); err == nil {
-                                                               if v < 0 {
-                                                                       v = 0
-                                                               } else if v > 200 {
-                                                                       v = 200
-                                                               }
-                                                               g.Power = float64(v)
-                                                       }
-                                                       g.enteringPow = false
-                                                       g.powerInput = ""
-                                                       g.throw()
-                                               }
-                                       } else if r >= '0' && r <= '9' {
+					} else if r == ',' {
+						if g.enteringAng {
+							if strings.HasPrefix(g.angleInput, "*") {
+								g.Angle = g.LastAngle[g.Current]
+							} else if v, err := strconv.Atoi(g.angleInput); err == nil {
+								if v < 0 {
+									v = 0
+								} else if v > 360 {
+									v = 360
+								}
+								g.Angle = float64(v)
+							}
+							g.enteringAng = false
+							g.angleInput = ""
+							g.enteringPow = true
+						} else if g.enteringPow {
+							if strings.HasPrefix(g.powerInput, "*") {
+								g.Power = g.LastPower[g.Current]
+							} else if v, err := strconv.Atoi(g.powerInput); err == nil {
+								if v < 0 {
+									v = 0
+								} else if v > 200 {
+									v = 200
+								}
+								g.Power = float64(v)
+							}
+							g.enteringPow = false
+							g.powerInput = ""
+							g.throw()
+						}
+					} else if r >= '0' && r <= '9' {
 						if now.Sub(g.lastDigit) > digitBufferTimeout {
 							if g.enteringAng {
 								g.angleInput = string(r)
