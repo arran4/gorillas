@@ -1,0 +1,38 @@
+package gorillas
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func TestLoadSettingsFile(t *testing.T) {
+	dir := t.TempDir()
+	ini := filepath.Join(dir, "gorillas.ini")
+	data := []byte("" +
+		"UseSound=no\n" +
+		"UseOldExplosions=yes\n" +
+		"NewExplosionRadius=20.5\n" +
+		"DefaultGravity=30\n" +
+		"DefaultRoundQty=7\n")
+	if err := os.WriteFile(ini, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+	s := DefaultSettings()
+	loadSettingsFile(ini, &s)
+	if s.UseSound != false {
+		t.Errorf("expected UseSound=false got %v", s.UseSound)
+	}
+	if !s.UseOldExplosions {
+		t.Errorf("expected UseOldExplosions=true")
+	}
+	if s.NewExplosionRadius != 20.5 {
+		t.Errorf("unexpected radius %f", s.NewExplosionRadius)
+	}
+	if s.DefaultGravity != 30 {
+		t.Errorf("unexpected gravity %f", s.DefaultGravity)
+	}
+	if s.DefaultRoundQty != 7 {
+		t.Errorf("unexpected round qty %d", s.DefaultRoundQty)
+	}
+}

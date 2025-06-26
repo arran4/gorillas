@@ -27,6 +27,8 @@ type Settings struct {
 	UseSound           bool
 	UseOldExplosions   bool
 	NewExplosionRadius float64
+	DefaultGravity     float64
+	DefaultRoundQty    int
 }
 
 type Explosion struct {
@@ -37,7 +39,12 @@ type Explosion struct {
 }
 
 func DefaultSettings() Settings {
-	return Settings{UseSound: true, NewExplosionRadius: 40}
+	return Settings{
+		UseSound:           true,
+		NewExplosionRadius: 40,
+		DefaultGravity:     17,
+		DefaultRoundQty:    4,
+	}
 }
 
 // LoadScores reads the persistent win totals from disk.
