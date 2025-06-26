@@ -74,8 +74,8 @@ func TestBananaTrajectoryAndOutOfBounds(t *testing.T) {
 
 func TestBuildingCollisionEndsTurn(t *testing.T) {
 	g := newTestGame()
-	// make building 2 tall so banana will collide
-	g.Buildings[2].H = 50
+	// make building 2 tall enough to block the banana
+	g.Buildings[2].H = float64(g.Height) - g.Gorillas[0].Y + 5
 
 	g.Angle = 0
 	g.Power = 20
@@ -297,5 +297,32 @@ func TestVictoryDanceStartsOnHit(t *testing.T) {
 	}
 	if g.Gorillas[0].Y != baseY {
 		t.Fatalf("gorilla should return to base position")
+	}
+}
+
+func TestNewGameWindUsesBasicAlgorithm(t *testing.T) {
+	rand.Seed(1)
+	g := NewGame(100, 100, DefaultBuildingCount)
+	if g.Wind != -11 {
+		t.Fatalf("expected wind -11 got %f", g.Wind)
+	}
+}
+
+func TestVariableWindChangesEachRound(t *testing.T) {
+	rand.Seed(1)
+	g := NewGame(100, 100, DefaultBuildingCount)
+	g.Settings = DefaultSettings()
+	g.Settings.VariableWind = true
+	initial := g.Wind
+	// trigger round end immediately
+	g.Explosion = Explosion{Active: true, Radii: []float64{1}}
+	for g.Explosion.Active {
+		g.Step()
+	}
+	if g.Wind == initial {
+		t.Fatalf("wind should change each round")
+	}
+	if g.Wind != 10 {
+		t.Fatalf("expected wind 10 got %f", g.Wind)
 	}
 }
