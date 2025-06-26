@@ -23,19 +23,20 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings   []building
-	screen      tcell.Screen
-	sunX, sunY  int
-	sunHitTicks int
-	angleInput  string
-	powerInput  string
-	enteringAng bool
-	enteringPow bool
-	abortPrompt bool
-	resumeAng   bool
-	resumePow   bool
-	gorillaArt  [][]string
-	js          *joystick
+	buildings    []building
+	screen       tcell.Screen
+	sunX, sunY   int
+	sunHitTicks  int
+	sunIntegrity int
+	angleInput   string
+	powerInput   string
+	enteringAng  bool
+	enteringPow  bool
+	abortPrompt  bool
+	resumeAng    bool
+	resumePow    bool
+	gorillaArt   [][]string
+	js           *joystick
 }
 
 const buildingWidth = 8

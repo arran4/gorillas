@@ -140,38 +140,20 @@ func (playState) Update(g *Game) error {
 				return nil
 			}
 		}
-		if g.Current == 0 {
-			if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-				g.Angle += 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyRight) {
-				g.Angle -= 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyUp) {
-				g.Power += 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyDown) {
-				g.Power -= 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeySpace) {
-				g.Throw()
-			}
-		} else {
-			if ebiten.IsKeyPressed(ebiten.KeyA) {
-				g.Angle += 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyD) {
-				g.Angle -= 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyW) {
-				g.Power += 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyS) {
-				g.Power -= 1
-			}
-			if ebiten.IsKeyPressed(ebiten.KeyF) {
-				g.Throw()
-			}
+		if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+			g.Angle += 1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyRight) {
+			g.Angle -= 1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyUp) {
+			g.Power += 1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeyDown) {
+			g.Power -= 1
+		}
+		if ebiten.IsKeyPressed(ebiten.KeySpace) {
+			g.Throw()
 		}
 
 		g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
