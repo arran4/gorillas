@@ -84,6 +84,7 @@ type Game struct {
 	Wins          [2]int
 	TotalWins     [2]int
 	ScoreFile     string
+	Wind          float64
 }
 
 const BuildingCount = 10
@@ -93,6 +94,7 @@ func NewGame(width, height int) *Game {
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile}
 	g.Settings = DefaultSettings()
 	rand.Seed(time.Now().UnixNano())
+	g.Wind = float64(rand.Intn(21) - 10)
 	bw := float64(width) / BuildingCount
 
 	// create a sloping skyline similar to the original BASIC version
@@ -213,6 +215,7 @@ func (g *Game) Step() {
 	g.Banana.X += g.Banana.VX
 	g.Banana.Y += g.Banana.VY
 	g.Banana.VY += 0.5
+	g.Banana.VX += g.Wind / 20
 	idx := int(g.Banana.X / (float64(g.Width) / BuildingCount))
 	if idx >= 0 && idx < BuildingCount {
 		if g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {

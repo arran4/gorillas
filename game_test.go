@@ -9,6 +9,7 @@ import (
 func newTestGame() *Game {
 	g := &Game{Width: 100, Height: 100}
 	g.Settings = DefaultSettings()
+	g.Wind = 0
 	bw := float64(g.Width) / BuildingCount
 	for i := 0; i < BuildingCount; i++ {
 		g.Buildings = append(g.Buildings, Building{X: float64(i) * bw, W: bw, H: 0})
@@ -88,6 +89,22 @@ func TestBuildingCollisionEndsTurn(t *testing.T) {
 	}
 	if g.Current != 1 {
 		t.Fatalf("turn should switch to player 2 after hitting building, got %d", g.Current)
+	}
+}
+
+func TestWindInfluencesVelocity(t *testing.T) {
+	g := newTestGame()
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+	g.Wind = 4
+
+	g.Throw()
+	initialVX := g.Banana.VX
+	g.Step()
+	expectedVX := initialVX + g.Wind/20
+	if !almostEqual(g.Banana.VX, expectedVX) {
+		t.Fatalf("expected vx %f got %f", expectedVX, g.Banana.VX)
 	}
 }
 
