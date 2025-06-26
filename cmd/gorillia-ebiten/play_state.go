@@ -3,17 +3,17 @@
 package main
 
 import (
-        "fmt"
-        "image/color"
-        "math"
-        "strconv"
-        "strings"
+	"fmt"
+	"image/color"
+	"math"
+	"strconv"
+	"strings"
 
-        "github.com/hajimehoshi/ebiten/v2"
-        "github.com/hajimehoshi/ebiten/v2/ebitenutil"
-        "github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
-        gorillas "github.com/arran4/gorillas"
+	gorillas "github.com/arran4/gorillas"
 )
 
 // playState implements the main gameplay loop.
@@ -162,16 +162,16 @@ func (playState) Update(g *Game) error {
 			g.Throw()
 		}
 
-                g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
-                for _, id := range g.gamepads {
-                        if ebiten.IsStandardGamepadLayoutAvailable(id) {
-                                lx := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickHorizontal)
-                                ly := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickVertical)
-                                if lx < -0.2 {
-                                        g.Angle += 1
-                                }
-                                if lx > 0.2 {
-                                        g.Angle -= 1
+		g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
+		for _, id := range g.gamepads {
+			if ebiten.IsStandardGamepadLayoutAvailable(id) {
+				lx := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickHorizontal)
+				ly := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickVertical)
+				if lx < -0.2 {
+					g.Angle += 1
+				}
+				if lx > 0.2 {
+					g.Angle -= 1
 				}
 				if ly < -0.2 {
 					g.Power += 1
@@ -305,8 +305,8 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height/2 - charH/2
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
-        } else if g.LastEvent != gorillas.EventNone {
-                msg := gorillas.EventMessage(g.LastEvent)
+	} else if g.LastEvent != gorillas.EventNone {
+		msg := g.LastEventMsg
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height / 3
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
