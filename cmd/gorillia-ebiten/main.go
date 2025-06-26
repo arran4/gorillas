@@ -150,7 +150,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		ebitenutil.DrawRect(screen, g.Banana.X-2, g.Banana.Y-2, 4, 4, color.RGBA{255, 255, 0, 255})
 	}
 	if g.Explosion.Active {
-		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.radii[g.Explosion.frame], color.RGBA{255, 255, 0, 255})
+		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], color.RGBA{255, 255, 0, 255})
 	}
 	g.drawSun(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))

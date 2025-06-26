@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"time"
@@ -88,7 +89,7 @@ func (g *Game) draw() {
 		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), 'o', nil, tcell.StyleDefault)
 	}
 	if g.Explosion.Active {
-		r := int(g.Explosion.Radii[g.Explosion.frame])
+		r := int(g.Explosion.Radii[g.Explosion.Frame])
 		ex := int(g.Explosion.X)
 		ey := int(g.Explosion.Y)
 		for dx := -r; dx <= r; dx++ {
@@ -170,6 +171,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 func main() {
 	s, err := tcell.NewScreen()
 	if err != nil {
+		log.Printf("Error: %s", err.Error())
 		panic(err)
 	}
 	if err = s.Init(); err != nil {
