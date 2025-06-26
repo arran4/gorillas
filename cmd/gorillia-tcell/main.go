@@ -514,7 +514,8 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 
 // setupScreen presents an interactive form allowing the player names,
 // round count and gravity to be edited. It returns the updated values
-// once the user presses Escape to start the game.
+// once the user starts the game by pressing Enter on "Start" or
+// pressing Escape.
 func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds int, gravity float64) (string, string, int, float64, bool) {
 	fields := []string{p1, p2, strconv.Itoa(rounds), fmt.Sprintf("%.0f", gravity)}
 	players := league.Names()
