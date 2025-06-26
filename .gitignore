@@ -26,3 +26,4 @@ go.work.sum
 .env
 
 /gorillas_scores.json
+/gorillas.lge
