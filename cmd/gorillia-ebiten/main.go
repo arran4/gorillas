@@ -173,6 +173,10 @@ func main() {
 	flag.Parse()
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
+
+	if settings.ShowIntro {
+		showIntroMovie(settings.UseSound, settings.UseSlidingText)
+	}
 	game := newGame(settings, *buildings, *wind)
 	if err := ebiten.RunGame(game); err != nil {
 		panic(err)
