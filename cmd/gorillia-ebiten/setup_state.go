@@ -1,3 +1,5 @@
+//go:build !test
+
 package main
 
 import (
@@ -25,9 +27,10 @@ type setupState struct {
 
 func newSetupState(g *Game) *setupState {
 	s := &setupState{
-		game:    g,
-		fields:  []string{g.Players[0], g.Players[1], strconv.Itoa(g.Settings.DefaultRoundQty), fmt.Sprintf("%.0f", g.Settings.DefaultGravity)},
-		players: g.League.Names(),
+		game:          g,
+		fields:        []string{g.Players[0], g.Players[1], strconv.Itoa(g.Settings.DefaultRoundQty), fmt.Sprintf("%.0f", g.Settings.DefaultGravity)},
+		players:       g.League.Names(),
+		editingPlayer: -1,
 	}
 	s.updateAssignField()
 	return s
@@ -155,6 +158,7 @@ func (s *setupState) Update(g *Game) error {
 				s.cur = s.assignField
 			} else if s.cur < len(s.fields) {
 				s.editing = true
+				s.editingPlayer = -1
 			} else {
 				s.editing = true
 				s.editingPlayer = s.cur - len(s.fields)

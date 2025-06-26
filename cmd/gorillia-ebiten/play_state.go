@@ -1,3 +1,5 @@
+//go:build !test
+
 package main
 
 import (
@@ -171,12 +173,42 @@ func (playState) Update(g *Game) error {
 				g.Throw()
 			}
 		}
+
+		g.gamepads = ebiten.AppendGamepadIDs(g.gamepads[:0])
+		for _, id := range g.gamepads {
+			if ebiten.IsStandardGamepadLayoutAvailable(id) {
+				lx, ly := ebiten.StandardGamepadLayout(id).LeftStickPosition()
+				if lx < -0.2 {
+					g.Angle += 1
+				}
+				if lx > 0.2 {
+					g.Angle -= 1
+				}
+				if ly < -0.2 {
+					g.Power += 1
+				}
+				if ly > 0.2 {
+					g.Power -= 1
+				}
+				if inpututil.IsStandardGamepadButtonJustPressed(id, ebiten.StandardGamepadButtonRightBottom) {
+					g.Throw()
+				}
+			} else {
+				if inpututil.IsGamepadButtonJustPressed(id, ebiten.GamepadButton0) {
+					g.Throw()
+				}
+			}
+		}
 	} else {
 		g.Step()
-		if g.Banana.Active {
-			if g.Banana.X >= g.sunX-sunRadius && g.Banana.X <= g.sunX+sunRadius &&
-				g.Banana.Y >= g.sunY-sunRadius && g.Banana.Y <= g.sunY+sunRadius {
+		if g.Banana.Active && g.sunIntegrity > 0 {
+			r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
+			if g.Banana.X >= g.sunX-r && g.Banana.X <= g.sunX+r &&
+				g.Banana.Y >= g.sunY-r && g.Banana.Y <= g.sunY+r {
 				g.sunHitTicks = 10
+				if g.sunIntegrity > 0 {
+					g.sunIntegrity--
+				}
 			}
 		}
 	}
@@ -239,7 +271,12 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		if len(g.Explosion.Colors) > g.Explosion.Frame {
 			clr = color.RGBAModel.Convert(g.Explosion.Colors[g.Explosion.Frame]).(color.RGBA)
 		}
-		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], clr)
+		frame := g.Explosion.Frame
+		if g.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Explosion.Vectors) {
+			drawVectorLines(screen, g.Explosion.Vectors[frame-1], clr)
+		} else {
+			drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[frame], clr)
+		}
 	}
 	g.drawSun(screen)
 	g.drawWindArrow(screen)
@@ -266,6 +303,11 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		msg := "Abort game? [Y/N]"
 		x := (g.Width - len(msg)*charW) / 2
 		y := g.Height/2 - charH/2
+		ebitenutil.DebugPrintAt(screen, msg, x, y)
+	} else if g.LastEvent != EventNone {
+		msg := gorillas.EventMessage(g.LastEvent)
+		x := (g.Width - len(msg)*charW) / 2
+		y := g.Height / 3
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
 	}
 }

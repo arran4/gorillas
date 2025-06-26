@@ -11,17 +11,18 @@ import (
 // The flag package can override these values using its BoolVar API.
 // Recognised variables:
 //
-//		GORILLAS_SOUND - set to 'true' or 'false' to enable or disable sound.
-//		GORILLAS_OLD_EXPLOSIONS - 'true' to use the old explosion style.
-//		GORILLAS_EXPLOSION_RADIUS - floating point radius for new explosions.
-//		GORILLAS_GRAVITY - gravitational constant used in game physics.
-//		GORILLAS_ROUNDS - default number of rounds to play.
-//		GORILLAS_SLIDING_TEXT - 'true' to enable sliding text effects.
-//		GORILLAS_SHOW_INTRO - 'true' to display the intro sequence.
-//		GORILLAS_FORCE_CGA - 'true' to force CGA mode graphics.
-//		     GORILLAS_WINNER_FIRST - 'true' if round winner starts the next round.
-//		GORILLAS_VARIABLE_WIND - 'true' to mimic BASIC wind changes each round.
-//	     GORILLAS_WIND_FLUCT - 'true' to vary wind slightly each throw.
+//			GORILLAS_SOUND - set to 'true' or 'false' to enable or disable sound.
+//			GORILLAS_OLD_EXPLOSIONS - 'true' to use the old explosion style.
+//			GORILLAS_EXPLOSION_RADIUS - floating point radius for new explosions.
+//	          GORILLAS_VECTOR_EXPLOSIONS - 'true' to use vector explosions.
+//			GORILLAS_GRAVITY - gravitational constant used in game physics.
+//			GORILLAS_ROUNDS - default number of rounds to play.
+//			GORILLAS_SLIDING_TEXT - 'true' to enable sliding text effects.
+//			GORILLAS_SHOW_INTRO - 'true' to display the intro sequence.
+//			GORILLAS_FORCE_CGA - 'true' to force CGA mode graphics.
+//			     GORILLAS_WINNER_FIRST - 'true' if round winner starts the next round.
+//			GORILLAS_VARIABLE_WIND - 'true' to mimic BASIC wind changes each round.
+//		     GORILLAS_WIND_FLUCT - 'true' to vary wind slightly each throw.
 func loadSettingsFile(path string, s *Settings) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -56,6 +57,14 @@ func loadSettingsFile(path string, s *Settings) {
 				s.UseOldExplosions = true
 			} else if strings.EqualFold(val, "NO") {
 				s.UseOldExplosions = false
+			}
+		case "USEVECTOREXPLOSIONS":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.UseVectorExplosions = b
+			} else if strings.EqualFold(val, "YES") {
+				s.UseVectorExplosions = true
+			} else if strings.EqualFold(val, "NO") {
+				s.UseVectorExplosions = false
 			}
 		case "NEWEXPLOSIONRADIUS":
 			if f, err := strconv.ParseFloat(val, 64); err == nil {
@@ -132,6 +141,11 @@ func LoadSettings() Settings {
 	if v, ok := os.LookupEnv("GORILLAS_OLD_EXPLOSIONS"); ok {
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.UseOldExplosions = b
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_VECTOR_EXPLOSIONS"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.UseVectorExplosions = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_EXPLOSION_RADIUS"); ok {
