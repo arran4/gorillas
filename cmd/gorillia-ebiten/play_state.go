@@ -201,10 +201,14 @@ func (playState) Update(g *Game) error {
 		}
 	} else {
 		g.Step()
-		if g.Banana.Active {
-			if g.Banana.X >= g.sunX-sunRadius && g.Banana.X <= g.sunX+sunRadius &&
-				g.Banana.Y >= g.sunY-sunRadius && g.Banana.Y <= g.sunY+sunRadius {
+		if g.Banana.Active && g.sunIntegrity > 0 {
+			r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
+			if g.Banana.X >= g.sunX-r && g.Banana.X <= g.sunX+r &&
+				g.Banana.Y >= g.sunY-r && g.Banana.Y <= g.sunY+r {
 				g.sunHitTicks = 10
+				if g.sunIntegrity > 0 {
+					g.sunIntegrity--
+				}
 			}
 		}
 	}
