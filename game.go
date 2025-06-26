@@ -42,6 +42,15 @@ type Explosion struct {
 	Active bool
 }
 
+// Dance holds temporary state for the winner's victory animation.
+type Dance struct {
+	idx    int
+	frames []float64
+	frame  int
+	baseY  float64
+	Active bool
+}
+
 func DefaultSettings() Settings {
 	return Settings{
 		UseSound:           true,
@@ -95,6 +104,7 @@ type Game struct {
 	Gorillas      [2]Gorilla
 	Banana        Banana
 	Explosion     Explosion
+	Dance         Dance
 	Settings      Settings
 	Angle         float64
 	Power         float64
@@ -216,6 +226,36 @@ func (g *Game) startGorillaExplosion(idx int) {
 	g.Explosion.Active = true
 }
 
+func (g *Game) startVictoryDance(idx int) {
+	g.Dance = Dance{
+		idx:    idx,
+		frames: []float64{0, -3, 0, -3, 0},
+		baseY:  g.Gorillas[idx].Y,
+		Active: true,
+	}
+	g.Dance.frame = 0
+	if g.Settings.UseSound {
+		PlayBeep()
+	}
+}
+
+func (g *Game) stepVictoryDance() {
+	if !g.Dance.Active {
+		return
+	}
+	if g.Dance.frame >= len(g.Dance.frames) {
+		g.Gorillas[g.Dance.idx].Y = g.Dance.baseY
+		g.Dance.Active = false
+		return
+	}
+	offset := g.Dance.frames[g.Dance.frame]
+	g.Gorillas[g.Dance.idx].Y = g.Dance.baseY + offset
+	g.Dance.frame++
+	if g.Settings.UseSound {
+		PlayBeep()
+	}
+}
+
 func (g *Game) Throw() {
 	if g.Settings.UseSound {
 		PlayBeep()
@@ -236,6 +276,7 @@ func (g *Game) Throw() {
 }
 
 func (g *Game) Step() {
+	g.stepVictoryDance()
 	if g.Explosion.Active {
 		if g.Explosion.frame < len(g.Explosion.radii)-1 {
 			g.Explosion.frame++
@@ -278,6 +319,7 @@ func (g *Game) Step() {
 			g.Shots = [2]int{}
 			g.SaveScores()
 			g.startGorillaExplosion(i)
+			g.startVictoryDance(g.Current)
 			return
 		}
 	}

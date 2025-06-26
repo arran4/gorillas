@@ -90,6 +90,7 @@ func loadSettingsFile(path string, s *Settings) {
 				s.ForceCGA = true
 			} else if strings.EqualFold(val, "NO") {
 				s.ForceCGA = false
+			}
 		case "WINNERFIRST":
 			if b, err := strconv.ParseBool(val); err == nil {
 				s.WinnerFirst = b
