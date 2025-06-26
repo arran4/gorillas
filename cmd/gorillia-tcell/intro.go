@@ -149,7 +149,8 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 		drawString(s, w/2-9, cy+3, "V/X - View Intro")
 		drawString(s, w/2-9, cy+4, "I - Instructions")
 		drawString(s, w/2-9, cy+5, "P/Start - Play Game")
-		drawString(s, w/2-9, cy+6, "Q/B - Quit")
+		drawString(s, w/2-9, cy+6, "R - Replays")
+		drawString(s, w/2-9, cy+7, "Q/B - Quit")
 		s.Show()
 		ev := s.PollEvent()
 		if key, ok := ev.(*tcell.EventKey); ok {
