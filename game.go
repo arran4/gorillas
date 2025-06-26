@@ -445,6 +445,35 @@ func (g *Game) killGorillaIfInRadius(x, y, r float64) bool {
 	return false
 }
 
+// gorillaHitBetween checks if the line from (x1,y1) to (x2,y2) intersects any
+// gorilla. It returns the index of the gorilla hit or -1.
+func (g *Game) gorillaHitBetween(x1, y1, x2, y2 float64) int {
+	steps := int(math.Ceil(math.Max(math.Abs(x2-x1), math.Abs(y2-y1))))
+	if steps < 1 {
+		steps = 1
+	}
+	for i := 1; i <= steps; i++ {
+		t := float64(i) / float64(steps)
+		x := x1 + (x2-x1)*t
+		y := y1 + (y2-y1)*t
+		if g.HitMap != nil {
+			idx := g.HitMap.GorillaHitAt(int(math.Round(x)), int(math.Round(y)))
+			if idx >= 0 && idx != g.Current {
+				return idx
+			}
+		}
+		for j, gr := range g.Gorillas {
+			if j == g.Current {
+				continue
+			}
+			if math.Abs(gr.X-x) < 5 && math.Abs(gr.Y-y) < 10 {
+				return j
+			}
+		}
+	}
+	return -1
+}
+
 func (g *Game) startExplosion(x, y float64) {
 	base := g.explosionBase()
 	if g.Settings.UseSound {
@@ -631,6 +660,8 @@ func (g *Game) Step() ShotEvent {
 	if !g.Banana.Active {
 		return EventNone
 	}
+	oldX := g.Banana.X
+	oldY := g.Banana.Y
 	g.Banana.X += g.Banana.VX
 	g.Banana.Y += g.Banana.VY
 	// apply gravity scaled to the configured constant
@@ -662,6 +693,12 @@ func (g *Game) Step() ShotEvent {
 			g.setCurrent((g.Current + 1) % 2)
 			return g.LastEvent
 		}
+	}
+	if hit := g.gorillaHitBetween(oldX, oldY, g.Banana.X, g.Banana.Y); hit >= 0 {
+		g.Banana.Active = false
+		g.handleGorillaKill(hit)
+		g.startGorillaExplosion(hit)
+		return g.LastEvent
 	}
 	for i, gr := range g.Gorillas {
 		hit := false
