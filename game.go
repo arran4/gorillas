@@ -9,13 +9,13 @@ import (
 	"os"
 )
 
-type DamageRect struct {
-	X, Y, W, H float64
+type DamageCircle struct {
+	X, Y, R float64
 }
 
 type Building struct {
 	X, W, H float64
-	Damage  []DamageRect
+	Damage  []DamageCircle
 }
 
 type Gorilla struct {
@@ -342,14 +342,67 @@ func (g *Game) recordExplosionDamage(x, y, r float64) {
 		bx2 := b.X + b.W
 		by1 := float64(g.Height) - b.H
 		by2 := float64(g.Height)
-		left := math.Max(bx1, x-r)
-		right := math.Min(bx2, x+r)
-		top := math.Max(by1, y-r)
-		bottom := math.Min(by2, y+r)
-		if left < right && top < bottom {
-			b.Damage = append(b.Damage, DamageRect{left, top, right - left, bottom - top})
+		if x+r <= bx1 || x-r >= bx2 || y+r <= by1 || y-r >= by2 {
+			continue
+		}
+		b.Damage = append(b.Damage, DamageCircle{x, y, r})
+	}
+}
+
+func (g *Game) pointInDamage(idx int, x, y float64) bool {
+	b := &g.Buildings[idx]
+	for _, d := range b.Damage {
+		dx := x - d.X
+		dy := y - d.Y
+		if dx*dx+dy*dy <= d.R*d.R {
+			return true
 		}
 	}
+	return false
+}
+
+func (g *Game) startExplosion(x, y float64) {
+	base := g.Settings.NewExplosionRadius
+	if base <= 0 {
+		base = 16
+	}
+	if g.Settings.ForceCGA {
+		base /= 2
+	}
+	if g.Settings.UseSound {
+		PlayExplosionMelody()
+	}
+	g.Explosion = Explosion{X: x, Y: y}
+	if g.Settings.UseOldExplosions {
+		for i := 1; i <= int(base); i++ {
+			g.Explosion.Radii = append(g.Explosion.Radii, float64(i))
+		}
+		for i := int(base * 1.5); i >= 1; i-- {
+			g.Explosion.Radii = append(g.Explosion.Radii, float64(i))
+		}
+	} else {
+		g.Explosion.Radii = []float64{base * 1.175, base, base * 0.9, base * 0.6, base * 0.45, 0}
+		g.Explosion.Colors = []color.Color{
+			color.RGBA{128, 128, 128, 255},
+			color.RGBA{255, 0, 0, 255},
+			color.RGBA{255, 165, 0, 255},
+			color.RGBA{255, 255, 0, 255},
+			color.RGBA{255, 255, 255, 255},
+			color.Black,
+		}
+		if g.Settings.UseVectorExplosions {
+			frames := []float64{base, base * 0.9, base * 0.6, base * 0.45}
+			for _, r := range frames {
+				w := 2 * r
+				h := 2 * r * 0.825
+				offX := x - r
+				offY := y - r*0.825
+				g.Explosion.Vectors = append(g.Explosion.Vectors, scaleVector(vectorData, w, h, offX, offY))
+			}
+		}
+	}
+	g.Explosion.Active = true
+	g.recordExplosionDamage(x, y, base)
 }
 
 func (g *Game) startGorillaExplosion(idx int) {
@@ -513,14 +566,11 @@ func (g *Game) Step() ShotEvent {
 	idx := int(g.Banana.X / bw)
 	if idx >= 0 && idx < g.BuildingCount && g.Banana.Y < float64(g.Height) {
 		if g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
-			// shorten the building to the impact point to simulate
-			// simple environmental destruction
-			newH := float64(g.Height) - g.Banana.Y
-			if newH < 0 {
-				newH = 0
-			}
-			if newH < g.Buildings[idx].H {
-				g.Buildings[idx].H = newH
+			if !g.pointInDamage(idx, g.Banana.X, g.Banana.Y) {
+				g.Banana.Active = false
+				g.startExplosion(g.Banana.X, g.Banana.Y)
+				g.evaluateMiss()
+				g.Current = (g.Current + 1) % 2
 			}
 			g.Banana.Active = false
 			// evaluate shot quality on miss

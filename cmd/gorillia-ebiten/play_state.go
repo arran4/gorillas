@@ -296,27 +296,20 @@ func (playState) Update(g *Game) error {
 
 func (playState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	for i := range g.buildings {
-		g.buildings[i].h = g.Buildings[i].H
-		g.buildings[i].damage = g.buildings[i].damage[:0]
+	bw := float64(g.Width) / float64(g.Game.BuildingCount)
+	for i := 0; i < g.Game.BuildingCount; i++ {
+		h := g.Buildings[i].H
+		img := g.buildingImg[i]
+		img.Fill(color.RGBA{})
+		img.DrawImage(g.buildingBase[i], nil)
 		for _, d := range g.Buildings[i].Damage {
-			g.buildings[i].damage = append(g.buildings[i].damage, damageRect{
-				x: d.X,
-				y: d.Y,
-				w: d.W,
-				h: d.H,
-			})
+			rx := int(d.X - float64(i)*bw)
+			ry := int(d.Y - (float64(g.Height) - h))
+			clearCircle(img, rx, ry, d.R)
 		}
-	}
-	for i, b := range g.buildings {
-		ebitenutil.DrawRect(screen, b.x, float64(g.Height)-b.h, b.w-1, b.h, b.color)
-		for _, w := range b.windows {
-			ebitenutil.DrawRect(screen, w.x, w.y, w.w, w.h, color.RGBA{255, 255, 0, 255})
-		}
-		for _, d := range b.damage {
-			ebitenutil.DrawRect(screen, d.x, d.y, d.w, d.h, color.Black)
-		}
-		_ = i
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(i)*bw, float64(g.Height)-h)
+		screen.DrawImage(img, op)
 	}
 	for i := range g.Gorillas {
 		g.drawGorilla(screen, i)
