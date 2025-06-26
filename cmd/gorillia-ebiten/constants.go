@@ -1,3 +1,5 @@
+//go:build !test
+
 package main
 
 // charW and charH define the width and height of ASCII characters used

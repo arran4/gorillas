@@ -23,19 +23,20 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings   []building
-	screen      tcell.Screen
-	sunX, sunY  int
-	sunHitTicks int
-	angleInput  string
-	powerInput  string
-	enteringAng bool
-	enteringPow bool
-	abortPrompt bool
-	resumeAng   bool
-	resumePow   bool
-	gorillaArt  [][]string
-	js          *joystick
+	buildings    []building
+	screen       tcell.Screen
+	sunX, sunY   int
+	sunHitTicks  int
+	angleInput   string
+	powerInput   string
+	enteringAng  bool
+	enteringPow  bool
+	abortPrompt  bool
+	resumeAng    bool
+	resumePow    bool
+	gorillaArt   [][]string
+	js           *joystick
+	sunIntegrity int
 }
 
 const buildingWidth = 8
@@ -479,7 +480,8 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 
 // setupScreen presents an interactive form allowing the player names,
 // round count and gravity to be edited. It returns the updated values
-// once the user presses Escape to start the game.
+// once the player chooses to start the game using either Enter on the
+// "Start" option or the Escape key.
 func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds int, gravity float64) (string, string, int, float64, bool) {
 	fields := []string{p1, p2, strconv.Itoa(rounds), fmt.Sprintf("%.0f", gravity)}
 	players := league.Names()

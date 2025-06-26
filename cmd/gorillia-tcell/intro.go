@@ -146,16 +146,10 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 		drawGorillaFrame(s, cx, cy, gorillaFrames[0])
 		drawGorillaFrame(s, cx+12, cy, gorillaFrames[0])
 		drawString(s, w/2-4, cy-2, "GORILLAS")
-<<<<<<< codex/add-instructionsstate-for-ebiten-and-tcell-ports
 		drawString(s, w/2-9, cy+3, "V - View Intro")
 		drawString(s, w/2-9, cy+4, "I - Instructions")
 		drawString(s, w/2-9, cy+5, "P - Play Game")
 		drawString(s, w/2-9, cy+6, "Q - Quit")
-=======
-		drawString(s, w/2-9, cy+3, "V/X - View Intro")
-		drawString(s, w/2-9, cy+4, "P/Start - Play Game")
-		drawString(s, w/2-9, cy+5, "Q/B - Quit")
->>>>>>> master
 		s.Show()
 		ev := s.PollEvent()
 		if key, ok := ev.(*tcell.EventKey); ok {
