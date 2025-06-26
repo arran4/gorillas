@@ -187,6 +187,8 @@ type Game struct {
 	Settings      Settings
 	Angle         float64
 	Power         float64
+	Angles        [2]float64
+	Powers        [2]float64
 	Current       int
 	Wins          [2]int
 	TotalWins     [2]int
@@ -231,6 +233,8 @@ func NewGame(width, height, buildingCount int) *Game {
 		buildingCount = DefaultBuildingCount
 	}
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, ShotsFile: defaultShotsFile, BuildingCount: buildingCount, Aborted: false}
+	g.Angles = [2]float64{45, 45}
+	g.Powers = [2]float64{50, 50}
 	g.League = LoadLeague(defaultLeagueFile)
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
@@ -307,6 +311,12 @@ func (g *Game) Reset() {
 	if g.ResetHook != nil {
 		g.ResetHook()
 	}
+}
+
+func (g *Game) setCurrent(idx int) {
+	g.Current = idx
+	g.Angle = g.Angles[idx]
+	g.Power = g.Powers[idx]
 }
 
 func fnRan(x int) int {
@@ -428,6 +438,8 @@ func (g *Game) Throw() {
 	}
 	g.LastAngle[g.Current] = g.Angle
 	g.LastPower[g.Current] = g.Power
+	g.Angles[g.Current] = g.Angle
+	g.Powers[g.Current] = g.Power
 	g.Shots[g.Current]++
 	start := g.Gorillas[g.Current]
 	g.lastStartX = start.X
@@ -469,9 +481,9 @@ func (g *Game) Step() ShotEvent {
 				g.Wind = basicWind()
 			}
 			if g.Settings.WinnerFirst {
-				g.Current = cur
+				g.setCurrent(cur)
 			} else {
-				g.Current = (cur + 1) % 2
+				g.setCurrent((cur + 1) % 2)
 			}
 		}
 		return EventNone
@@ -493,7 +505,7 @@ func (g *Game) Step() ShotEvent {
 		} else {
 			g.Banana.Active = false
 			g.evaluateMiss()
-			g.Current = (g.Current + 1) % 2
+			g.setCurrent((g.Current + 1) % 2)
 			return g.LastEvent
 		}
 	}
@@ -513,7 +525,7 @@ func (g *Game) Step() ShotEvent {
 			g.Banana.Active = false
 			// evaluate shot quality on miss
 			g.evaluateMiss()
-			g.Current = (g.Current + 1) % 2
+			g.setCurrent((g.Current + 1) % 2)
 		}
 	}
 	for i, gr := range g.Gorillas {
@@ -539,7 +551,7 @@ func (g *Game) Step() ShotEvent {
 			g.SaveScores()
 			g.startGorillaExplosion(i)
 			g.startVictoryDance(winner)
-			g.Current = winner
+			g.setCurrent(winner)
 			if g.Settings.UseSound && event != EventNone {
 				PlayBeep()
 			}
@@ -549,7 +561,7 @@ func (g *Game) Step() ShotEvent {
 	if g.Banana.Y > float64(g.Height) || g.Banana.X < 0 || g.Banana.X >= float64(g.Width) {
 		g.Banana.Active = false
 		g.evaluateMiss()
-		g.Current = (g.Current + 1) % 2
+		g.setCurrent((g.Current + 1) % 2)
 	}
 	return g.LastEvent
 }

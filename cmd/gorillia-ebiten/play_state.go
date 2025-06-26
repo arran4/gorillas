@@ -299,7 +299,14 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
 		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
-	ebitenutil.DebugPrint(screen, info)
+	x := 0
+	if g.Current == 1 {
+		x = g.Width - len(info)*charW
+		if x < 0 {
+			x = 0
+		}
+	}
+	ebitenutil.DebugPrintAt(screen, info, x, 0)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
 		x := (g.Width - len(msg)*charW) / 2
