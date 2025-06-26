@@ -248,3 +248,10 @@ func PlayDanceMelody() {
 		playTone(f, 100*time.Millisecond)
 	}
 }
+
+// PlayExplosionMelody plays the tune heard during a gorilla explosion.
+// The melody matches the original QBasic game as well as the Ebiten port.
+func PlayExplosionMelody() {
+	// The explosion tune uses the same notes as the victory dance.
+	PlayDanceMelody()
+}

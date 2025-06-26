@@ -7,3 +7,5 @@ func PlayBeep() {}
 func PlayIntroMusic() {}
 
 func PlayDanceMelody() {}
+
+func PlayExplosionMelody() {}
