@@ -239,7 +239,12 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		if len(g.Explosion.Colors) > g.Explosion.Frame {
 			clr = color.RGBAModel.Convert(g.Explosion.Colors[g.Explosion.Frame]).(color.RGBA)
 		}
-		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], clr)
+		frame := g.Explosion.Frame
+		if g.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Explosion.Vectors) {
+			drawVectorLines(screen, g.Explosion.Vectors[frame-1], clr)
+		} else {
+			drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[frame], clr)
+		}
 	}
 	g.drawSun(screen)
 	g.drawWindArrow(screen)
