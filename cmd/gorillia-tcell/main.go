@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/arran4/gorillas"
 	"github.com/gdamore/tcell/v2"
@@ -30,6 +31,9 @@ type Game struct {
 	powerInput  string
 	enteringAng bool
 	enteringPow bool
+	abortPrompt bool
+	resumeAng   bool
+	resumePow   bool
 	gorillaArt  [][]string
 }
 
@@ -162,6 +166,10 @@ func (g *Game) draw() {
 	for i, r := range s {
 		g.screen.SetContent(i, 0, r, nil, tcell.StyleDefault)
 	}
+	if g.abortPrompt {
+		msg := "Abort game? [Y/N]"
+		drawString(g.screen, (g.Width-len(msg))/2, 1, msg)
+	}
 	g.screen.Show()
 }
 
@@ -235,6 +243,26 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 
 		ev := s.PollEvent()
 		if key, ok := ev.(*tcell.EventKey); ok {
+			if g.abortPrompt {
+				r := unicode.ToUpper(key.Rune())
+				if r == 'Y' {
+					return nil
+				}
+				if r == 'N' {
+					g.abortPrompt = false
+					if g.resumeAng {
+						g.enteringAng = true
+						g.angleInput = ""
+					}
+					if g.resumePow {
+						g.enteringPow = true
+						g.powerInput = ""
+					}
+					g.resumeAng = false
+					g.resumePow = false
+				}
+				continue
+			}
 			if g.enteringAng || g.enteringPow {
 				switch key.Key() {
 				case tcell.KeyEnter:
@@ -268,6 +296,9 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 						g.throw()
 					}
 				case tcell.KeyEsc:
+					g.abortPrompt = true
+					g.resumeAng = g.enteringAng
+					g.resumePow = g.enteringPow
 					g.enteringAng = false
 					g.enteringPow = false
 					g.angleInput = ""
