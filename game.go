@@ -92,6 +92,7 @@ type Game struct {
 	TotalWins     [2]int
 	ScoreFile     string
 	Wind          float64
+	Gravity       float64
 }
 
 const BuildingCount = 10
@@ -100,6 +101,7 @@ const defaultScoreFile = "gorillas_scores.json"
 func NewGame(width, height int) *Game {
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile}
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	rand.Seed(time.Now().UnixNano())
 	g.Wind = float64(rand.Intn(21) - 10)
 	bw := float64(width) / BuildingCount
@@ -158,6 +160,7 @@ func (g *Game) Reset() {
 	file := g.ScoreFile
 	*g = *NewGame(g.Width, g.Height)
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	g.Wins = wins
 	g.TotalWins = totals
 	g.ScoreFile = file
@@ -221,7 +224,7 @@ func (g *Game) Step() {
 	}
 	g.Banana.X += g.Banana.VX
 	g.Banana.Y += g.Banana.VY
-	g.Banana.VY += 0.5
+	g.Banana.VY += g.Gravity / 34
 	g.Banana.VX += g.Wind / 20
 	idx := int(g.Banana.X / (float64(g.Width) / BuildingCount))
 	if idx >= 0 && idx < BuildingCount {
