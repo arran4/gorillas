@@ -24,25 +24,27 @@ type Banana struct {
 }
 
 type Settings struct {
-	UseSound           bool
-	UseOldExplosions   bool
-	NewExplosionRadius float64
-	UseSlidingText     bool
-	DefaultGravity     float64
-	DefaultRoundQty    int
-	ShowIntro          bool
-	ForceCGA           bool
-	WinnerFirst        bool
-	VariableWind       bool
-	WindFluctuations   bool
+	UseSound            bool
+	UseOldExplosions    bool
+	UseVectorExplosions bool
+	NewExplosionRadius  float64
+	UseSlidingText      bool
+	DefaultGravity      float64
+	DefaultRoundQty     int
+	ShowIntro           bool
+	ForceCGA            bool
+	WinnerFirst         bool
+	VariableWind        bool
+	WindFluctuations    bool
 }
 
 type Explosion struct {
-	X, Y   float64
-	Radii  []float64
-	Colors []color.Color
-	Frame  int
-	Active bool
+	X, Y    float64
+	Radii   []float64
+	Colors  []color.Color
+	Vectors [][]VectorPoint
+	Frame   int
+	Active  bool
 }
 
 // ShotEvent indicates special outcomes for a banana throw.
@@ -84,16 +86,17 @@ type Dance struct {
 
 func DefaultSettings() Settings {
 	return Settings{
-		UseSound:           true,
-		NewExplosionRadius: 40,
-		UseSlidingText:     false,
-		DefaultGravity:     17,
-		DefaultRoundQty:    4,
-		ShowIntro:          true,
-		ForceCGA:           false,
-		WinnerFirst:        false,
-		VariableWind:       false,
-		WindFluctuations:   false,
+		UseSound:            true,
+		UseVectorExplosions: false,
+		NewExplosionRadius:  40,
+		UseSlidingText:      false,
+		DefaultGravity:      17,
+		DefaultRoundQty:     4,
+		ShowIntro:           true,
+		ForceCGA:            false,
+		WinnerFirst:         false,
+		VariableWind:        false,
+		WindFluctuations:    false,
 	}
 }
 
@@ -164,6 +167,7 @@ type Game struct {
 	lastStartX float64
 	lastOtherX float64
 	lastVX     float64
+	ResetHook     func()
 }
 
 const DefaultBuildingCount = 10
@@ -246,6 +250,9 @@ func (g *Game) Reset() {
 	g.League = league
 	g.Settings = settings
 	g.Gravity = gravity
+	if g.ResetHook != nil {
+		g.ResetHook()
+	}
 }
 
 func fnRan(x int) int {
@@ -292,6 +299,16 @@ func (g *Game) startGorillaExplosion(idx int) {
 			color.RGBA{255, 255, 0, 255},
 			color.RGBA{255, 255, 255, 255},
 			color.Black,
+		}
+		if g.Settings.UseVectorExplosions {
+			frames := []float64{base, base * 0.9, base * 0.6, base * 0.45}
+			for _, r := range frames {
+				w := 2 * r
+				h := 2 * r * 0.825
+				offX := g.Explosion.X - r
+				offY := g.Explosion.Y - r*0.825
+				g.Explosion.Vectors = append(g.Explosion.Vectors, scaleVector(vectorData, w, h, offX, offY))
+			}
 		}
 	}
 	g.Explosion.Active = true
