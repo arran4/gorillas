@@ -129,6 +129,7 @@ type Game struct {
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
+	ResetHook     func()
 }
 
 const DefaultBuildingCount = 10
@@ -211,6 +212,9 @@ func (g *Game) Reset() {
 	g.League = league
 	g.Settings = settings
 	g.Gravity = gravity
+	if g.ResetHook != nil {
+		g.ResetHook()
+	}
 }
 
 func fnRan(x int) int {

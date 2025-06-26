@@ -17,6 +17,7 @@ import (
 )
 
 const sunRadius = 20
+const sunMaxIntegrity = 4
 
 type window struct {
 	x, y, w, h float64
@@ -33,11 +34,15 @@ func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 }
 
 func (g *Game) drawSun(img *ebiten.Image) {
+	if g.sunIntegrity <= 0 {
+		return
+	}
 	clr := color.RGBA{255, 255, 0, 255}
 	if g.sunHitTicks > 0 {
 		clr = color.RGBA{255, 100, 100, 255}
 	}
-	drawFilledCircle(img, g.sunX, g.sunY, sunRadius, clr)
+	r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
+	drawFilledCircle(img, g.sunX, g.sunY, r, clr)
 	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
 	ebitenutil.DrawRect(img, g.sunX+3, g.sunY-4, 3, 3, color.Black)
 	if g.sunHitTicks > 0 {
@@ -133,23 +138,24 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings   []building
-	sunX, sunY  float64
-	sunHitTicks int
-	angleInput  string
-	powerInput  string
-	enteringAng bool
-	enteringPow bool
-	abortPrompt bool
-	resumeAng   bool
-	resumePow   bool
-	bananaLeft  *ebiten.Image
-	bananaRight *ebiten.Image
-	bananaUp    *ebiten.Image
-	bananaDown  *ebiten.Image
-	gorillaImg  *ebiten.Image
-	gorillaArt  [][]string
-	State       State
+	buildings    []building
+	sunX, sunY   float64
+	sunHitTicks  int
+	sunIntegrity int
+	angleInput   string
+	powerInput   string
+	enteringAng  bool
+	enteringPow  bool
+	abortPrompt  bool
+	resumeAng    bool
+	resumePow    bool
+	bananaLeft   *ebiten.Image
+	bananaRight  *ebiten.Image
+	bananaUp     *ebiten.Image
+	bananaDown   *ebiten.Image
+	gorillaImg   *ebiten.Image
+	gorillaArt   [][]string
+	State        State
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -186,6 +192,10 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.sunX = float64(g.Width) - 40
 	g.sunY = 40
+	g.sunIntegrity = sunMaxIntegrity
+	g.Game.ResetHook = func() {
+		g.sunIntegrity = sunMaxIntegrity
+	}
 	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites()
 	return g
 }
