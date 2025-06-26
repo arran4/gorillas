@@ -40,7 +40,7 @@ func (m *menuState) Update(g *Game) error {
 			case ebiten.KeyQ:
 				return ebiten.Termination
 			case ebiten.KeyP:
-				g.State = playState{}
+				g.State = newSetupState(g)
 				return nil
 			case ebiten.KeyV:
 				g.State = newIntroMovieState(m.useSound, m.sliding)
