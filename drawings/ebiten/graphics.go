@@ -67,24 +67,16 @@ const (
 // DrawBASSun renders the classic QBASIC sun sprite at the given position and radius.
 func DrawBASSun(img *ebiten.Image, cx, cy, r float64, shocked bool, clr color.Color) {
 	DrawFilledCircle(img, cx, cy, r, clr)
-	scale := r / 12
-	lines := [][4]float64{
-		{-20, 0, 20, 0},
-		{0, -15, 0, 15},
-		{-15, -10, 15, 10},
-		{-15, 10, 15, -10},
-		{-8, -13, 8, 13},
-		{-8, 13, 8, -13},
-		{-18, -5, 18, 5},
-		{-18, 5, 18, -5},
-	}
-	for _, l := range lines {
-		x1 := cx + l[0]*scale
-		y1 := cy + l[1]*scale
-		x2 := cx + l[2]*scale
-		y2 := cy + l[3]*scale
+	rayLen := r / 2
+	for i := 0; i < 8; i++ {
+		ang := float64(i) * 45 * math.Pi / 180
+		x1 := cx + r*math.Cos(ang)
+		y1 := cy - r*math.Sin(ang)
+		x2 := cx + (r+rayLen)*math.Cos(ang)
+		y2 := cy - (r+rayLen)*math.Sin(ang)
 		ebitenutil.DrawLine(img, x1, y1, x2, y2, clr)
 	}
+	scale := r / 12
 	eyeX := 3 * scale
 	eyeY := -2 * scale
 	DrawFilledCircle(img, cx-eyeX, cy+eyeY, 1*scale, color.Black)
