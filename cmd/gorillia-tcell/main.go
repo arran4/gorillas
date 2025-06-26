@@ -923,10 +923,11 @@ func main() {
 		}
 		panic(err)
 	}
-	if err = s.Init(); err != nil {
-		panic(fmt.Errorf("screen init: %w", err))
-	}
-	defer s.Fini()
+    if err = s.Init(); err != nil {
+            panic(fmt.Errorf("screen init: %w", err))
+    }
+    s.SetStyle(tcell.StyleDefault.Background(tcell.ColorBlack).Foreground(tcell.ColorWhite))
+    defer s.Fini()
 
 	settings := gorillas.LoadSettings()
 	wind := flag.Float64("wind", math.NaN(), "initial wind")
