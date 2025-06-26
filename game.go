@@ -162,6 +162,7 @@ type Game struct {
 	Players       [2]string
 	League        *League
 	ScoreFile     string
+	ShotsFile     string
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
@@ -180,6 +181,7 @@ type Game struct {
 
 const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
+const defaultShotsFile = "gorillas_shots.json"
 const defaultLeagueFile = "gorillas.lge"
 const groundBounceFactor = 0.4
 const groundBounceThreshold = 5.0
@@ -188,7 +190,7 @@ func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
 		buildingCount = DefaultBuildingCount
 	}
-	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount, Aborted: false}
+	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, ShotsFile: defaultShotsFile, BuildingCount: buildingCount, Aborted: false}
 	g.League = LoadLeague(defaultLeagueFile)
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
@@ -248,6 +250,7 @@ func (g *Game) Reset() {
 	wins := g.Wins
 	totals := g.TotalWins
 	file := g.ScoreFile
+	shotsFile := g.ShotsFile
 	players := g.Players
 	league := g.League
 	settings := g.Settings
@@ -256,6 +259,7 @@ func (g *Game) Reset() {
 	g.Wins = wins
 	g.TotalWins = totals
 	g.ScoreFile = file
+	g.ShotsFile = shotsFile
 	g.Players = players
 	g.League = league
 	g.Settings = settings
