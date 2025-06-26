@@ -45,6 +45,9 @@ func (m *menuState) Update(g *Game) error {
 			case ebiten.KeyV:
 				g.State = newIntroMovieState(m.useSound, m.sliding)
 				return nil
+			case ebiten.KeyI:
+				g.State = newInstructionsState(m.sliding)
+				return nil
 			}
 		}
 	}
@@ -73,9 +76,11 @@ func (m *menuState) Draw(g *Game, screen *ebiten.Image) {
 	if m.stage == 1 {
 		line := "V - View Intro"
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+3*charH)
-		line = "P - Play Game"
+		line = "I - Instructions"
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+4*charH)
-		line = "Q - Quit"
+		line = "P - Play Game"
 		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+5*charH)
+		line = "Q - Quit"
+		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, cy+6*charH)
 	}
 }

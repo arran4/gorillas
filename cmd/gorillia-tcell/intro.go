@@ -95,6 +95,40 @@ func showIntroMovie(s tcell.Screen, useSound, sliding bool) {
 	SparklePause(s, 0)
 }
 
+func showInstructions(s tcell.Screen, sliding bool) {
+	lines, err := gorillas.LoadInstructions()
+	if err != nil {
+		lines = []string{"Instructions unavailable"}
+	}
+	w, h := s.Size()
+	maxLen := 0
+	for _, l := range lines {
+		if len(l) > maxLen {
+			maxLen = len(l)
+		}
+	}
+	y := h/2 - len(lines)/2
+	if sliding {
+		for i := 1; i <= maxLen; i++ {
+			for j, line := range lines {
+				n := i
+				if n > len(line) {
+					n = len(line)
+				}
+				drawString(s, (w-len(line))/2, y+j, line[:n])
+			}
+			s.Show()
+			time.Sleep(30 * time.Millisecond)
+		}
+	} else {
+		for j, line := range lines {
+			drawString(s, (w-len(line))/2, y+j, line)
+		}
+		s.Show()
+	}
+	SparklePause(s, 0)
+}
+
 func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 	w, h := s.Size()
 	cx := w/2 - 10
@@ -113,8 +147,9 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 		drawGorillaFrame(s, cx+12, cy, gorillaFrames[0])
 		drawString(s, w/2-4, cy-2, "GORILLAS")
 		drawString(s, w/2-9, cy+3, "V - View Intro")
-		drawString(s, w/2-9, cy+4, "P - Play Game")
-		drawString(s, w/2-9, cy+5, "Q - Quit")
+		drawString(s, w/2-9, cy+4, "I - Instructions")
+		drawString(s, w/2-9, cy+5, "P - Play Game")
+		drawString(s, w/2-9, cy+6, "Q - Quit")
 		s.Show()
 		ev := s.PollEvent()
 		if key, ok := ev.(*tcell.EventKey); ok {
@@ -125,6 +160,8 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 				return true
 			case 'v', 'V':
 				showIntroMovie(s, useSound, sliding)
+			case 'i', 'I':
+				showInstructions(s, sliding)
 			}
 		}
 	}
