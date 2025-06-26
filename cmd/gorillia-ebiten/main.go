@@ -9,13 +9,11 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/arran4/gorillas"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const sunRadius = 20
