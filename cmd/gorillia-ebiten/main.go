@@ -305,8 +305,28 @@ func main() {
 	} else {
 		game.State = newMenuState(settings.UseSound, settings.UseSlidingText)
 	}
+	winsBackup := game.TotalWins
+	var playersBackup map[string]*gorillas.PlayerStats
+	if game.League != nil {
+		playersBackup = make(map[string]*gorillas.PlayerStats, len(game.League.Players))
+		for n, ps := range game.League.Players {
+			cp := *ps
+			playersBackup[n] = &cp
+		}
+	}
 	if err := ebiten.RunGame(game); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
+	}
+	if game.Aborted {
+		game.TotalWins = winsBackup
+		if game.League != nil {
+			game.League.Players = playersBackup
+			game.League.Save()
+		}
+		if err := SparklePause([]string{"Game aborted"}, 0); err != nil {
+			panic(fmt.Errorf("sparkle pause: %w", err))
+		}
+		return
 	}
 	game.SaveScores()
 	if err := showStats(game.StatsString()); err != nil {

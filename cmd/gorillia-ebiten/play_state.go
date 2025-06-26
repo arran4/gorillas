@@ -22,7 +22,7 @@ func (playState) Update(g *Game) error {
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			switch k {
 			case ebiten.KeyY:
-				g.State = newScoreState(g.StatsString())
+				g.State = newAbortState()
 			case ebiten.KeyN:
 				g.abortPrompt = false
 				if g.resumeAng {
