@@ -295,7 +295,7 @@ func (playState) Update(g *Game) error {
 }
 
 func (playState) Draw(g *Game, screen *ebiten.Image) {
-	screen.Fill(color.RGBA{0, 0, 0, 255})
+	screen.Fill(color.RGBA{0, 0, 255, 255})
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {
 		h := g.Buildings[i].H
