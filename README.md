@@ -72,6 +72,6 @@ go test -tags test ./...
 ### Known limitations
 
 - The Ebiten version currently has no computer controlled opponent.
-- The tcell version uses arrow keys and Enter for input and requires a UTF-8 capable terminal.
+ - The tcell version allows arrow keys or typed numbers for input and requires a UTF-8 capable terminal.
 - Sound support may vary across platforms.
 
