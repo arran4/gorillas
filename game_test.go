@@ -231,6 +231,17 @@ func TestExplosionProgressAndReset(t *testing.T) {
 	}
 }
 
+func TestExplosionColorsMatchRadii(t *testing.T) {
+	g := newTestGame()
+	g.startGorillaExplosion(0)
+	if g.Settings.UseOldExplosions {
+		t.Skip("old explosions have no colours")
+	}
+	if len(g.Explosion.Colors) != len(g.Explosion.Radii) {
+		t.Fatalf("colour frames %d do not match radii %d", len(g.Explosion.Colors), len(g.Explosion.Radii))
+	}
+}
+
 func TestSaveAndLoadScores(t *testing.T) {
 	tmp := filepath.Join(t.TempDir(), "scores.json")
 	g1 := newTestGame()
