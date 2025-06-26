@@ -19,6 +19,7 @@ import (
 type building struct {
 	h       int
 	windows []int
+	style   tcell.Style
 }
 
 type Game struct {
@@ -60,7 +61,12 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 				wins = append(wins, y)
 			}
 		}
-		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins})
+		style := tcell.StyleDefault
+		if settings.ForceCGA {
+			cga := []tcell.Color{tcell.ColorBlack, tcell.ColorCyan, tcell.ColorMagenta, tcell.ColorWhite}
+			style = style.Foreground(cga[rand.Intn(3)+1])
+		}
+		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins, style: style})
 	}
 	g.sunX = g.Width - 4
 	g.sunY = 1
@@ -74,14 +80,26 @@ var (
 
 func (g *Game) drawSun() {
 	art := sunHappy
-	if g.sunHitTicks > 0 {
+	hit := g.sunHitTicks > 0
+	if hit {
 		art = sunShock
 		g.sunHitTicks--
+	}
+	style := tcell.StyleDefault
+	if g.Settings.ForceCGA {
+		style = style.Foreground(tcell.ColorMagenta)
+	}
+	if g.Settings.ForceCGA {
+		fg := tcell.ColorCyan
+		if hit {
+			fg = tcell.ColorMagenta
+		}
+		style = style.Foreground(fg)
 	}
 	for dy, line := range art {
 		for dx, r := range line {
 			if r != ' ' {
-				g.screen.SetContent(g.sunX+dx, g.sunY+dy, r, nil, tcell.StyleDefault)
+				g.screen.SetContent(g.sunX+dx, g.sunY+dy, r, nil, style)
 			}
 		}
 	}
@@ -95,16 +113,24 @@ func (g *Game) draw() {
 	for i, b := range g.buildings {
 		x := i*buildingWidth + 4
 		for y := g.Height - 1; y >= g.Height-b.h; y-- {
-			g.screen.SetContent(x, y, '#', nil, tcell.StyleDefault)
+			g.screen.SetContent(x, y, '#', nil, b.style)
+		}
+		winStyle := b.style
+		if g.Settings.ForceCGA {
+			winStyle = winStyle.Foreground(tcell.ColorWhite)
 		}
 		for _, wy := range b.windows {
-			g.screen.SetContent(x, wy, 'o', nil, tcell.StyleDefault)
+			g.screen.SetContent(x, wy, 'o', nil, winStyle)
 		}
 	}
 	g.drawGorilla(0)
 	g.drawGorilla(1)
 	// draw a simple sun
-	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
+	sunStyle := tcell.StyleDefault
+	if g.Settings.ForceCGA {
+		sunStyle = sunStyle.Foreground(tcell.ColorCyan)
+	}
+	g.screen.SetContent(g.Width-2, 1, 'O', nil, sunStyle)
 	if g.Banana.Active {
 		ch := 'o'
 		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
@@ -120,7 +146,11 @@ func (g *Game) draw() {
 				ch = 'v'
 			}
 		}
-		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), ch, nil, tcell.StyleDefault)
+		style := tcell.StyleDefault
+		if g.Settings.ForceCGA {
+			style = style.Foreground(tcell.ColorCyan)
+		}
+		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), ch, nil, style)
 	}
 	if g.Explosion.Active {
 		r := int(g.Explosion.Radii[g.Explosion.Frame])
@@ -135,13 +165,17 @@ func (g *Game) draw() {
 				char = chars[len(chars)-1]
 			}
 		}
+		style := tcell.StyleDefault
+		if g.Settings.ForceCGA {
+			style = style.Foreground(tcell.ColorMagenta)
+		}
 		for dx := -r; dx <= r; dx++ {
 			for dy := -r; dy <= r; dy++ {
 				if dx*dx+dy*dy <= r*r {
 					x := ex + dx
 					y := ey + dy
 					if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
-						g.screen.SetContent(x, y, char, nil, tcell.StyleDefault)
+						g.screen.SetContent(x, y, char, nil, style)
 					}
 				}
 			}
@@ -189,7 +223,11 @@ func (g *Game) drawWindArrow() {
 	for i := dir; i != length; i += dir {
 		pos := x + i
 		if pos >= 0 && pos < g.Width {
-			g.screen.SetContent(pos, y, '-', nil, tcell.StyleDefault)
+			style := tcell.StyleDefault
+			if g.Settings.ForceCGA {
+				style = style.Foreground(tcell.ColorWhite)
+			}
+			g.screen.SetContent(pos, y, '-', nil, style)
 		}
 	}
 	headX := x + length
@@ -198,7 +236,11 @@ func (g *Game) drawWindArrow() {
 		if length < 0 {
 			head = '<'
 		}
-		g.screen.SetContent(headX, y, head, nil, tcell.StyleDefault)
+		style := tcell.StyleDefault
+		if g.Settings.ForceCGA {
+			style = style.Foreground(tcell.ColorWhite)
+		}
+		g.screen.SetContent(headX, y, head, nil, style)
 	}
 }
 
@@ -569,6 +611,9 @@ func main() {
 		panic(fmt.Errorf("screen init: %w", err))
 	}
 	defer s.Fini()
+	if settings.ForceCGA {
+		s.SetStyle(tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorBlack))
+	}
 
 	settings := gorillas.LoadSettings()
 	wind := flag.Float64("wind", math.NaN(), "initial wind")

@@ -250,13 +250,24 @@ func (g *Game) startGorillaExplosion(idx int) {
 		}
 	} else {
 		g.Explosion.Radii = []float64{base * 1.175, base, base * 0.9, base * 0.6, base * 0.45, 0}
-		g.Explosion.Colors = []color.Color{
-			color.RGBA{128, 128, 128, 255},
-			color.RGBA{255, 0, 0, 255},
-			color.RGBA{255, 165, 0, 255},
-			color.RGBA{255, 255, 0, 255},
-			color.RGBA{255, 255, 255, 255},
-			color.Black,
+		if g.Settings.ForceCGA {
+			g.Explosion.Colors = []color.Color{
+				CGAPalette[2], // magenta
+				CGAPalette[1], // cyan
+				CGAPalette[3], // white
+				CGAPalette[1], // cyan
+				CGAPalette[3], // white
+				CGAPalette[0], // black
+			}
+		} else {
+			g.Explosion.Colors = []color.Color{
+				color.RGBA{128, 128, 128, 255},
+				color.RGBA{255, 0, 0, 255},
+				color.RGBA{255, 165, 0, 255},
+				color.RGBA{255, 255, 0, 255},
+				color.RGBA{255, 255, 255, 255},
+				color.Black,
+			}
 		}
 	}
 	g.Explosion.Active = true

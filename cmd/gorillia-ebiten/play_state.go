@@ -194,7 +194,11 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 	for i, b := range g.buildings {
 		ebitenutil.DrawRect(screen, b.x, float64(g.Height)-b.h, b.w-1, b.h, b.color)
 		for _, w := range b.windows {
-			ebitenutil.DrawRect(screen, w.x, w.y, w.w, w.h, color.RGBA{255, 255, 0, 255})
+			clr := color.RGBA{255, 255, 0, 255}
+			if g.Settings.ForceCGA {
+				clr = gorillas.CGAPalette[3]
+			}
+			ebitenutil.DrawRect(screen, w.x, w.y, w.w, w.h, clr)
 		}
 		_ = i
 	}

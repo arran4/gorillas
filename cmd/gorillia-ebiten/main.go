@@ -34,8 +34,15 @@ func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 
 func (g *Game) drawSun(img *ebiten.Image) {
 	clr := color.RGBA{255, 255, 0, 255}
+	if g.Settings.ForceCGA {
+		clr = gorillas.CGAPalette[1]
+	}
 	if g.sunHitTicks > 0 {
-		clr = color.RGBA{255, 100, 100, 255}
+		if g.Settings.ForceCGA {
+			clr = gorillas.CGAPalette[2]
+		} else {
+			clr = color.RGBA{255, 100, 100, 255}
+		}
 	}
 	drawFilledCircle(img, g.sunX, g.sunY, sunRadius, clr)
 	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
@@ -48,11 +55,10 @@ func (g *Game) drawSun(img *ebiten.Image) {
 	}
 }
 
-func createBananaSprite(mask []string) *ebiten.Image {
+func createBananaSprite(mask []string, clr color.Color) *ebiten.Image {
 	h := len(mask)
 	w := len(mask[0])
 	img := ebiten.NewImage(w, h)
-	clr := color.RGBA{255, 255, 0, 255}
 	for y, row := range mask {
 		for x, c := range row {
 			if c != '.' {
@@ -63,35 +69,35 @@ func createBananaSprite(mask []string) *ebiten.Image {
 	return img
 }
 
-func createBananaSprites() (left, right, up, down *ebiten.Image) {
+func createBananaSprites(clr color.Color) (left, right, up, down *ebiten.Image) {
 	left = createBananaSprite([]string{
 		"..##.",
 		".###.",
 		"#####",
 		".###.",
 		"..##.",
-	})
+	}, clr)
 	right = createBananaSprite([]string{
 		".##..",
 		".###.",
 		"#####",
 		".###.",
 		".##..",
-	})
+	}, clr)
 	up = createBananaSprite([]string{
 		"..#..",
 		".###.",
 		"..#..",
 		"..#..",
 		"..#..",
-	})
+	}, clr)
 	down = createBananaSprite([]string{
 		"..#..",
 		"..#..",
 		"..#..",
 		".###.",
 		"..#..",
-	})
+	}, clr)
 	return
 }
 
@@ -109,7 +115,7 @@ func createGorillaSprite(mask []string, clr color.Color) *ebiten.Image {
 	return img
 }
 
-func defaultGorillaSprite() *ebiten.Image {
+func defaultGorillaSprite(forceCGA bool) *ebiten.Image {
 	mask := []string{
 		"..##..",
 		".####.",
@@ -122,7 +128,11 @@ func defaultGorillaSprite() *ebiten.Image {
 		".#..#.",
 		".####.",
 	}
-	return createGorillaSprite(mask, color.RGBA{150, 75, 0, 255})
+	clr := color.RGBA{150, 75, 0, 255}
+	if forceCGA {
+		clr = gorillas.CGAPalette[2] // magenta
+	}
+	return createGorillaSprite(mask, clr)
 }
 
 type building struct {
@@ -163,17 +173,21 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
-	g.gorillaImg = defaultGorillaSprite()
+	g.gorillaImg = defaultGorillaSprite(settings.ForceCGA)
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {
 		h := g.Buildings[i].H
+		clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+		if settings.ForceCGA {
+			clr = gorillas.CGAPalette[rand.Intn(3)+1]
+		}
 		b := building{
 			x:     float64(i) * bw,
 			w:     bw,
 			h:     h,
-			color: color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255},
+			color: clr,
 		}
 		for wx := b.x + 3; wx < b.x+b.w-3; wx += 6 {
 			for wy := float64(g.Height) - 3; wy > float64(g.Height)-b.h+3; wy -= 6 {
@@ -186,7 +200,11 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.sunX = float64(g.Width) - 40
 	g.sunY = 40
-	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites()
+	bananaClr := color.RGBA{255, 255, 0, 255}
+	if settings.ForceCGA {
+		bananaClr = gorillas.CGAPalette[1]
+	}
+	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites(bananaClr)
 	return g
 }
 
@@ -213,7 +231,11 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 	}
 	if len(g.gorillaArt) == 0 {
 		gr := g.Gorillas[idx]
-		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
+		clr := color.RGBA{255, 0, 0, 255}
+		if g.Settings.ForceCGA {
+			clr = gorillas.CGAPalette[2]
+		}
+		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, clr)
 		return
 	}
 	frame := g.gorillaArt[0]
@@ -222,7 +244,11 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 	for dy, line := range frame {
 		for dx, ch := range line {
 			if ch != ' ' {
-				ebitenutil.DrawRect(img, float64(baseX+dx), float64(baseY+dy), 1, 1, color.RGBA{255, 0, 0, 255})
+				clr := color.RGBA{255, 0, 0, 255}
+				if g.Settings.ForceCGA {
+					clr = gorillas.CGAPalette[2]
+				}
+				ebitenutil.DrawRect(img, float64(baseX+dx), float64(baseY+dy), 1, 1, clr)
 			}
 		}
 	}
@@ -236,14 +262,18 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 	y := float64(g.Height) - float64(g.Height)/40
 	x := float64(g.Width) / 2
 	end := x + length
-	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})
+	clr := color.RGBA{255, 255, 0, 255}
+	if g.Settings.ForceCGA {
+		clr = gorillas.CGAPalette[3]
+	}
+	ebitenutil.DrawLine(img, x, y, end, y, clr)
 	head := 5.0
 	if length > 0 {
-		ebitenutil.DrawLine(img, end, y, end-head, y-3, color.RGBA{255, 255, 0, 255})
-		ebitenutil.DrawLine(img, end, y, end-head, y+3, color.RGBA{255, 255, 0, 255})
+		ebitenutil.DrawLine(img, end, y, end-head, y-3, clr)
+		ebitenutil.DrawLine(img, end, y, end-head, y+3, clr)
 	} else {
-		ebitenutil.DrawLine(img, end, y, end+head, y-3, color.RGBA{255, 255, 0, 255})
-		ebitenutil.DrawLine(img, end, y, end+head, y+3, color.RGBA{255, 255, 0, 255})
+		ebitenutil.DrawLine(img, end, y, end+head, y-3, clr)
+		ebitenutil.DrawLine(img, end, y, end+head, y+3, clr)
 	}
 }
 
