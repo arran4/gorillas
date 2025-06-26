@@ -46,9 +46,13 @@ type introGame struct {
 	charIdx  int
 	next     time.Time
 	frame    int
+	done     bool
 }
 
 func (g *introGame) Update() error {
+	if g.done {
+		return nil
+	}
 	now := time.Now()
 	switch g.stage {
 	case 0:
@@ -91,7 +95,7 @@ func (g *introGame) Update() error {
 		}
 	case 3:
 		if now.After(g.next) {
-			return ebiten.Termination
+			g.done = true
 		}
 	}
 	return nil
@@ -136,12 +140,11 @@ func (g *introGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return g.width, g.height
 }
 
-func showIntroMovie(useSound, sliding bool) {
-	w, h := ebiten.WindowSize()
+func newIntroGame(w, h int, useSound, sliding bool) *introGame {
 	if w == 0 || h == 0 {
 		w, h = 800, 600
 	}
-	ig := &introGame{
+	return &introGame{
 		useSound: useSound,
 		sliding:  sliding,
 		lines:    []string{"QBasic GORILLAS", "", "Starring two gorillas"},
@@ -149,5 +152,4 @@ func showIntroMovie(useSound, sliding bool) {
 		height:   h,
 		next:     time.Now(),
 	}
-	_ = ebiten.RunGame(ig)
 }
