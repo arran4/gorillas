@@ -203,6 +203,7 @@ type Game struct {
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
+	HitMap        *HitMap
 
 	// LastEvent records the outcome of the most recent shot.
 	LastEvent ShotEvent
@@ -291,6 +292,18 @@ func NewGame(width, height, buildingCount int) *Game {
 	}
 	g.Gorillas[0] = Gorilla{g.Buildings[1].X + bw/2, float64(height) - g.Buildings[1].H}
 	g.Gorillas[1] = Gorilla{g.Buildings[g.BuildingCount-2].X + bw/2, float64(height) - g.Buildings[g.BuildingCount-2].H}
+
+	g.HitMap = NewHitMap(width, height)
+	for _, b := range g.Buildings {
+		x1 := int(b.X)
+		x2 := int(b.X + b.W)
+		y1 := height - int(b.H)
+		g.HitMap.AddBuilding(x1, y1, x2, height)
+	}
+	for i, gr := range g.Gorillas {
+		g.HitMap.DrawGorilla(int(gr.X), int(gr.Y), i, 4)
+	}
+
 	return g
 }
 
@@ -353,6 +366,9 @@ func (g *Game) recordExplosionDamage(x, y, r float64) {
 		}
 		b.Damage = append(b.Damage, DamageCircle{x, y, r})
 	}
+	if g.HitMap != nil {
+		g.HitMap.ClearBuildingArea(int(math.Round(x)), int(math.Round(y)), int(math.Ceil(r)))
+	}
 }
 
 func (g *Game) pointInDamage(idx int, x, y float64) bool {
@@ -397,6 +413,10 @@ func (g *Game) handleGorillaKill(idx int) {
 	}
 	g.Shots = [2]int{}
 	g.SaveScores()
+	if g.HitMap != nil {
+		gr := g.Gorillas[idx]
+		g.HitMap.ClearGorilla(int(gr.X), int(gr.Y), idx, 4)
+	}
 	g.startVictoryDance(winner)
 	g.setCurrent(winner)
 	if g.Settings.UseSound && event != EventNone {
@@ -406,6 +426,14 @@ func (g *Game) handleGorillaKill(idx int) {
 }
 
 func (g *Game) killGorillaIfInRadius(x, y, r float64) bool {
+	if g.HitMap != nil {
+		idx := g.HitMap.GorillaHitInCircle(int(math.Round(x)), int(math.Round(y)), int(math.Ceil(r)))
+		if idx >= 0 {
+			g.handleGorillaKill(idx)
+			return true
+		}
+		return false
+	}
 	for i, gr := range g.Gorillas {
 		dx := gr.X - x
 		dy := gr.Y - y
@@ -636,7 +664,16 @@ func (g *Game) Step() ShotEvent {
 		}
 	}
 	for i, gr := range g.Gorillas {
-		if math.Abs(gr.X-g.Banana.X) < 5 && math.Abs(gr.Y-g.Banana.Y) < 10 {
+		hit := false
+		if g.HitMap != nil {
+			if g.HitMap.GorillaHitAt(int(math.Round(g.Banana.X)), int(math.Round(g.Banana.Y))) == i {
+				hit = true
+			}
+		}
+		if !hit && math.Abs(gr.X-g.Banana.X) < 5 && math.Abs(gr.Y-g.Banana.Y) < 10 {
+			hit = true
+		}
+		if hit {
 			g.Banana.Active = false
 			shooter := g.Current
 			winner := shooter
