@@ -176,7 +176,9 @@ func introScreen(s tcell.Screen, useSound, sliding bool) bool {
 		drawGorillaFrame(s, cx+12, cy, gorillaFrames[(i+1)%len(gorillaFrames)])
 		drawString(s, w/2-4, cy-2, "GORILLAS")
 		s.Show()
-		time.Sleep(300 * time.Millisecond)
+		if waitEsc(s, 300*time.Millisecond) {
+			break
+		}
 	}
 	for {
 		s.Clear()
