@@ -2,15 +2,19 @@ package gorillas
 
 import (
 	"math"
+	"math/rand"
 	"path/filepath"
 	"testing"
 )
 
 func newTestGame() *Game {
+	rand.Seed(1)
 	g := NewGame(100, 100, DefaultBuildingCount)
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
 	g.Wind = 0
+	// tests expect no persistent league data
+	g.League = nil
 	return g
 }
 
