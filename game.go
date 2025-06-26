@@ -33,6 +33,7 @@ type Settings struct {
 	ForceCGA           bool
 	WinnerFirst        bool
 	VariableWind       bool
+	WindFluctuations   bool
 }
 
 type Explosion struct {
@@ -62,6 +63,7 @@ func DefaultSettings() Settings {
 		ForceCGA:           false,
 		WinnerFirst:        false,
 		VariableWind:       false,
+		WindFluctuations:   false,
 	}
 }
 
@@ -274,6 +276,14 @@ func (g *Game) stepVictoryDance() {
 func (g *Game) Throw() {
 	if g.Settings.UseSound {
 		PlayBeep()
+	}
+	if g.Settings.WindFluctuations {
+		g.Wind += float64(rand.Intn(5) - 2)
+		if g.Wind > 10 {
+			g.Wind = 10
+		} else if g.Wind < -10 {
+			g.Wind = -10
+		}
 	}
 	g.Shots[g.Current]++
 	start := g.Gorillas[g.Current]
