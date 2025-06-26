@@ -178,6 +178,8 @@ func showStats(s tcell.Screen, stats string) {
 	for i, line := range lines {
 		drawString(s, (w-len(line))/2, y+i, line)
 	}
+	msg := "Press any key to continue"
+	drawString(s, (w-len(msg))/2, y+len(lines)+1, msg)
 	s.Show()
 	SparklePause(s, 0)
 }
@@ -196,6 +198,8 @@ func showLeague(s tcell.Screen, l *gorillas.League) {
 	for i, line := range rows {
 		drawString(s, (w-len(line))/2, y+i, line)
 	}
+	msg := "Press any key to continue"
+	drawString(s, (w-len(msg))/2, y+len(rows)+1, msg)
 	s.Show()
 	SparklePause(s, 0)
 }

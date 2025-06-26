@@ -21,33 +21,6 @@ type window struct {
 	x, y, w, h float64
 }
 
-type wrapper struct {
-	intro *introGame
-	main  *Game
-}
-
-func (w *wrapper) Update() error {
-	if w.intro != nil && !w.intro.done {
-		return w.intro.Update()
-	}
-	return w.main.Update()
-}
-
-func (w *wrapper) Draw(screen *ebiten.Image) {
-	if w.intro != nil && !w.intro.done {
-		w.intro.Draw(screen)
-	} else {
-		w.main.Draw(screen)
-	}
-}
-
-func (w *wrapper) Layout(outsideWidth, outsideHeight int) (int, int) {
-	if w.intro != nil && !w.intro.done {
-		return w.intro.Layout(outsideWidth, outsideHeight)
-	}
-	return w.main.Layout(outsideWidth, outsideHeight)
-}
-
 func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 	for dx := -r; dx <= r; dx++ {
 		for dy := -r; dy <= r; dy++ {
@@ -66,7 +39,12 @@ func (g *Game) drawSun(img *ebiten.Image) {
 	drawFilledCircle(img, g.sunX, g.sunY, sunRadius, clr)
 	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
 	ebitenutil.DrawRect(img, g.sunX+3, g.sunY-4, 3, 3, color.Black)
-	ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+	if g.sunHitTicks > 0 {
+		drawFilledCircle(img, g.sunX, g.sunY+6, 5, color.Black)
+		drawFilledCircle(img, g.sunX, g.sunY+6, 3, clr)
+	} else {
+		ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+	}
 }
 
 func createBananaSprite(mask []string) *ebiten.Image {
@@ -131,6 +109,7 @@ type Game struct {
 	bananaRight *ebiten.Image
 	bananaUp    *ebiten.Image
 	bananaDown  *ebiten.Image
+	gorillaArt  [][]string
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -139,6 +118,11 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.Game.Wind = wind
 	}
 	g.Game.Settings = settings
+	if art, err := gorillas.LoadGorillaArt("assets/gorilla.txt"); err == nil {
+		g.gorillaArt = art
+	} else {
+		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
+	}
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
@@ -224,8 +208,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 		_ = i
 	}
-	for _, gr := range g.Gorillas {
-		ebitenutil.DrawRect(screen, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
+	for i := range g.Gorillas {
+		g.drawGorilla(screen, i)
 	}
 	if g.Banana.Active {
 		dir := 0
@@ -261,11 +245,33 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 	if g.Explosion.Active {
-		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], color.RGBA{255, 255, 0, 255})
+		clr := color.RGBA{255, 255, 0, 255}
+		if len(g.Explosion.Colors) > g.Explosion.Frame {
+			clr = color.RGBAModel.Convert(g.Explosion.Colors[g.Explosion.Frame]).(color.RGBA)
+		}
+		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], clr)
 	}
 	g.drawSun(screen)
 	g.drawWindArrow(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
+}
+
+func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
+	if len(g.gorillaArt) == 0 {
+		gr := g.Gorillas[idx]
+		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
+		return
+	}
+	frame := g.gorillaArt[0]
+	baseX := int(g.Gorillas[idx].X) - len(frame[0])/2
+	baseY := int(g.Gorillas[idx].Y) - len(frame)
+	for dy, line := range frame {
+		for dx, ch := range line {
+			if ch != ' ' {
+				ebitenutil.DrawRect(img, float64(baseX+dx), float64(baseY+dy), 1, 1, color.RGBA{255, 0, 0, 255})
+			}
+		}
+	}
 }
 
 func (g *Game) drawWindArrow(img *ebiten.Image) {
@@ -292,6 +298,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
+	increaseRLimit()
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Gorillas Ebiten")
 	settings := gorillas.LoadSettings()
@@ -306,14 +313,14 @@ func main() {
 	flag.Parse()
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
-	var ig *introGame
 	if settings.ShowIntro {
-		w, h := ebiten.WindowSize()
-		ig = newIntroGame(w, h, settings.UseSound, settings.UseSlidingText)
+		if !introScreen(settings.UseSound, settings.UseSlidingText) {
+			return
+		}
 	}
 	game := newGame(settings, *buildings, *wind)
 	game.Players = [2]string{*p1, *p2}
-	if err := ebiten.RunGame(&wrapper{intro: ig, main: game}); err != nil {
+	if err := ebiten.RunGame(game); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
 	}
 	game.SaveScores()

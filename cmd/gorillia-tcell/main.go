@@ -25,6 +25,7 @@ type Game struct {
 	screen      tcell.Screen
 	sunX, sunY  int
 	sunHitTicks int
+	gorillaArt  [][]string
 }
 
 const buildingWidth = 8
@@ -35,6 +36,11 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.Game.Wind = wind
 	}
 	g.Game.Settings = settings
+	if art, err := gorillas.LoadGorillaArt("assets/gorilla.txt"); err == nil {
+		g.gorillaArt = art
+	} else {
+		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
+	}
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	for _, b := range g.Buildings {
@@ -108,13 +114,22 @@ func (g *Game) draw() {
 		r := int(g.Explosion.Radii[g.Explosion.Frame])
 		ex := int(g.Explosion.X)
 		ey := int(g.Explosion.Y)
+		char := '*'
+		if !g.Settings.UseOldExplosions {
+			chars := []rune{'#', '@', 'O', 'o', '.'}
+			if g.Explosion.Frame < len(chars) {
+				char = chars[g.Explosion.Frame]
+			} else {
+				char = chars[len(chars)-1]
+			}
+		}
 		for dx := -r; dx <= r; dx++ {
 			for dy := -r; dy <= r; dy++ {
 				if dx*dx+dy*dy <= r*r {
 					x := ex + dx
 					y := ey + dy
 					if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
-						g.screen.SetContent(x, y, '*', nil, tcell.StyleDefault)
+						g.screen.SetContent(x, y, char, nil, tcell.StyleDefault)
 					}
 				}
 			}
@@ -157,15 +172,20 @@ func (g *Game) drawWindArrow() {
 }
 
 func (g *Game) drawGorilla(idx int) {
-	x := int(g.Gorillas[idx].X)
-	y := int(g.Gorillas[idx].Y) - 1
+	if len(g.gorillaArt) == 0 {
+		return
+	}
+	frame := g.gorillaArt[0]
+	x := int(g.Gorillas[idx].X) - len(frame[0])/2
+	y := int(g.Gorillas[idx].Y) - len(frame)
 	style := tcell.StyleDefault
-	g.screen.SetContent(x, y-2, 'O', nil, style)
-	g.screen.SetContent(x-1, y-1, '/', nil, style)
-	g.screen.SetContent(x, y-1, '|', nil, style)
-	g.screen.SetContent(x+1, y-1, '\\', nil, style)
-	g.screen.SetContent(x-1, y, '/', nil, style)
-	g.screen.SetContent(x+1, y, '\\', nil, style)
+	for dy, line := range frame {
+		for dx, r := range line {
+			if r != ' ' {
+				g.screen.SetContent(x+dx, y+dy, r, nil, style)
+			}
+		}
+	}
 }
 
 func (g *Game) throw() {
