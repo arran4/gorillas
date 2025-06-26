@@ -7,16 +7,10 @@ import (
 )
 
 func newTestGame() *Game {
-	g := &Game{Width: 100, Height: 100}
+	g := NewGame(100, 100, DefaultBuildingCount)
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
 	g.Wind = 0
-	bw := float64(g.Width) / BuildingCount
-	for i := 0; i < BuildingCount; i++ {
-		g.Buildings = append(g.Buildings, Building{X: float64(i) * bw, W: bw, H: 0})
-	}
-	g.Gorillas[0] = Gorilla{g.Buildings[1].X + bw/2, float64(g.Height) - g.Buildings[1].H}
-	g.Gorillas[1] = Gorilla{g.Buildings[BuildingCount-2].X + bw/2, float64(g.Height) - g.Buildings[BuildingCount-2].H}
 	return g
 }
 
@@ -52,7 +46,8 @@ func TestBananaTrajectoryAndOutOfBounds(t *testing.T) {
 	if !almostEqual(g.Banana.X, startX+vx) || !almostEqual(g.Banana.Y, startY+vy) {
 		t.Fatalf("unexpected position after first step: (%f,%f)", g.Banana.X, g.Banana.Y)
 	}
-	if !almostEqual(g.Banana.VY, vy+g.Gravity/34) {
+	expectedVY := vy + 0.5*(g.Settings.DefaultGravity/17)
+	if !almostEqual(g.Banana.VY, expectedVY) {
 		t.Fatalf("unexpected vy after first step: %f", g.Banana.VY)
 	}
 	if !g.Banana.Active {

@@ -26,8 +26,11 @@ type Game struct {
 
 const buildingWidth = 8
 
-func newGame(settings gorillas.Settings) *Game {
-	g := &Game{Game: gorillas.NewGame(80, 24)}
+func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
+	g := &Game{Game: gorillas.NewGame(80, 24, buildings)}
+	if !math.IsNaN(wind) {
+		g.Game.Wind = wind
+	}
 	g.Game.Settings = settings
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
@@ -172,14 +175,20 @@ func main() {
 	defer s.Fini()
 
 	settings := gorillas.LoadSettings()
+	wind := flag.Float64("wind", math.NaN(), "initial wind")
+	gravity := flag.Float64("gravity", settings.DefaultGravity, "gravity")
+	rounds := flag.Int("rounds", settings.DefaultRoundQty, "round count")
+	buildings := flag.Int("buildings", gorillas.DefaultBuildingCount, "building count")
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
 	flag.Parse()
+	settings.DefaultGravity = *gravity
+	settings.DefaultRoundQty = *rounds
 
 	if !introScreen(s, settings.UseSound) {
 		return
 	}
 
-	g := newGame(settings)
+	g := newGame(settings, *buildings, *wind)
 	if err := g.run(s); err != nil {
 		panic(err)
 	}
