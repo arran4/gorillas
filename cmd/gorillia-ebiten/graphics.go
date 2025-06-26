@@ -76,12 +76,16 @@ func drawBASSun(img *ebiten.Image, cx, cy, r float64, shocked bool, clr color.Co
 }
 
 // drawBASGorilla draws a simple approximation of the BAS gorilla sprite.
-func drawBASGorilla(img *ebiten.Image, x, y, scale float64, clr color.Color) {
+func drawBASGorilla(img *ebiten.Image, x, y, scale float64, arms int, clr color.Color) {
 	S := func(v float64) float64 { return v * scale }
 	// head
 	drawFilledRect(img, x-S(4), y, x+S(2.9), y+S(6), clr)
 	drawFilledRect(img, x-S(5), y+S(2), x+S(4), y+S(4), clr)
 	ebitenutil.DrawLine(img, x-S(3), y+S(2), x+S(2), y+S(2), color.Black)
+	for i := -2.0; i <= -1.0; i++ {
+		ebitenutil.DrawRect(img, x+S(i), y+S(4), 1, 1, color.Black)
+		ebitenutil.DrawRect(img, x+S(i+3), y+S(4), 1, 1, color.Black)
+	}
 	// neck
 	ebitenutil.DrawLine(img, x-S(3), y+S(7), x+S(2), y+S(7), clr)
 	// body
@@ -95,4 +99,17 @@ func drawBASGorilla(img *ebiten.Image, x, y, scale float64, clr color.Color) {
 	// chest outline
 	drawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
 	drawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
+	for i := -5.0; i <= -1.0; i++ {
+		switch arms {
+		case armsRightUp:
+			drawArc(img, x+S(i-0.1), y+S(14), S(9), 135, 225, clr)
+			drawArc(img, x+S(4.9)+S(i), y+S(4), S(9), 315, 45, clr)
+		case armsLeftUp:
+			drawArc(img, x+S(i-0.1), y+S(4), S(9), 135, 225, clr)
+			drawArc(img, x+S(4.9)+S(i), y+S(14), S(9), 315, 45, clr)
+		default:
+			drawArc(img, x+S(i-0.1), y+S(14), S(9), 135, 225, clr)
+			drawArc(img, x+S(4.9)+S(i), y+S(14), S(9), 315, 45, clr)
+		}
+	}
 }

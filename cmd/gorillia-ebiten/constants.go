@@ -8,10 +8,20 @@ const (
 	charW = 6
 	charH = 16
 	// gorillaScale controls how large the gorilla sprite appears in game
-	gorillaScale = 4
+	// The previous value of 4 produced gorillas far larger than the
+	// buildings drawn at 800x600, so reduce this to better match the
+	// original QBASIC proportions.
+	gorillaScale = 2
 	// bananaScale and sunScale keep other sprites proportional to the gorilla
 	bananaScale = gorillaScale
 	sunScale    = gorillaScale
+)
+
+// Constants describing the gorilla arm positions when drawing.
+const (
+	armsRightUp = 1
+	armsLeftUp  = 2
+	armsDown    = 3
 )
 
 // gorillaFrames represents the ASCII gorilla animation frames shared by
