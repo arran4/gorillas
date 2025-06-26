@@ -4,13 +4,16 @@ package main
 
 import "golang.org/x/sys/unix"
 
-func increaseRLimit() {
+func increaseRLimit() error {
 	var r unix.Rlimit
 	if err := unix.Getrlimit(unix.RLIMIT_NOFILE, &r); err != nil {
-		return
+		return err
 	}
 	if r.Cur < r.Max {
 		r.Cur = r.Max
-		_ = unix.Setrlimit(unix.RLIMIT_NOFILE, &r)
+		if err := unix.Setrlimit(unix.RLIMIT_NOFILE, &r); err != nil {
+			return err
+		}
 	}
+	return nil
 }

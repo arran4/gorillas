@@ -2,4 +2,4 @@
 
 package main
 
-func increaseRLimit() {}
+func increaseRLimit() error { return nil }
