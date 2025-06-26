@@ -15,6 +15,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	gorillas "github.com/arran4/gorillas"
+	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
 )
 
 // playState implements the main gameplay loop.
@@ -306,7 +307,7 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		for _, d := range g.Buildings[i].Damage {
 			rx := int(d.X - float64(i)*bw)
 			ry := int(d.Y - float64(g.Height-intH))
-			clearCircle(img, rx, ry, d.R)
+			ebdraw.ClearCircle(img, rx, ry, d.R)
 		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(i)*bw, float64(g.Height-intH))
@@ -358,7 +359,7 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		if g.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Explosion.Vectors) {
 			drawVectorLines(screen, g.Explosion.Vectors[frame-1], clr)
 		} else {
-			drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[frame], clr)
+			ebdraw.DrawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[frame], clr)
 		}
 	}
 	g.drawSun(screen)

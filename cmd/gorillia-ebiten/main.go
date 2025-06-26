@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/arran4/gorillas"
+	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
@@ -24,14 +25,7 @@ const (
 )
 
 func drawVectorLines(img *ebiten.Image, pts []gorillas.VectorPoint, clr color.Color) {
-	if len(pts) == 0 {
-		return
-	}
-	prev := pts[0]
-	for _, p := range pts[1:] {
-		ebitenutil.DrawLine(img, prev.X, prev.Y, p.X, p.Y, clr)
-		prev = p
-	}
+	ebdraw.DrawVectorLines(img, pts, clr)
 }
 
 func (g *Game) drawSun(img *ebiten.Image) {
@@ -43,124 +37,7 @@ func (g *Game) drawSun(img *ebiten.Image) {
 		clr = color.RGBA{255, 100, 100, 255}
 	}
 	r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
-	drawBASSun(img, g.sunX, g.sunY, r, g.sunHitTicks > 0, clr)
-}
-
-func createBananaSprite(mask []string) *ebiten.Image {
-	h := len(mask)
-	w := len(mask[0])
-	img := ebiten.NewImage(w, h)
-	clr := color.RGBA{255, 255, 0, 255}
-	for y, row := range mask {
-		for x, c := range row {
-			if c != '.' {
-				img.Set(x, y, clr)
-			}
-		}
-	}
-	return img
-}
-
-func createBananaSprites() (left, right, up, down *ebiten.Image) {
-	left = createBananaSprite([]string{
-		"..##.",
-		".###.",
-		"#####",
-		".###.",
-		"..##.",
-	})
-	right = createBananaSprite([]string{
-		".##..",
-		".###.",
-		"#####",
-		".###.",
-		".##..",
-	})
-	up = createBananaSprite([]string{
-		"..#..",
-		".###.",
-		"..#..",
-		"..#..",
-		"..#..",
-	})
-	down = createBananaSprite([]string{
-		"..#..",
-		"..#..",
-		"..#..",
-		".###.",
-		"..#..",
-	})
-	return
-}
-
-func createGorillaSprite(mask []string, clr color.Color) *ebiten.Image {
-	h := len(mask)
-	w := len(mask[0])
-	img := ebiten.NewImage(w, h)
-	for y, row := range mask {
-		for x, c := range row {
-			if c != '.' {
-				img.Set(x, y, clr)
-			}
-		}
-	}
-	return img
-}
-
-func defaultGorillaSprite() *ebiten.Image {
-	size := int(30 * gorillaScale)
-	img := ebiten.NewImage(size, size)
-	clr := color.RGBA{150, 75, 0, 255}
-	drawBASGorilla(img, 15*gorillaScale, gorillaScale, gorillaScale, armsDown, clr)
-	return img
-}
-
-func createBuildingSprite(w, h float64, clr color.Color) *ebiten.Image {
-	iw := int(w)
-	ih := int(h)
-	img := ebiten.NewImage(iw, ih)
-	img.Fill(clr)
-	winClr := color.RGBA{255, 255, 0, 255}
-	for x := 3; x < iw-3; x += 6 {
-		for y := ih - 3; y > 3; y -= 6 {
-			if rand.Intn(3) != 0 {
-				for dx := 0; dx < 3; dx++ {
-					for dy := 0; dy < 3; dy++ {
-						img.Set(x+dx, y+dy, winClr)
-					}
-				}
-			}
-		}
-	}
-	return img
-}
-
-func clearRect(img *ebiten.Image, x, y, w, h int) {
-	for dx := 0; dx < w; dx++ {
-		for dy := 0; dy < h; dy++ {
-			ix := x + dx
-			iy := y + dy
-			if ix >= 0 && ix < img.Bounds().Dx() && iy >= 0 && iy < img.Bounds().Dy() {
-				img.Set(ix, iy, color.RGBA{})
-			}
-		}
-	}
-}
-
-func clearCircle(img *ebiten.Image, cx, cy int, r float64) {
-	ir := int(r)
-	r2 := r * r
-	for dx := -ir; dx <= ir; dx++ {
-		for dy := -ir; dy <= ir; dy++ {
-			if float64(dx*dx+dy*dy) <= r2 {
-				ix := cx + dx
-				iy := cy + dy
-				if ix >= 0 && ix < img.Bounds().Dx() && iy >= 0 && iy < img.Bounds().Dy() {
-					img.Set(ix, iy, color.RGBA{})
-				}
-			}
-		}
-	}
+	ebdraw.DrawBASSun(img, g.sunX, g.sunY, r, g.sunHitTicks > 0, clr)
 }
 
 type Game struct {
@@ -202,14 +79,14 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
-	g.gorillaImg = defaultGorillaSprite()
+	g.gorillaImg = ebdraw.DefaultGorillaSprite(gorillaScale)
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {
 		h := g.Buildings[i].H
 		clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
-		base := createBuildingSprite(bw-1, h, clr)
+		base := ebdraw.CreateBuildingSprite(bw-1, h, clr)
 		g.buildingBase = append(g.buildingBase, base)
 		img := ebiten.NewImage(int(bw-1), int(h))
 		g.buildingImg = append(g.buildingImg, img)
@@ -226,13 +103,13 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		for i := 0; i < g.Game.BuildingCount; i++ {
 			h := g.Buildings[i].H
 			clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
-			base := createBuildingSprite(bw-1, h, clr)
+			base := ebdraw.CreateBuildingSprite(bw-1, h, clr)
 			g.buildingBase = append(g.buildingBase, base)
 			img := ebiten.NewImage(int(bw-1), int(h))
 			g.buildingImg = append(g.buildingImg, img)
 		}
 	}
-	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites()
+	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = ebdraw.CreateBananaSprites()
 	g.gamepads = ebiten.AppendGamepadIDs(nil)
 	return g
 }
