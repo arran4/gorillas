@@ -303,6 +303,16 @@ func (g *Game) drawGorilla(idx int) {
 	}
 }
 
+func (g *Game) startVictoryDance(idx int) {
+	g.Dance = gorillas.Dance{
+		idx:    idx,
+		frames: []float64{-3, 0, -3, 0},
+		baseY:  g.Gorillas[idx].Y,
+		Active: true,
+	}
+	g.Dance.frame = 0
+}
+
 func (g *Game) throw() {
 	g.Throw()
 }
@@ -311,19 +321,24 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 	g.screen = s
 
 	ticker := time.NewTicker(50 * time.Millisecond)
+	prevExplosion := g.Explosion.Active
 	for {
 		g.draw()
-		if g.Banana.Active || g.Explosion.Active {
-			<-ticker.C
-			g.Step()
-			if g.Banana.Active && g.sunIntegrity > 0 {
-				if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
-					g.sunHitTicks = 10
-					if g.sunIntegrity > 0 {
-						g.sunIntegrity--
-					}
+		<-ticker.C
+		g.Step()
+		if !prevExplosion && g.Explosion.Active {
+			g.startVictoryDance(g.Current)
+		}
+		prevExplosion = g.Explosion.Active
+		if g.Banana.Active && g.sunIntegrity > 0 {
+			if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
+				g.sunHitTicks = 10
+				if g.sunIntegrity > 0 {
+					g.sunIntegrity--
 				}
 			}
+		}
+		if g.Banana.Active || g.Explosion.Active || g.Dance.Active {
 			continue
 		}
 
