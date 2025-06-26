@@ -183,6 +183,7 @@ func main() {
 	rounds := flag.Int("rounds", settings.DefaultRoundQty, "round count")
 	buildings := flag.Int("buildings", gorillas.DefaultBuildingCount, "building count")
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
+	flag.BoolVar(&settings.WinnerFirst, "winnerfirst", settings.WinnerFirst, "winner starts next round")
 	ai := flag.Bool("ai", false, "enable computer opponent")
 	flag.Parse()
 	settings.DefaultGravity = *gravity
@@ -192,7 +193,7 @@ func main() {
 		return
 	}
 
-	g := newGame(settings)
+	g := newGame(settings, *buildings, *wind)
 	if err := g.run(s, *ai); err != nil {
 		panic(err)
 	}

@@ -29,6 +29,7 @@ type Settings struct {
 	NewExplosionRadius float64
 	DefaultGravity     float64
 	DefaultRoundQty    int
+	WinnerFirst        bool
 }
 
 type Explosion struct {
@@ -44,6 +45,7 @@ func DefaultSettings() Settings {
 		NewExplosionRadius: 40,
 		DefaultGravity:     17,
 		DefaultRoundQty:    4,
+		WinnerFirst:        false,
 	}
 }
 
@@ -218,7 +220,11 @@ func (g *Game) Step() {
 			g.Explosion.Active = false
 			cur := g.Current
 			g.Reset()
-			g.Current = cur
+			if g.Settings.WinnerFirst {
+				g.Current = cur
+			} else {
+				g.Current = (cur + 1) % 2
+			}
 		}
 		return
 	}
