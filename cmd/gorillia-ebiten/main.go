@@ -85,6 +85,7 @@ type Game struct {
 	buildings   []building
 	sunX, sunY  float64
 	sunHitTicks int
+	gorillaArt  [][]string
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -93,6 +94,11 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.Game.Wind = wind
 	}
 	g.Game.Settings = settings
+	if art, err := gorillas.LoadGorillaArt("assets/gorilla.txt"); err == nil {
+		g.gorillaArt = art
+	} else {
+		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
+	}
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
@@ -177,8 +183,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 		_ = i
 	}
-	for _, gr := range g.Gorillas {
-		ebitenutil.DrawRect(screen, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
+	for i := range g.Gorillas {
+		g.drawGorilla(screen, i)
 	}
 	if g.Banana.Active {
 		ebitenutil.DrawRect(screen, g.Banana.X-2, g.Banana.Y-2, 4, 4, color.RGBA{255, 255, 0, 255})
@@ -189,6 +195,24 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.drawSun(screen)
 	g.drawWindArrow(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
+}
+
+func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
+	if len(g.gorillaArt) == 0 {
+		gr := g.Gorillas[idx]
+		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})
+		return
+	}
+	frame := g.gorillaArt[0]
+	baseX := int(g.Gorillas[idx].X) - len(frame[0])/2
+	baseY := int(g.Gorillas[idx].Y) - len(frame)
+	for dy, line := range frame {
+		for dx, ch := range line {
+			if ch != ' ' {
+				ebitenutil.DrawRect(img, float64(baseX+dx), float64(baseY+dy), 1, 1, color.RGBA{255, 0, 0, 255})
+			}
+		}
+	}
 }
 
 func (g *Game) drawWindArrow(img *ebiten.Image) {
