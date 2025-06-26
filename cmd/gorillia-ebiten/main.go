@@ -179,7 +179,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		ebitenutil.DrawRect(screen, g.Banana.X-2, g.Banana.Y-2, 4, 4, color.RGBA{255, 255, 0, 255})
 	}
 	if g.Explosion.Active {
-		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], color.RGBA{255, 255, 0, 255})
+		clr := color.RGBA{255, 255, 0, 255}
+		if len(g.Explosion.Colors) > g.Explosion.Frame {
+			clr = color.RGBAModel.Convert(g.Explosion.Colors[g.Explosion.Frame]).(color.RGBA)
+		}
+		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[g.Explosion.Frame], clr)
 	}
 	g.drawSun(screen)
 	g.drawWindArrow(screen)

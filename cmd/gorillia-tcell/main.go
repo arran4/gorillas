@@ -94,13 +94,22 @@ func (g *Game) draw() {
 		r := int(g.Explosion.Radii[g.Explosion.Frame])
 		ex := int(g.Explosion.X)
 		ey := int(g.Explosion.Y)
+		char := '*'
+		if !g.Settings.UseOldExplosions {
+			chars := []rune{'#', '@', 'O', 'o', '.'}
+			if g.Explosion.Frame < len(chars) {
+				char = chars[g.Explosion.Frame]
+			} else {
+				char = chars[len(chars)-1]
+			}
+		}
 		for dx := -r; dx <= r; dx++ {
 			for dy := -r; dy <= r; dy++ {
 				if dx*dx+dy*dy <= r*r {
 					x := ex + dx
 					y := ey + dy
 					if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
-						g.screen.SetContent(x, y, '*', nil, tcell.StyleDefault)
+						g.screen.SetContent(x, y, char, nil, tcell.StyleDefault)
 					}
 				}
 			}
