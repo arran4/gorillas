@@ -13,6 +13,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
+const sunRadius = 20
+
 type window struct {
 	x, y, w, h float64
 }
@@ -27,6 +29,17 @@ func drawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 	}
 }
 
+func (g *Game) drawSun(img *ebiten.Image) {
+	clr := color.RGBA{255, 255, 0, 255}
+	if g.sunHitTicks > 0 {
+		clr = color.RGBA{255, 100, 100, 255}
+	}
+	drawFilledCircle(img, g.sunX, g.sunY, sunRadius, clr)
+	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
+	ebitenutil.DrawRect(img, g.sunX+3, g.sunY-4, 3, 3, color.Black)
+	ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+}
+
 type building struct {
 	x, w, h float64
 	color   color.Color
@@ -35,7 +48,9 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings []building
+	buildings   []building
+	sunX, sunY  float64
+	sunHitTicks int
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -64,6 +79,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		}
 		g.buildings = append(g.buildings, b)
 	}
+	g.sunX = float64(g.Width) - 40
+	g.sunY = 40
 	return g
 }
 
@@ -104,6 +121,15 @@ func (g *Game) Update() error {
 		}
 	} else {
 		g.Step()
+		if g.Banana.Active {
+			if g.Banana.X >= g.sunX-sunRadius && g.Banana.X <= g.sunX+sunRadius &&
+				g.Banana.Y >= g.sunY-sunRadius && g.Banana.Y <= g.sunY+sunRadius {
+				g.sunHitTicks = 10
+			}
+		}
+	}
+	if g.sunHitTicks > 0 {
+		g.sunHitTicks--
 	}
 	return nil
 }
@@ -126,6 +152,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	if g.Explosion.Active {
 		drawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.radii[g.Explosion.frame], color.RGBA{255, 255, 0, 255})
 	}
+	g.drawSun(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%2.0f P:%2.0f W:%+2.0f P%d %d-%d", g.Angle, g.Power, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
 }
 
