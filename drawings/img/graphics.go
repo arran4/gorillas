@@ -78,6 +78,9 @@ func DrawFilledCircle(img image.Image, cx, cy, r float64, clr color.Color) {
 
 // DrawArc renders an arc from startDeg to endDeg going clockwise from 0 degrees to the right.
 func DrawArc(img image.Image, cx, cy, r float64, startDeg, endDeg float64, clr color.Color) {
+	if endDeg < startDeg {
+		endDeg += 360
+	}
 	step := 2.0
 	prevX := cx + r*math.Cos(startDeg*math.Pi/180)
 	prevY := cy - r*math.Sin(startDeg*math.Pi/180)
