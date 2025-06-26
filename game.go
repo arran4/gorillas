@@ -92,17 +92,23 @@ type Game struct {
 	TotalWins     [2]int
 	ScoreFile     string
 	Wind          float64
+	BuildingCount int
+	Gravity       float64
 }
 
-const BuildingCount = 10
+const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
 
-func NewGame(width, height int) *Game {
-	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile}
+func NewGame(width, height, buildingCount int) *Game {
+	if buildingCount <= 0 {
+		buildingCount = DefaultBuildingCount
+	}
+	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount}
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	rand.Seed(time.Now().UnixNano())
 	g.Wind = float64(rand.Intn(21) - 10)
-	bw := float64(width) / BuildingCount
+	bw := float64(width) / float64(g.BuildingCount)
 
 	// create a sloping skyline similar to the original BASIC version
 	slope := rand.Intn(6) + 1
@@ -112,7 +118,7 @@ func NewGame(width, height int) *Game {
 	}
 	htInc := float64(height) / 20
 
-	for i := 0; i < BuildingCount; i++ {
+	for i := 0; i < g.BuildingCount; i++ {
 		x := float64(i) * bw
 		switch slope {
 		case 1:
@@ -148,7 +154,7 @@ func NewGame(width, height int) *Game {
 		})
 	}
 	g.Gorillas[0] = Gorilla{g.Buildings[1].X + bw/2, float64(height) - g.Buildings[1].H}
-	g.Gorillas[1] = Gorilla{g.Buildings[BuildingCount-2].X + bw/2, float64(height) - g.Buildings[BuildingCount-2].H}
+	g.Gorillas[1] = Gorilla{g.Buildings[g.BuildingCount-2].X + bw/2, float64(height) - g.Buildings[g.BuildingCount-2].H}
 	return g
 }
 
@@ -156,8 +162,9 @@ func (g *Game) Reset() {
 	wins := g.Wins
 	totals := g.TotalWins
 	file := g.ScoreFile
-	*g = *NewGame(g.Width, g.Height)
+	*g = *NewGame(g.Width, g.Height, g.BuildingCount)
 	g.Settings = DefaultSettings()
+	g.Gravity = g.Settings.DefaultGravity
 	g.Wins = wins
 	g.TotalWins = totals
 	g.ScoreFile = file
@@ -221,10 +228,10 @@ func (g *Game) Step() {
 	}
 	g.Banana.X += g.Banana.VX
 	g.Banana.Y += g.Banana.VY
-	g.Banana.VY += 0.5
+	g.Banana.VY += 0.5 * (g.Settings.DefaultGravity / 17)
 	g.Banana.VX += g.Wind / 20
-	idx := int(g.Banana.X / (float64(g.Width) / BuildingCount))
-	if idx >= 0 && idx < BuildingCount {
+	idx := int(g.Banana.X / (float64(g.Width) / float64(g.BuildingCount)))
+	if idx >= 0 && idx < g.BuildingCount {
 		if g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
 			g.Banana.Active = false
 			g.Current = (g.Current + 1) % 2
