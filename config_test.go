@@ -19,7 +19,8 @@ func TestLoadSettingsFile(t *testing.T) {
 		"ShowIntro=no\n" +
 		"ForceCGA=yes\n" +
 		"WinnerFirst=yes\n" +
-		"VariableWind=yes\n")
+		"VariableWind=yes\n" +
+		"WindFluctuations=yes\n")
 	if err := os.WriteFile(ini, data, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -54,5 +55,8 @@ func TestLoadSettingsFile(t *testing.T) {
 	}
 	if !s.VariableWind {
 		t.Errorf("expected VariableWind=true")
+	}
+	if !s.WindFluctuations {
+		t.Errorf("expected WindFluctuations=true")
 	}
 }

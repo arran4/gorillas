@@ -108,6 +108,20 @@ func TestWindInfluencesVelocity(t *testing.T) {
 	}
 }
 
+func TestThrowAppliesWindFluctuation(t *testing.T) {
+	g := newTestGame()
+	g.Settings.WindFluctuations = true
+	g.Wind = 5
+	rand.Seed(2)
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+	g.Throw()
+	if g.Wind != 4 {
+		t.Fatalf("expected wind 4 got %f", g.Wind)
+	}
+}
+
 func TestGravityInfluencesVelocity(t *testing.T) {
 	g := newTestGame()
 	g.Angle = 0
