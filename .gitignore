@@ -28,3 +28,5 @@ go.work.sum
 /gorillas_scores.json
 /gorillas.lge
 cmd/tests/*.png
+/gorilla.png
+/sun.png
