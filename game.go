@@ -303,6 +303,7 @@ func (g *Game) Reset() {
 	league := g.League
 	settings := g.Settings
 	gravity := g.Gravity
+	hook := g.ResetHook
 	*g = *NewGame(g.Width, g.Height, g.BuildingCount)
 	g.Wins = wins
 	g.TotalWins = totals
@@ -312,6 +313,7 @@ func (g *Game) Reset() {
 	g.League = league
 	g.Settings = settings
 	g.Gravity = gravity
+	g.ResetHook = hook
 	if g.ResetHook != nil {
 		g.ResetHook()
 	}
