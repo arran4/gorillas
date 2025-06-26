@@ -204,8 +204,6 @@ func (g *Game) draw() {
 	}
 	g.drawGorilla(0)
 	g.drawGorilla(1)
-	// draw a simple sun at the current sun location
-	g.screen.SetContent(g.sunX+1, g.sunY+1, 'O', nil, tcell.StyleDefault)
 	if g.Banana.Active {
 		ch := 'o'
 		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {

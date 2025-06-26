@@ -44,6 +44,18 @@ func drawVectorLines(img *ebiten.Image, pts []gorillas.VectorPoint, clr color.Co
 	}
 }
 
+func drawArc(img *ebiten.Image, cx, cy, r float64, startDeg, endDeg float64, clr color.Color) {
+	step := 2.0
+	prevX := cx + r*math.Cos(startDeg*math.Pi/180)
+	prevY := cy + r*math.Sin(startDeg*math.Pi/180)
+	for a := startDeg + step; a <= endDeg; a += step {
+		x := cx + r*math.Cos(a*math.Pi/180)
+		y := cy + r*math.Sin(a*math.Pi/180)
+		ebitenutil.DrawLine(img, prevX, prevY, x, y, clr)
+		prevX, prevY = x, y
+	}
+}
+
 func (g *Game) drawSun(img *ebiten.Image) {
 	if g.sunIntegrity <= 0 {
 		return
@@ -53,14 +65,41 @@ func (g *Game) drawSun(img *ebiten.Image) {
 		clr = color.RGBA{255, 100, 100, 255}
 	}
 	r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
+
+	// body
 	drawFilledCircle(img, g.sunX, g.sunY, r, clr)
-	ebitenutil.DrawRect(img, g.sunX-6, g.sunY-4, 3, 3, color.Black)
-	ebitenutil.DrawRect(img, g.sunX+3, g.sunY-4, 3, 3, color.Black)
+
+	scale := r / 12
+	// rays following the original QBASIC layout
+	lines := [][4]float64{
+		{-20, 0, 20, 0},
+		{0, -15, 0, 15},
+		{-15, -10, 15, 10},
+		{-15, 10, 15, -10},
+		{-8, -13, 8, 13},
+		{-8, 13, 8, -13},
+		{-18, -5, 18, 5},
+		{-18, 5, 18, -5},
+	}
+	for _, l := range lines {
+		x1 := g.sunX + l[0]*scale
+		y1 := g.sunY + l[1]*scale
+		x2 := g.sunX + l[2]*scale
+		y2 := g.sunY + l[3]*scale
+		ebitenutil.DrawLine(img, x1, y1, x2, y2, clr)
+	}
+
+	// eyes
+	eyeX := 3 * scale
+	eyeY := -2 * scale
+	drawFilledCircle(img, g.sunX-eyeX, g.sunY+eyeY, 1*scale, color.Black)
+	drawFilledCircle(img, g.sunX+eyeX, g.sunY+eyeY, 1*scale, color.Black)
+
+	// mouth
 	if g.sunHitTicks > 0 {
-		drawFilledCircle(img, g.sunX, g.sunY+6, 5, color.Black)
-		drawFilledCircle(img, g.sunX, g.sunY+6, 3, clr)
+		drawFilledCircle(img, g.sunX, g.sunY+5*scale, 2.9*scale, color.Black)
 	} else {
-		ebitenutil.DrawRect(img, g.sunX-4, g.sunY+4, 8, 2, color.Black)
+		drawArc(img, g.sunX, g.sunY, 8*scale, 210, 330, color.Black)
 	}
 }
 
