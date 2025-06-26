@@ -135,10 +135,10 @@ func newIntroGame(w, h int, useSound, sliding bool) *introGame {
 }
 
 // showIntroMovie runs the introductory animation.
-func showIntroMovie(useSound, sliding bool) {
+func showIntroMovie(useSound, sliding bool) error {
 	w, h := ebiten.WindowSize()
 	ig := newIntroGame(w, h, useSound, sliding)
-	_ = ebiten.RunGame(ig)
+	return ebiten.RunGame(ig)
 }
 
 // introScreenGame implements ebiten.Game for the initial menu.
@@ -174,7 +174,9 @@ func (g *introScreenGame) Update() error {
 				g.play = true
 				return ebiten.Termination
 			case ebiten.KeyV:
-				showIntroMovie(g.useSound, g.sliding)
+				if err := showIntroMovie(g.useSound, g.sliding); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -215,14 +217,16 @@ func (g *introScreenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 // introScreen runs the intro menu and returns true if the player chose to play.
-func introScreen(useSound, sliding bool) bool {
+func introScreen(useSound, sliding bool) (bool, error) {
 	w, h := ebiten.WindowSize()
 	if w == 0 || h == 0 {
 		w, h = 800, 600
 	}
 	ig := &introScreenGame{useSound: useSound, sliding: sliding, width: w, height: h, next: time.Now().Add(300 * time.Millisecond)}
-	_ = ebiten.RunGame(ig)
-	return ig.play
+	if err := ebiten.RunGame(ig); err != nil {
+		return false, err
+	}
+	return ig.play, nil
 }
 
 // sparkleGame shows twinkling '*' borders and optional lines of text.
@@ -288,29 +292,29 @@ func (g *sparkleGame) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 // SparklePause displays a star border for the specified duration. If lines are
 // provided they are shown centred on the screen.
-func SparklePause(lines []string, dur time.Duration) {
+func SparklePause(lines []string, dur time.Duration) error {
 	w, h := ebiten.WindowSize()
 	if w == 0 || h == 0 {
 		w, h = 800, 600
 	}
 	sg := &sparkleGame{lines: lines, width: w, height: h, timeout: dur}
-	_ = ebiten.RunGame(sg)
+	return ebiten.RunGame(sg)
 }
 
-func showStats(stats string) {
+func showStats(stats string) error {
 	lines := strings.Split(stats, "\n")
 	lines = append(lines, "", "Press any key to continue")
-	SparklePause(lines, 0)
+	return SparklePause(lines, 0)
 }
 
-func showLeague(l *gorillas.League) {
+func showLeague(l *gorillas.League) error {
 	if l == nil {
-		return
+		return nil
 	}
 	lines := []string{"Player           Rounds Wins Accuracy"}
 	for _, s := range l.Standings() {
 		lines = append(lines, fmt.Sprintf("%-15s %6d %4d %8.1f", s.Name, s.Rounds, s.Wins, s.Accuracy))
 	}
 	lines = append(lines, "", "Press any key to continue")
-	SparklePause(lines, 0)
+	return SparklePause(lines, 0)
 }

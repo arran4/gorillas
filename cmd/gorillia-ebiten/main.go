@@ -8,6 +8,8 @@ import (
 	"image/color"
 	"math"
 	"math/rand"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/arran4/gorillas"
@@ -210,7 +212,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func main() {
-	increaseRLimit()
+	if err := increaseRLimit(); err != nil {
+		fmt.Fprintf(os.Stderr, "increase rlimit: %v\n", err)
+	}
 	ebiten.SetWindowSize(800, 600)
 	ebiten.SetWindowTitle("Gorillas Ebiten")
 	settings := gorillas.LoadSettings()

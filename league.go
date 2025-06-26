@@ -73,7 +73,9 @@ func (l *League) Names() []string {
 func LoadLeague(path string) *League {
 	l := &League{Players: map[string]*PlayerStats{}, file: path}
 	if b, err := os.ReadFile(path); err == nil {
-		_ = json.Unmarshal(b, &l.Players)
+		if err := json.Unmarshal(b, &l.Players); err != nil {
+			fmt.Fprintf(os.Stderr, "load league: %v\n", err)
+		}
 	}
 	return l
 }
@@ -87,7 +89,9 @@ func (l *League) Save() {
 		return
 	}
 	if b, err := json.Marshal(l.Players); err == nil {
-		_ = os.WriteFile(l.file, b, 0644)
+		if err := os.WriteFile(l.file, b, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "save league: %v\n", err)
+		}
 	}
 }
 
