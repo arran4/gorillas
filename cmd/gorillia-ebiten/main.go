@@ -95,6 +95,36 @@ func createBananaSprites() (left, right, up, down *ebiten.Image) {
 	return
 }
 
+func createGorillaSprite(mask []string, clr color.Color) *ebiten.Image {
+	h := len(mask)
+	w := len(mask[0])
+	img := ebiten.NewImage(w, h)
+	for y, row := range mask {
+		for x, c := range row {
+			if c != '.' {
+				img.Set(x, y, clr)
+			}
+		}
+	}
+	return img
+}
+
+func defaultGorillaSprite() *ebiten.Image {
+	mask := []string{
+		"..##..",
+		".####.",
+		"######",
+		"##..##",
+		"######",
+		"######",
+		"##..##",
+		"##..##",
+		".#..#.",
+		".####.",
+	}
+	return createGorillaSprite(mask, color.RGBA{150, 75, 0, 255})
+}
+
 type building struct {
 	x, w, h float64
 	color   color.Color
@@ -117,6 +147,7 @@ type Game struct {
 	bananaRight *ebiten.Image
 	bananaUp    *ebiten.Image
 	bananaDown  *ebiten.Image
+	gorillaImg  *ebiten.Image
 	gorillaArt  [][]string
 	State       State
 }
@@ -132,6 +163,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
+	g.gorillaImg = defaultGorillaSprite()
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
@@ -172,6 +204,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
+	if g.gorillaImg != nil {
+		op := &ebiten.DrawImageOptions{}
+		w, h := g.gorillaImg.Size()
+		op.GeoM.Translate(g.Gorillas[idx].X-float64(w)/2, g.Gorillas[idx].Y-float64(h))
+		img.DrawImage(g.gorillaImg, op)
+		return
+	}
 	if len(g.gorillaArt) == 0 {
 		gr := g.Gorillas[idx]
 		ebitenutil.DrawRect(img, gr.X-5, gr.Y-10, 10, 10, color.RGBA{255, 0, 0, 255})

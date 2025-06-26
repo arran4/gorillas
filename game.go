@@ -349,9 +349,19 @@ func (g *Game) Step() {
 	// default behaviour uses DefaultGravity which equals Gravity initially
 	g.Banana.VY += g.Gravity / 34
 	g.Banana.VX += g.Wind / 20
-	idx := int(g.Banana.X / (float64(g.Width) / float64(g.BuildingCount)))
+	bw := float64(g.Width) / float64(g.BuildingCount)
+	idx := int(g.Banana.X / bw)
 	if idx >= 0 && idx < g.BuildingCount {
 		if g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
+			// shorten the building to the impact point to simulate
+			// simple environmental destruction
+			newH := float64(g.Height) - g.Banana.Y
+			if newH < 0 {
+				newH = 0
+			}
+			if newH < g.Buildings[idx].H {
+				g.Buildings[idx].H = newH
+			}
 			g.Banana.Active = false
 			g.Current = (g.Current + 1) % 2
 		}
