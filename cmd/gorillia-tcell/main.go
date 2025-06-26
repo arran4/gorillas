@@ -29,6 +29,7 @@ const buildingWidth = 8
 func newGame(settings gorillas.Settings) *Game {
 	g := &Game{Game: gorillas.NewGame(80, 24)}
 	g.Game.Settings = settings
+	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	for _, b := range g.Buildings {
 		var wins []int
@@ -182,4 +183,6 @@ func main() {
 	if err := g.run(s); err != nil {
 		panic(err)
 	}
+	g.SaveScores()
+	fmt.Println(g.StatsString())
 }

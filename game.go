@@ -1,8 +1,11 @@
 package gorillas
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -37,6 +40,37 @@ func DefaultSettings() Settings {
 	return Settings{UseSound: true, NewExplosionRadius: 40}
 }
 
+// LoadScores reads the persistent win totals from disk.
+func (g *Game) LoadScores() {
+	file := g.ScoreFile
+	if file == "" {
+		file = defaultScoreFile
+	}
+	b, err := os.ReadFile(file)
+	if err == nil {
+		_ = json.Unmarshal(b, &g.TotalWins)
+	}
+}
+
+// SaveScores writes the accumulated win totals to disk.
+func (g *Game) SaveScores() {
+	file := g.ScoreFile
+	if file == "" {
+		file = defaultScoreFile
+	}
+	b, err := json.Marshal(g.TotalWins)
+	if err == nil {
+		_ = os.WriteFile(file, b, 0644)
+	}
+}
+
+// StatsString returns a printable summary of wins this session and overall.
+func (g *Game) StatsString() string {
+	session := fmt.Sprintf("Session - P1:%d P2:%d", g.Wins[0], g.Wins[1])
+	total := fmt.Sprintf("Overall - P1:%d P2:%d", g.TotalWins[0], g.TotalWins[1])
+	return session + "\n" + total
+}
+
 type Game struct {
 	Width, Height int
 	Buildings     []Building
@@ -48,12 +82,15 @@ type Game struct {
 	Power         float64
 	Current       int
 	Wins          [2]int
+	TotalWins     [2]int
+	ScoreFile     string
 }
 
 const BuildingCount = 10
+const defaultScoreFile = "gorillas_scores.json"
 
 func NewGame(width, height int) *Game {
-	g := &Game{Width: width, Height: height, Angle: 45, Power: 50}
+	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile}
 	g.Settings = DefaultSettings()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(width) / BuildingCount
@@ -108,9 +145,13 @@ func NewGame(width, height int) *Game {
 
 func (g *Game) Reset() {
 	wins := g.Wins
+	totals := g.TotalWins
+	file := g.ScoreFile
 	*g = *NewGame(g.Width, g.Height)
 	g.Settings = DefaultSettings()
 	g.Wins = wins
+	g.TotalWins = totals
+	g.ScoreFile = file
 }
 
 func (g *Game) startGorillaExplosion(idx int) {
@@ -183,6 +224,8 @@ func (g *Game) Step() {
 		if math.Abs(gr.X-g.Banana.X) < 5 && math.Abs(gr.Y-g.Banana.Y) < 10 {
 			g.Banana.Active = false
 			g.Wins[g.Current]++
+			g.TotalWins[g.Current]++
+			g.SaveScores()
 			g.startGorillaExplosion(i)
 			return
 		}
