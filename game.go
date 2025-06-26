@@ -279,8 +279,8 @@ func NewGame(width, height, buildingCount int) *Game {
 		if h < float64(height)*0.1 {
 			h = float64(height) * 0.1
 		}
-		if h > float64(height)*0.9 {
-			h = float64(height) * 0.9
+		if h > float64(height)*0.8 {
+			h = float64(height) * 0.8
 		}
 
 		g.Buildings = append(g.Buildings, Building{
