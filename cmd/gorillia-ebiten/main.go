@@ -112,6 +112,9 @@ type Game struct {
 	powerInput  string
 	enteringAng bool
 	enteringPow bool
+	abortPrompt bool
+	resumeAng   bool
+	resumePow   bool
 	bananaLeft  *ebiten.Image
 	bananaRight *ebiten.Image
 	bananaUp    *ebiten.Image

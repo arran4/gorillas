@@ -15,6 +15,27 @@ import (
 type playState struct{}
 
 func (playState) Update(g *Game) error {
+	if g.abortPrompt {
+		for _, k := range inpututil.AppendJustPressedKeys(nil) {
+			switch k {
+			case ebiten.KeyY:
+				g.State = newScoreState(g.StatsString())
+			case ebiten.KeyN:
+				g.abortPrompt = false
+				if g.resumeAng {
+					g.enteringAng = true
+				}
+				if g.resumePow {
+					g.enteringPow = true
+				}
+				g.angleInput = ""
+				g.powerInput = ""
+				g.resumeAng = false
+				g.resumePow = false
+			}
+		}
+		return nil
+	}
 	if !g.Banana.Active && !g.Explosion.Active {
 		if g.enteringAng || g.enteringPow {
 			for _, k := range inpututil.AppendJustPressedKeys(nil) {
@@ -47,6 +68,9 @@ func (playState) Update(g *Game) error {
 					}
 				case ebiten.KeyEscape:
 					if g.enteringAng || g.enteringPow {
+						g.abortPrompt = true
+						g.resumeAng = g.enteringAng
+						g.resumePow = g.enteringPow
 						g.enteringAng = false
 						g.enteringPow = false
 						g.angleInput = ""
@@ -199,4 +223,10 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		}
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%3s P:%3s W:%+2.0f P%d %d-%d", angleStr, powerStr, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
+	if g.abortPrompt {
+		msg := "Abort game? [Y/N]"
+		x := (g.Width - len(msg)*charW) / 2
+		y := g.Height/2 - charH/2
+		ebitenutil.DebugPrintAt(screen, msg, x, y)
+	}
 }
