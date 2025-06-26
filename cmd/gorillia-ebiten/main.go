@@ -38,6 +38,7 @@ type Game struct {
 
 func newGame() *Game {
 	g := &Game{Game: gorillas.NewGame(800, 600)}
+	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / gorillas.BuildingCount
 	for i := 0; i < gorillas.BuildingCount; i++ {
@@ -133,4 +134,6 @@ func main() {
 	if err := ebiten.RunGame(game); err != nil {
 		panic(err)
 	}
+	game.SaveScores()
+	fmt.Println(game.StatsString())
 }
