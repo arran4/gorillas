@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"strings"
 	"time"
@@ -154,9 +155,6 @@ func newIntroGame(w, h int, useSound, sliding bool) *introGame {
 		height:   h,
 		next:     time.Now(),
 	}
-<<<<<<< codex/create-sparklepause-function
-	_ = ebiten.RunGame(ig)
-	SparklePause(nil, 0)
 }
 
 // sparkleGame shows twinkling '*' borders and optional lines of text.
@@ -233,6 +231,15 @@ func SparklePause(lines []string, dur time.Duration) {
 
 func showStats(stats string) {
 	SparklePause(strings.Split(stats, "\n"), 0)
-=======
->>>>>>> master
+}
+
+func showLeague(l *gorillas.League) {
+	if l == nil {
+		return
+	}
+	lines := []string{"Player           Rounds Wins Accuracy"}
+	for _, s := range l.Standings() {
+		lines = append(lines, fmt.Sprintf("%-15s %6d %4d %8.1f", s.Name, s.Rounds, s.Wins, s.Accuracy))
+	}
+	SparklePause(lines, 0)
 }

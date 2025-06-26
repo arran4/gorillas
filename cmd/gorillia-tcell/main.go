@@ -292,6 +292,9 @@ func main() {
 	}
 	g.SaveScores()
 	showStats(s, g.StatsString())
+	if g.League != nil {
+		showLeague(s, g.League)
+	}
 	fmt.Println(g.StatsString())
 	showExtro(s)
 }
