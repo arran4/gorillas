@@ -47,6 +47,53 @@ func (g *Game) drawSun(img *ebiten.Image) {
 	}
 }
 
+func createBananaSprite(mask []string) *ebiten.Image {
+	h := len(mask)
+	w := len(mask[0])
+	img := ebiten.NewImage(w, h)
+	clr := color.RGBA{255, 255, 0, 255}
+	for y, row := range mask {
+		for x, c := range row {
+			if c != '.' {
+				img.Set(x, y, clr)
+			}
+		}
+	}
+	return img
+}
+
+func createBananaSprites() (left, right, up, down *ebiten.Image) {
+	left = createBananaSprite([]string{
+		"..##.",
+		".###.",
+		"#####",
+		".###.",
+		"..##.",
+	})
+	right = createBananaSprite([]string{
+		".##..",
+		".###.",
+		"#####",
+		".###.",
+		".##..",
+	})
+	up = createBananaSprite([]string{
+		"..#..",
+		".###.",
+		"..#..",
+		"..#..",
+		"..#..",
+	})
+	down = createBananaSprite([]string{
+		"..#..",
+		"..#..",
+		"..#..",
+		".###.",
+		"..#..",
+	})
+	return
+}
+
 type building struct {
 	x, w, h float64
 	color   color.Color
@@ -58,6 +105,10 @@ type Game struct {
 	buildings   []building
 	sunX, sunY  float64
 	sunHitTicks int
+	bananaLeft  *ebiten.Image
+	bananaRight *ebiten.Image
+	bananaUp    *ebiten.Image
+	bananaDown  *ebiten.Image
 	gorillaArt  [][]string
 }
 
@@ -94,6 +145,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.sunX = float64(g.Width) - 40
 	g.sunY = 40
+	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = createBananaSprites()
 	return g
 }
 
@@ -160,7 +212,37 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.drawGorilla(screen, i)
 	}
 	if g.Banana.Active {
-		ebitenutil.DrawRect(screen, g.Banana.X-2, g.Banana.Y-2, 4, 4, color.RGBA{255, 255, 0, 255})
+		dir := 0
+		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
+			if g.Banana.VX < 0 {
+				dir = 0
+			} else {
+				dir = 1
+			}
+		} else {
+			if g.Banana.VY < 0 {
+				dir = 2
+			} else {
+				dir = 3
+			}
+		}
+		var img *ebiten.Image
+		switch dir {
+		case 0:
+			img = g.bananaLeft
+		case 1:
+			img = g.bananaRight
+		case 2:
+			img = g.bananaUp
+		case 3:
+			img = g.bananaDown
+		}
+		if img != nil {
+			op := &ebiten.DrawImageOptions{}
+			w, h := img.Size()
+			op.GeoM.Translate(g.Banana.X-float64(w)/2, g.Banana.Y-float64(h)/2)
+			screen.DrawImage(img, op)
+		}
 	}
 	if g.Explosion.Active {
 		clr := color.RGBA{255, 255, 0, 255}
