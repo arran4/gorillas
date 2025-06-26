@@ -301,9 +301,9 @@ func (g *Game) startGorillaExplosion(idx int) {
 	if g.Settings.ForceCGA {
 		base /= 2
 	}
-	if g.Settings.UseSound {
-		PlayBeep()
-	}
+       if g.Settings.UseSound {
+               PlayExplosionMelody()
+       }
 	g.Explosion = Explosion{X: g.Gorillas[idx].X, Y: g.Gorillas[idx].Y}
 	if g.Settings.UseOldExplosions {
 		for i := 1; i <= int(base); i++ {
