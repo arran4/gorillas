@@ -30,6 +30,13 @@ command-line flags:
   -winnerfirst winner of a round starts next
 ```
 
+### Configuration
+
+Certain options can also be toggled through environment variables. Set
+`GORILLAS_FORCE_CGA=true` to restrict both frontends to the classic CGA
+palette (black, cyan, magenta, white). This can be handy on limited
+terminals or for nostalgia.
+
 ### Building and Running
 
 #### Prerequisites
