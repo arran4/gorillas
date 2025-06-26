@@ -18,7 +18,8 @@ func TestLoadSettingsFile(t *testing.T) {
 		"UseSlidingText=yes\n" +
 		"ShowIntro=no\n" +
 		"ForceCGA=yes\n" +
-		"WinnerFirst=yes\n")
+		"WinnerFirst=yes\n" +
+		"VariableWind=yes\n")
 	if err := os.WriteFile(ini, data, 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -47,8 +48,11 @@ func TestLoadSettingsFile(t *testing.T) {
 	}
 	if !s.ForceCGA {
 		t.Errorf("expected ForceCGA=true")
-  }
+	}
 	if !s.WinnerFirst {
 		t.Errorf("expected WinnerFirst=true")
+	}
+	if !s.VariableWind {
+		t.Errorf("expected VariableWind=true")
 	}
 }

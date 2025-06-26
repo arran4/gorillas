@@ -1,7 +1,6 @@
 package gorillas
 
 import (
-	"bufio"
 	"os"
 	"strconv"
 	"strings"
@@ -20,6 +19,7 @@ import (
 //	GORILLAS_SHOW_INTRO - 'true' to display the intro sequence.
 //	GORILLAS_FORCE_CGA - 'true' to force CGA mode graphics.
 //	     GORILLAS_WINNER_FIRST - 'true' if round winner starts the next round.
+//	GORILLAS_VARIABLE_WIND - 'true' to mimic BASIC wind changes each round.
 func loadSettingsFile(path string, s *Settings) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -99,6 +99,14 @@ func loadSettingsFile(path string, s *Settings) {
 			} else if strings.EqualFold(val, "NO") {
 				s.WinnerFirst = false
 			}
+		case "VARIABLEWIND":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.VariableWind = b
+			} else if strings.EqualFold(val, "YES") {
+				s.VariableWind = true
+			} else if strings.EqualFold(val, "NO") {
+				s.VariableWind = false
+			}
 		}
 	}
 }
@@ -149,6 +157,11 @@ func LoadSettings() Settings {
 	if v, ok := os.LookupEnv("GORILLAS_WINNER_FIRST"); ok {
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.WinnerFirst = b
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_VARIABLE_WIND"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.VariableWind = b
 		}
 	}
 	return s
