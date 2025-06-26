@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"time"
 )
 
 type Building struct {
@@ -135,7 +134,6 @@ func NewGame(width, height, buildingCount int) *Game {
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
-	rand.Seed(time.Now().UnixNano())
 	g.Wind = float64(rand.Intn(21) - 10)
 	bw := float64(width) / float64(g.BuildingCount)
 
