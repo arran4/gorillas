@@ -209,6 +209,16 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 	editingPlayer := -1
 	newPlayer := false
 	oldName := ""
+	assignField := 0
+
+	updateAssignField := func() {
+		if cur < 2 {
+			assignField = cur
+		} else if cur < len(fields) {
+			assignField = -1
+		}
+	}
+	updateAssignField()
 	for {
 		s.Clear()
 		_, h := s.Size()
@@ -311,10 +321,21 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 				} else {
 					cur = len(fields) + len(players) - 1
 				}
+				updateAssignField()
 			case tcell.KeyDown, tcell.KeyTab:
 				cur = (cur + 1) % (len(fields) + len(players))
+				updateAssignField()
 			case tcell.KeyEnter:
-				if cur < len(fields) {
+				if cur >= len(fields) && assignField >= 0 {
+					name := players[cur-len(fields)]
+					other := 1 - assignField
+					if fields[other] == name {
+						fields[other], fields[assignField] = fields[assignField], name
+					} else {
+						fields[assignField] = name
+					}
+					cur = assignField
+				} else if cur < len(fields) {
 					editing = true
 				} else {
 					editing = true
