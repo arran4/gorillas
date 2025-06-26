@@ -23,21 +23,23 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	buildings   []building
-	screen      tcell.Screen
-	sunX, sunY  int
-	sunHitTicks int
-	angleInput  string
-	powerInput  string
-	enteringAng bool
-	enteringPow bool
-	abortPrompt bool
-	resumeAng   bool
-	resumePow   bool
-	gorillaArt  [][]string
+	buildings    []building
+	screen       tcell.Screen
+	sunX, sunY   int
+	sunHitTicks  int
+	sunIntegrity int
+	angleInput   string
+	powerInput   string
+	enteringAng  bool
+	enteringPow  bool
+	abortPrompt  bool
+	resumeAng    bool
+	resumePow    bool
+	gorillaArt   [][]string
 }
 
 const buildingWidth = 8
+const sunMaxIntegrity = 4
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g := &Game{Game: gorillas.NewGame(80, 24, buildings)}
@@ -64,6 +66,8 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.sunX = g.Width - 4
 	g.sunY = 1
+	g.sunIntegrity = sunMaxIntegrity
+	g.Game.ResetHook = func() { g.sunIntegrity = sunMaxIntegrity }
 	return g
 }
 
@@ -73,15 +77,39 @@ var (
 )
 
 func (g *Game) drawSun() {
+	if g.sunIntegrity <= 0 {
+		return
+	}
 	art := sunHappy
 	if g.sunHitTicks > 0 {
 		art = sunShock
 		g.sunHitTicks--
 	}
-	for dy, line := range art {
+	switch g.sunIntegrity {
+	case 1:
+		r := rune(art[1][1])
+		g.screen.SetContent(g.sunX+1, g.sunY+1, r, nil, tcell.StyleDefault)
+	case 2:
+		line := art[1]
 		for dx, r := range line {
 			if r != ' ' {
-				g.screen.SetContent(g.sunX+dx, g.sunY+dy, r, nil, tcell.StyleDefault)
+				g.screen.SetContent(g.sunX+dx, g.sunY+1, r, nil, tcell.StyleDefault)
+			}
+		}
+	case 3:
+		for dy, line := range art[:2] {
+			for dx, r := range line {
+				if r != ' ' {
+					g.screen.SetContent(g.sunX+dx, g.sunY+dy, r, nil, tcell.StyleDefault)
+				}
+			}
+		}
+	default:
+		for dy, line := range art {
+			for dx, r := range line {
+				if r != ' ' {
+					g.screen.SetContent(g.sunX+dx, g.sunY+dy, r, nil, tcell.StyleDefault)
+				}
 			}
 		}
 	}
@@ -232,8 +260,13 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 		if g.Banana.Active || g.Explosion.Active {
 			<-ticker.C
 			g.Step()
-			if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
-				g.sunHitTicks = 10
+			if g.Banana.Active && g.sunIntegrity > 0 {
+				if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
+					g.sunHitTicks = 10
+					if g.sunIntegrity > 0 {
+						g.sunIntegrity--
+					}
+				}
 			}
 			continue
 		}
