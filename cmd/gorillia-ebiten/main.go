@@ -350,7 +350,8 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 		return
 	}
 	length := g.Wind * 3 * float64(g.Width) / 320
-	y := float64(g.Height) - float64(g.Height)/40
+       // Position arrow near the top instead of the bottom
+       y := float64(g.Height) / 40
 	x := float64(g.Width) / 2
 	end := x + length
 	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})

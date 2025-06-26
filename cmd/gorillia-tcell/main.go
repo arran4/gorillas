@@ -297,7 +297,8 @@ func (g *Game) drawWindArrow() {
 		return
 	}
 	length := int(math.Round(g.Wind * 3 * float64(g.Width) / 320))
-	y := g.Height - 1
+       // Draw near the top instead of bottom for better visibility
+       y := 1
 	x := g.Width / 2
 	dir := 1
 	if length < 0 {
