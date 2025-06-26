@@ -88,7 +88,21 @@ func (g *Game) draw() {
 	// draw a simple sun
 	g.screen.SetContent(g.Width-2, 1, 'O', nil, tcell.StyleDefault)
 	if g.Banana.Active {
-		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), 'o', nil, tcell.StyleDefault)
+		ch := 'o'
+		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
+			if g.Banana.VX < 0 {
+				ch = '<'
+			} else {
+				ch = '>'
+			}
+		} else {
+			if g.Banana.VY < 0 {
+				ch = '^'
+			} else {
+				ch = 'v'
+			}
+		}
+		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), ch, nil, tcell.StyleDefault)
 	}
 	if g.Explosion.Active {
 		r := int(g.Explosion.Radii[g.Explosion.Frame])
