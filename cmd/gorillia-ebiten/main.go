@@ -141,10 +141,13 @@ func defaultGorillaSprite() *ebiten.Image {
 	return createGorillaSprite(mask, color.RGBA{150, 75, 0, 255})
 }
 
+type damageRect struct{ x, y, w, h float64 }
+
 type building struct {
 	x, w, h float64
 	color   color.Color
 	windows []window
+	damage  []damageRect
 }
 
 type Game struct {
