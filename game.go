@@ -167,7 +167,10 @@ type Game struct {
 	lastStartX float64
 	lastOtherX float64
 	lastVX     float64
-	ResetHook     func()
+	ResetHook  func()
+
+	// Aborted indicates the game ended early by user request.
+	Aborted bool
 }
 
 const DefaultBuildingCount = 10
@@ -179,6 +182,7 @@ func NewGame(width, height, buildingCount int) *Game {
 		buildingCount = DefaultBuildingCount
 	}
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount}
+	g.Aborted = false
 	g.League = LoadLeague(defaultLeagueFile)
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()

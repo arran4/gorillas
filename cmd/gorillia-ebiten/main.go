@@ -149,7 +149,7 @@ type building struct {
 
 type Game struct {
 	*gorillas.Game
-	gamepads    []ebiten.GamepadID
+	gamepads     []ebiten.GamepadID
 	buildings    []building
 	sunX, sunY   float64
 	sunHitTicks  int
@@ -299,10 +299,31 @@ func main() {
 	} else {
 		game.State = newMenuState(settings.UseSound, settings.UseSlidingText)
 	}
+
+	origWins := game.TotalWins
+	var leagueSnap map[string]*gorillas.PlayerStats
+	if game.League != nil {
+		leagueSnap = make(map[string]*gorillas.PlayerStats, len(game.League.Players))
+		for n, ps := range game.League.Players {
+			c := *ps
+			leagueSnap[n] = &c
+		}
+	}
+
 	if err := ebiten.RunGame(game); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
 	}
-	game.SaveScores()
-	fmt.Println(game.StatsString())
+
+	if game.Aborted {
+		game.TotalWins = origWins
+		if game.League != nil {
+			game.League.Players = leagueSnap
+			game.League.Save()
+		}
+		SparklePause([]string{"Game aborted"}, 0)
+	} else {
+		game.SaveScores()
+		fmt.Println(game.StatsString())
+	}
 	showExtro()
 }

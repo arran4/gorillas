@@ -244,5 +244,16 @@ func showLeague(s tcell.Screen, l *gorillas.League) {
 	msg := "Press any key to continue"
 	drawString(s, (w-len(msg))/2, y+len(rows)+1, msg)
 	s.Show()
-	SparklePause(s, 0)
+       SparklePause(s, 0)
+}
+
+func showGameAborted(s tcell.Screen) {
+       s.Clear()
+       msg := "Game aborted"
+       w, h := s.Size()
+       drawString(s, (w-len(msg))/2, h/2, msg)
+       msg = "Press any key to continue"
+       drawString(s, (w-len(msg))/2, h/2+1, msg)
+       s.Show()
+       SparklePause(s, 0)
 }
