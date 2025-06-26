@@ -21,6 +21,54 @@ type League struct {
 	file    string
 }
 
+// AddPlayer ensures a player exists in the league.
+func (l *League) AddPlayer(name string) {
+	if l == nil {
+		return
+	}
+	if name == "" {
+		return
+	}
+	if _, ok := l.Players[name]; !ok {
+		l.Players[name] = &PlayerStats{}
+	}
+}
+
+// RenamePlayer changes the key for a player's stats.
+func (l *League) RenamePlayer(oldName, newName string) {
+	if l == nil {
+		return
+	}
+	if oldName == newName || newName == "" {
+		return
+	}
+	if ps, ok := l.Players[oldName]; ok {
+		delete(l.Players, oldName)
+		l.Players[newName] = ps
+	}
+}
+
+// DeletePlayer removes a player from the league.
+func (l *League) DeletePlayer(name string) {
+	if l == nil {
+		return
+	}
+	delete(l.Players, name)
+}
+
+// Names returns the list of player names sorted alphabetically.
+func (l *League) Names() []string {
+	if l == nil {
+		return nil
+	}
+	names := make([]string, 0, len(l.Players))
+	for n := range l.Players {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
+}
+
 // LoadLeague reads statistics from the given file.
 func LoadLeague(path string) *League {
 	l := &League{Players: map[string]*PlayerStats{}, file: path}
