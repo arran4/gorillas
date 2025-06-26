@@ -240,3 +240,13 @@ func showLeague(s tcell.Screen, l *gorillas.League) {
 	s.Show()
 	SparklePause(s, 0)
 }
+
+// showGameAborted displays an aborted message and waits for a key press.
+func showGameAborted(s tcell.Screen) {
+	s.Clear()
+	w, h := s.Size()
+	msg := "Game aborted"
+	drawString(s, (w-len(msg))/2, h/2, msg)
+	s.Show()
+	SparklePause(s, 0)
+}

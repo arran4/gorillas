@@ -173,6 +173,9 @@ type Game struct {
 	lastOtherX float64
 	lastVX     float64
 	ResetHook  func()
+
+	// Aborted indicates whether the game was aborted mid-play.
+	Aborted bool
 }
 
 const DefaultBuildingCount = 10
@@ -185,7 +188,7 @@ func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
 		buildingCount = DefaultBuildingCount
 	}
-	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount}
+	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, BuildingCount: buildingCount, Aborted: false}
 	g.League = LoadLeague(defaultLeagueFile)
 	g.Players = [2]string{"Player 1", "Player 2"}
 	g.Settings = DefaultSettings()
@@ -303,9 +306,9 @@ func (g *Game) startGorillaExplosion(idx int) {
 	if g.Settings.ForceCGA {
 		base /= 2
 	}
-       if g.Settings.UseSound {
-               PlayExplosionMelody()
-       }
+	if g.Settings.UseSound {
+		PlayExplosionMelody()
+	}
 	g.Explosion = Explosion{X: g.Gorillas[idx].X, Y: g.Gorillas[idx].Y}
 	if g.Settings.UseOldExplosions {
 		for i := 1; i <= int(base); i++ {

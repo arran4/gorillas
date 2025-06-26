@@ -391,6 +391,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 			if g.abortPrompt {
 				r := unicode.ToUpper(key.Rune())
 				if r == 'Y' {
+					g.Aborted = true
 					return nil
 				}
 				if r == 'N' {
@@ -496,6 +497,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 			}
 			switch key.Key() {
 			case tcell.KeyEscape:
+				g.Aborted = true
 				return nil
 			case tcell.KeyLeft:
 				g.Angle += 1
@@ -832,8 +834,26 @@ func main() {
 	g := newGame(settings, *buildings, *wind)
 	g.Players = [2]string{*p1, *p2}
 	g.League = league
+	winsBackup := g.TotalWins
+	var playersBackup map[string]*gorillas.PlayerStats
+	if g.League != nil {
+		playersBackup = make(map[string]*gorillas.PlayerStats, len(g.League.Players))
+		for n, ps := range g.League.Players {
+			cp := *ps
+			playersBackup[n] = &cp
+		}
+	}
 	if err := g.run(s, *ai); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
+	}
+	if g.Aborted {
+		g.TotalWins = winsBackup
+		if g.League != nil {
+			g.League.Players = playersBackup
+			g.League.Save()
+		}
+		showGameAborted(s)
+		return
 	}
 	g.SaveScores()
 	showStats(s, g.StatsString())
