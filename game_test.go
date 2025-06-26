@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -275,6 +276,22 @@ func TestSaveAndLoadScores(t *testing.T) {
 
 	if g2.TotalWins != g1.TotalWins {
 		t.Fatalf("expected %v, got %v", g1.TotalWins, g2.TotalWins)
+	}
+}
+
+func TestSaveAndLoadShots(t *testing.T) {
+	tmp := filepath.Join(t.TempDir(), "shots.json")
+	g1 := newTestGame()
+	g1.ShotsFile = tmp
+	g1.ShotHistory = []ShotRecord{{Angle: 45, Power: 50}, {Angle: 30, Power: 60}}
+	g1.SaveShots()
+
+	g2 := newTestGame()
+	g2.ShotsFile = tmp
+	g2.LoadShots()
+
+	if !reflect.DeepEqual(g2.ShotHistory, g1.ShotHistory) {
+		t.Fatalf("expected %v, got %v", g1.ShotHistory, g2.ShotHistory)
 	}
 }
 
