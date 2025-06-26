@@ -81,7 +81,7 @@ func (playState) Update(g *Game) error {
 		if g.enteringAng || g.enteringPow {
 			now := time.Now()
 			for _, r := range ebiten.AppendInputChars(nil) {
-                               if r == '*' {
+				if r == '*' {
 					if g.enteringAng && len(g.angleInput) == 0 {
 						g.angleInput = "*"
 					} else if g.enteringPow && len(g.powerInput) == 0 {
@@ -90,39 +90,39 @@ func (playState) Update(g *Game) error {
 					g.lastDigit = now
 					continue
 				}
-                               if r == ',' {
-                                       if g.enteringAng {
-                                               if strings.HasPrefix(g.angleInput, "*") {
-                                                       g.Angle = g.LastAngle[g.Current]
-                                               } else if v, err := strconv.Atoi(g.angleInput); err == nil {
-                                                       if v < 0 {
-                                                               v = 0
-                                                       } else if v > 360 {
-                                                               v = 360
-                                                       }
-                                                       g.Angle = float64(v)
-                                               }
-                                               g.enteringAng = false
-                                               g.angleInput = ""
-                                               g.enteringPow = true
-                                       } else if g.enteringPow {
-                                               if strings.HasPrefix(g.powerInput, "*") {
-                                                       g.Power = g.LastPower[g.Current]
-                                               } else if v, err := strconv.Atoi(g.powerInput); err == nil {
-                                                       if v < 0 {
-                                                               v = 0
-                                                       } else if v > 200 {
-                                                               v = 200
-                                                       }
-                                                       g.Power = float64(v)
-                                               }
-                                               g.enteringPow = false
-                                               g.powerInput = ""
-                                               g.Throw()
-                                       }
-                                       continue
-                               }
-                               if r >= '0' && r <= '9' {
+				if r == ',' {
+					if g.enteringAng {
+						if strings.HasPrefix(g.angleInput, "*") {
+							g.Angle = g.LastAngle[g.Current]
+						} else if v, err := strconv.Atoi(g.angleInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 360 {
+								v = 360
+							}
+							g.Angle = float64(v)
+						}
+						g.enteringAng = false
+						g.angleInput = ""
+						g.enteringPow = true
+					} else if g.enteringPow {
+						if strings.HasPrefix(g.powerInput, "*") {
+							g.Power = g.LastPower[g.Current]
+						} else if v, err := strconv.Atoi(g.powerInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 200 {
+								v = 200
+							}
+							g.Power = float64(v)
+						}
+						g.enteringPow = false
+						g.powerInput = ""
+						g.Throw()
+					}
+					continue
+				}
+				if r >= '0' && r <= '9' {
 					if now.Sub(g.lastDigit) > digitBufferTimeout {
 						if g.enteringAng {
 							g.angleInput = string(r)
@@ -140,8 +140,8 @@ func (playState) Update(g *Game) error {
 				}
 			}
 			for _, k := range inpututil.AppendJustPressedKeys(nil) {
-                               switch k {
-                                case ebiten.KeyEnter, ebiten.KeyComma:
+				switch k {
+				case ebiten.KeyEnter, ebiten.KeyComma:
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
 							g.Angle = g.LastAngle[g.Current]
@@ -343,7 +343,8 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		if img != nil {
 			op := &ebiten.DrawImageOptions{}
 			w, h := img.Size()
-			op.GeoM.Translate(g.Banana.X-float64(w)/2, g.Banana.Y-float64(h)/2)
+			op.GeoM.Scale(bananaScale, bananaScale)
+			op.GeoM.Translate(g.Banana.X-float64(w)*bananaScale/2, g.Banana.Y-float64(h)*bananaScale/2)
 			screen.DrawImage(img, op)
 		}
 	}
