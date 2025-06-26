@@ -28,3 +28,37 @@ command-line flags:
   -buildings  how many buildings appear in the skyline
 ```
 
+### Building and Running
+
+#### Prerequisites
+
+- Go toolchain installed (`go` 1.20 or newer).
+- Module downloads require internet access on first build.
+- `gorillia-ebiten` needs a graphical desktop environment.
+
+#### Build commands
+
+```bash
+# Build the Ebiten GUI version
+go build -o gorillia-ebiten ./cmd/gorillia-ebiten
+
+# Build the terminal version
+go build -o gorillia-tcell ./cmd/gorillia-tcell
+```
+
+#### Example usage
+
+```bash
+# Start the graphical port with 10 rounds
+./gorillia-ebiten -rounds 10
+
+# Play in the terminal with a computer opponent
+./gorillia-tcell -ai
+```
+
+### Known limitations
+
+- The Ebiten version currently has no computer controlled opponent.
+- The tcell version uses arrow keys and Enter for input and requires a UTF-8 capable terminal.
+- Sound support may vary across platforms.
+
