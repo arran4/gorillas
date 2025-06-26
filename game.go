@@ -218,7 +218,6 @@ const DefaultBuildingCount = 10
 const defaultScoreFile = "gorillas_scores.json"
 const defaultShotsFile = "gorillas_shots.json"
 const defaultLeagueFile = "gorillas.lge"
-const defaultShotsFile = "gorillas_shots.json"
 const groundBounceFactor = 0.4
 const groundBounceThreshold = 5.0
 
