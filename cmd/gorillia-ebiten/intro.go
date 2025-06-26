@@ -14,29 +14,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-var gorillaFrames = [][]string{
-	{
-		" O ",
-		"/|\\",
-		"/ \\",
-	},
-	{
-		" O ",
-		"/| ",
-		"/ \\",
-	},
-	{
-		" O ",
-		" |\\",
-		"/ \\",
-	},
-}
-
-const (
-	charW = 6
-	charH = 16
-)
-
 // introGame implements ebiten.Game to play the ASCII intro.
 type introGame struct {
 	useSound bool
