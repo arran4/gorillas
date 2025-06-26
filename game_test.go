@@ -238,3 +238,16 @@ func TestStatsString(t *testing.T) {
 		t.Fatalf("unexpected stats string: %q", s)
 	}
 }
+
+func TestForceCGAHalvesExplosionRadius(t *testing.T) {
+	g := newTestGame()
+	g.Settings.ForceCGA = true
+	g.Settings.NewExplosionRadius = 20
+	g.startGorillaExplosion(0)
+	if len(g.Explosion.radii) < 2 {
+		t.Fatal("not enough explosion frames")
+	}
+	if g.Explosion.radii[1] != 10 {
+		t.Fatalf("expected radius 10 got %f", g.Explosion.radii[1])
+	}
+}

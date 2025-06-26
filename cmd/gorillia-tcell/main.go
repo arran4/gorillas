@@ -189,7 +189,11 @@ func main() {
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
 
-	if !introScreen(s, settings.UseSound) {
+	if settings.ShowIntro {
+		showIntroMovie(s, settings.UseSound, settings.UseSlidingText)
+	}
+
+	if !introScreen(s, settings.UseSound, settings.UseSlidingText) {
 		return
 	}
 

@@ -27,8 +27,11 @@ type Settings struct {
 	UseSound           bool
 	UseOldExplosions   bool
 	NewExplosionRadius float64
+	UseSlidingText     bool
 	DefaultGravity     float64
 	DefaultRoundQty    int
+	ShowIntro          bool
+	ForceCGA           bool
 	WinnerFirst        bool
 }
 
@@ -43,8 +46,11 @@ func DefaultSettings() Settings {
 	return Settings{
 		UseSound:           true,
 		NewExplosionRadius: 40,
+		UseSlidingText:     false,
 		DefaultGravity:     17,
 		DefaultRoundQty:    4,
+		ShowIntro:          true,
+		ForceCGA:           false,
 		WinnerFirst:        false,
 	}
 }
@@ -176,6 +182,9 @@ func (g *Game) startGorillaExplosion(idx int) {
 	base := g.Settings.NewExplosionRadius
 	if base <= 0 {
 		base = 16
+	}
+	if g.Settings.ForceCGA {
+		base /= 2
 	}
 	if g.Settings.UseSound {
 		PlayBeep()

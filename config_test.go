@@ -15,6 +15,9 @@ func TestLoadSettingsFile(t *testing.T) {
 		"NewExplosionRadius=20.5\n" +
 		"DefaultGravity=30\n" +
 		"DefaultRoundQty=7\n" +
+		"UseSlidingText=yes\n" +
+		"ShowIntro=no\n" +
+		"ForceCGA=yes\n" +
 		"WinnerFirst=yes\n")
 	if err := os.WriteFile(ini, data, 0644); err != nil {
 		t.Fatal(err)
@@ -36,6 +39,15 @@ func TestLoadSettingsFile(t *testing.T) {
 	if s.DefaultRoundQty != 7 {
 		t.Errorf("unexpected round qty %d", s.DefaultRoundQty)
 	}
+	if !s.UseSlidingText {
+		t.Errorf("expected UseSlidingText=true")
+	}
+	if s.ShowIntro {
+		t.Errorf("expected ShowIntro=false")
+	}
+	if !s.ForceCGA {
+		t.Errorf("expected ForceCGA=true")
+  }
 	if !s.WinnerFirst {
 		t.Errorf("expected WinnerFirst=true")
 	}

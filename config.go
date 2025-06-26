@@ -11,10 +11,15 @@ import (
 // The flag package can override these values using its BoolVar API.
 // Recognised variables:
 //
-//		GORILLAS_SOUND - set to 'true' or 'false' to enable or disable sound.
-//		GORILLAS_OLD_EXPLOSIONS - 'true' to use the old explosion style.
+//	GORILLAS_SOUND - set to 'true' or 'false' to enable or disable sound.
+//	GORILLAS_OLD_EXPLOSIONS - 'true' to use the old explosion style.
+//	GORILLAS_EXPLOSION_RADIUS - floating point radius for new explosions.
+//	GORILLAS_GRAVITY - gravitational constant used in game physics.
+//	GORILLAS_ROUNDS - default number of rounds to play.
+//	GORILLAS_SLIDING_TEXT - 'true' to enable sliding text effects.
+//	GORILLAS_SHOW_INTRO - 'true' to display the intro sequence.
+//	GORILLAS_FORCE_CGA - 'true' to force CGA mode graphics.
 //	     GORILLAS_WINNER_FIRST - 'true' if round winner starts the next round.
-//		GORILLAS_EXPLOSION_RADIUS - floating point radius for new explosions.
 func loadSettingsFile(path string, s *Settings) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -54,6 +59,14 @@ func loadSettingsFile(path string, s *Settings) {
 			if f, err := strconv.ParseFloat(val, 64); err == nil {
 				s.NewExplosionRadius = f
 			}
+		case "USESLIDINGTEXT":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.UseSlidingText = b
+			} else if strings.EqualFold(val, "YES") {
+				s.UseSlidingText = true
+			} else if strings.EqualFold(val, "NO") {
+				s.UseSlidingText = false
+			}
 		case "DEFAULTGRAVITY":
 			if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
 				s.DefaultGravity = f
@@ -62,6 +75,21 @@ func loadSettingsFile(path string, s *Settings) {
 			if n, err := strconv.Atoi(val); err == nil && n > 0 {
 				s.DefaultRoundQty = n
 			}
+		case "SHOWINTRO":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.ShowIntro = b
+			} else if strings.EqualFold(val, "YES") {
+				s.ShowIntro = true
+			} else if strings.EqualFold(val, "NO") {
+				s.ShowIntro = false
+			}
+		case "FORCECGA":
+			if b, err := strconv.ParseBool(val); err == nil {
+				s.ForceCGA = b
+			} else if strings.EqualFold(val, "YES") {
+				s.ForceCGA = true
+			} else if strings.EqualFold(val, "NO") {
+				s.ForceCGA = false
 		case "WINNERFIRST":
 			if b, err := strconv.ParseBool(val); err == nil {
 				s.WinnerFirst = b
@@ -100,6 +128,21 @@ func LoadSettings() Settings {
 	if v, ok := os.LookupEnv("GORILLAS_ROUNDS"); ok {
 		if n, err := strconv.Atoi(v); err == nil {
 			s.DefaultRoundQty = n
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_SLIDING_TEXT"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.UseSlidingText = b
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_SHOW_INTRO"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.ShowIntro = b
+		}
+	}
+	if v, ok := os.LookupEnv("GORILLAS_FORCE_CGA"); ok {
+		if b, err := strconv.ParseBool(v); err == nil {
+			s.ForceCGA = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_WINNER_FIRST"); ok {
