@@ -40,6 +40,10 @@ func (playState) Update(g *Game) error {
 		return nil
 	}
 	if !g.Banana.Active && !g.Explosion.Active {
+		if g.AI && g.Current == 1 {
+			g.Game.AutoShot()
+			return nil
+		}
 		if g.enteringAng || g.enteringPow {
 			for _, r := range ebiten.AppendInputChars(nil) {
 				if r == '*' {
