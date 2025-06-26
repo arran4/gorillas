@@ -187,6 +187,8 @@ type Game struct {
 	AI           bool
 	State        State
 	lastDigit    time.Time
+	// Closed indicates whether the window was closed by the user.
+	Closed bool
 }
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
@@ -236,6 +238,11 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 }
 
 func (g *Game) Update() error {
+	if ebiten.IsWindowBeingClosed() {
+		g.Closed = true
+		g.Aborted = true
+		return ebiten.Termination
+	}
 	if g.State != nil {
 		return g.State.Update(g)
 	}
@@ -339,6 +346,9 @@ func main() {
 	}
 	if err := ebiten.RunGame(game); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
+	}
+	if game.Closed {
+		return
 	}
 	if game.Aborted {
 		game.TotalWins = winsBackup
