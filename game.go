@@ -235,11 +235,11 @@ func NewGame(width, height, buildingCount int) *Game {
 
 	// create a sloping skyline similar to the original BASIC version
 	slope := rand.Intn(6) + 1
-	newHt := float64(height) * 0.3
+	newHt := float64(height) * 0.2
 	if slope == 2 || slope == 6 {
-		newHt = float64(height) * 0.7
+		newHt = float64(height) * 0.6
 	}
-	htInc := float64(height) / 20
+	htInc := float64(height) / 25
 
 	for i := 0; i < g.BuildingCount; i++ {
 		x := float64(i) * bw
@@ -262,7 +262,7 @@ func NewGame(width, height, buildingCount int) *Game {
 			}
 		}
 
-		h := newHt + rand.Float64()*float64(height)/8
+		h := newHt + rand.Float64()*float64(height)/4
 		if h < float64(height)*0.1 {
 			h = float64(height) * 0.1
 		}
