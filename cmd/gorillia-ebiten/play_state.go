@@ -188,6 +188,9 @@ func (playState) Update(g *Game) error {
 
 func (playState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
+	for i := range g.buildings {
+		g.buildings[i].h = g.Buildings[i].H
+	}
 	for i, b := range g.buildings {
 		ebitenutil.DrawRect(screen, b.x, float64(g.Height)-b.h, b.w-1, b.h, b.color)
 		for _, w := range b.windows {
@@ -256,7 +259,9 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 			powerStr = g.powerInput
 		}
 	}
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("A:%3s P:%3s W:%+2.0f P%d %d-%d", angleStr, powerStr, g.Wind, g.Current+1, g.Wins[0], g.Wins[1]))
+	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
+		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
+	ebitenutil.DebugPrint(screen, info)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
 		x := (g.Width - len(msg)*charW) / 2

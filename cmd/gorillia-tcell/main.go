@@ -89,6 +89,9 @@ func (g *Game) drawSun() {
 
 func (g *Game) draw() {
 	g.screen.Clear()
+	for i := range g.buildings {
+		g.buildings[i].h = int(g.Buildings[i].H)
+	}
 	for i, b := range g.buildings {
 		x := i*buildingWidth + 4
 		for y := g.Height - 1; y >= g.Height-b.h; y-- {
@@ -162,10 +165,9 @@ func (g *Game) draw() {
 			powerStr = g.powerInput
 		}
 	}
-	s := fmt.Sprintf("A:%3s P:%3s W:%+2.0f P%d %d-%d", angleStr, powerStr, g.Wind, g.Current+1, g.Wins[0], g.Wins[1])
-	for i, r := range s {
-		g.screen.SetContent(i, 0, r, nil, tcell.StyleDefault)
-	}
+	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
+		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
+	drawString(g.screen, 0, 0, info)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
 		drawString(g.screen, (g.Width-len(msg))/2, 1, msg)

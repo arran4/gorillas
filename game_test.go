@@ -92,6 +92,26 @@ func TestBuildingCollisionEndsTurn(t *testing.T) {
 	}
 }
 
+func TestBuildingDamageReducesHeight(t *testing.T) {
+	g := newTestGame()
+	// ensure building 2 is tall and track initial height
+	idx := 2
+	g.Buildings[idx].H = float64(g.Height) - g.Gorillas[0].Y + 10
+	initial := g.Buildings[idx].H
+
+	// aim directly at the side of building 2
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+
+	g.Throw()
+	g.Step()
+
+	if g.Buildings[idx].H >= initial {
+		t.Fatalf("expected building height to decrease, got %f", g.Buildings[idx].H)
+	}
+}
+
 func TestWindInfluencesVelocity(t *testing.T) {
 	g := newTestGame()
 	g.Angle = 0
