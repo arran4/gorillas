@@ -1,5 +1,7 @@
 package gorillas
 
+import "image"
+
 const (
 	hitMapEmpty    = 0
 	hitMapBuilding = 1
@@ -126,6 +128,28 @@ func (m *HitMap) DrawGorilla(x, y int, idx int, r int) {
 		val = hitMapGorilla1
 	}
 	m.DrawCircle(x, y, r, byte(val))
+}
+
+// DrawGorillaImage marks non-transparent pixels of img using the same anchor
+// position as DrawGorilla (bottom centre). This allows hit detection to match
+// the rendered gorilla sprite.
+func (m *HitMap) DrawGorillaImage(x, y int, idx int, img image.Image) {
+	val := byte(hitMapGorilla0)
+	if idx == 1 {
+		val = hitMapGorilla1
+	}
+	b := img.Bounds()
+	w, h := b.Dx(), b.Dy()
+	baseX := x - w/2
+	baseY := y - h
+	for yy := 0; yy < h; yy++ {
+		for xx := 0; xx < w; xx++ {
+			_, _, _, a := img.At(b.Min.X+xx, b.Min.Y+yy).RGBA()
+			if a != 0 {
+				m.Set(baseX+xx, baseY+yy, val)
+			}
+		}
+	}
 }
 
 // GorillaValue returns the gorilla index stored at the coordinate or -1.

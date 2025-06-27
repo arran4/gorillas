@@ -80,6 +80,12 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
 	g.gorillaImg = ebdraw.DefaultGorillaSprite(gorillaScale)
+	if g.Game.HitMap != nil {
+		for i, gr := range g.Game.Gorillas {
+			g.Game.HitMap.ClearGorilla(int(gr.X), int(gr.Y), i, 4)
+			g.Game.HitMap.DrawGorillaImage(int(gr.X), int(gr.Y), i, g.gorillaImg)
+		}
+	}
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 	bw := float64(g.Width) / float64(g.Game.BuildingCount)
