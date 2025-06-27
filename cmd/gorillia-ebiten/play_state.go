@@ -22,7 +22,6 @@ import (
 type playState struct{}
 
 func (playState) Update(g *Game) error {
-	now := time.Now()
 	if g.abortPrompt {
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			switch k {
