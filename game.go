@@ -509,7 +509,13 @@ func (g *Game) startExplosion(x, y float64) {
 		}
 	}
 	g.Explosion.Active = true
-	if g.killGorillaIfInRadius(x, y, base) {
+	maxR := base
+	for _, r := range g.Explosion.Radii {
+		if r > maxR {
+			maxR = r
+		}
+	}
+	if g.killGorillaIfInRadius(x, y, maxR) {
 		// handleGorillaKill sets roundOver and other state
 	} else {
 		g.roundOver = false

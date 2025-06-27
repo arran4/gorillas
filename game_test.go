@@ -300,6 +300,31 @@ func TestExplosionKillsNearbyGorilla(t *testing.T) {
 	}
 }
 
+func TestExplosionBlastRadiusKills(t *testing.T) {
+	g := newTestGame()
+	g.Current = 0
+	base := g.Settings.NewExplosionRadius
+	if base <= 0 {
+		base = 16
+	}
+	if g.Settings.ForceCGA {
+		base /= 2
+	}
+	dist := base * 1.1
+	x := g.Gorillas[1].X
+	y := g.Gorillas[1].Y - dist
+	if y < 0 {
+		y = g.Gorillas[1].Y + dist
+	}
+	g.startExplosion(x, y)
+	if !g.roundOver {
+		t.Fatal("round should end when gorilla in blast radius")
+	}
+	if g.Wins[0] != 1 {
+		t.Fatalf("expected player 1 to score, wins: %v", g.Wins)
+	}
+}
+
 func TestSecondPlayerThrowDirection(t *testing.T) {
 	g := newTestGame()
 	g.Current = 1
