@@ -2,8 +2,6 @@ package ebdraw
 
 import (
 	"image/color"
-	"image/draw"
-	"math"
 	"math/rand"
 
 	"github.com/arran4/gorillas"
@@ -13,32 +11,32 @@ import (
 
 // DrawVectorLines joins a series of points with lines of the specified colour.
 func DrawVectorLines(img *ebiten.Image, pts []gorillas.VectorPoint, clr color.Color) {
-	drawcommon.DrawVectorLines(img.(draw.Image), pts, clr)
+	drawcommon.DrawVectorLines(img, pts, clr)
 }
 
 // DrawFilledRect fills a rectangle between two points.
 func DrawFilledRect(img *ebiten.Image, x1, y1, x2, y2 float64, clr color.Color) {
-	drawcommon.DrawFilledRect(img.(draw.Image), x1, y1, x2, y2, clr)
+	drawcommon.DrawFilledRect(img, x1, y1, x2, y2, clr)
 }
 
 // DrawFilledCircle draws a filled circle at the provided centre and radius.
 func DrawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
-	drawcommon.DrawFilledCircle(img.(draw.Image), cx, cy, r, clr)
+	drawcommon.DrawFilledCircle(img, cx, cy, r, clr)
 }
 
 // DrawFilledEllipse draws a filled ellipse with horizontal radius rx and vertical radius ry.
 func DrawFilledEllipse(img *ebiten.Image, cx, cy, rx, ry float64, clr color.Color) {
-	drawcommon.DrawFilledEllipse(img.(draw.Image), cx, cy, rx, ry, clr)
+	drawcommon.DrawFilledEllipse(img, cx, cy, rx, ry, clr)
 }
 
 // DrawArc renders an arc from startDeg to endDeg going clockwise from 0 degrees to the right.
 func DrawArc(img *ebiten.Image, cx, cy, r float64, startDeg, endDeg float64, clr color.Color) {
-	drawcommon.DrawArc(img.(draw.Image), cx, cy, r, startDeg, endDeg, clr)
+	drawcommon.DrawArc(img, cx, cy, r, startDeg, endDeg, clr)
 }
 
 // DrawThickArc draws a thicker arc using overlapping circles.
 func DrawThickArc(img *ebiten.Image, cx, cy, r, thickness, startDeg, endDeg float64, clr color.Color) {
-	drawcommon.DrawThickArc(img.(draw.Image), cx, cy, r, thickness, startDeg, endDeg, clr)
+	drawcommon.DrawThickArc(img, cx, cy, r, thickness, startDeg, endDeg, clr)
 }
 
 // Arms constants describe gorilla arm positions when drawing.
@@ -50,12 +48,12 @@ const (
 
 // DrawBASSun renders the classic QBASIC sun sprite at the given position and radius.
 func DrawBASSun(img *ebiten.Image, cx, cy, r float64, shocked bool, clr color.Color) {
-	drawcommon.DrawBASSun(img.(draw.Image), cx, cy, r, shocked, clr)
+	drawcommon.DrawBASSun(img, cx, cy, r, shocked, clr)
 }
 
 // DrawBASGorilla draws a simple approximation of the QBASIC gorilla sprite.
 func DrawBASGorilla(img *ebiten.Image, x, y, scale float64, arms int, clr color.Color) {
-	drawcommon.DrawBASGorilla(img.(draw.Image), x, y, scale, arms, clr)
+	drawcommon.DrawBASGorilla(img, x, y, scale, arms, clr)
 }
 
 // CreateBananaSprite converts an ASCII mask into an ebiten image using yellow pixels.
@@ -154,10 +152,10 @@ func CreateBuildingSprite(w, h float64, clr color.Color) *ebiten.Image {
 
 // ClearRect clears a rectangle region on the image by setting pixels transparent.
 func ClearRect(img *ebiten.Image, x, y, w, h int) {
-	drawcommon.ClearRect(img.(draw.Image), x, y, w, h)
+	drawcommon.ClearRect(img, x, y, w, h)
 }
 
 // ClearCircle clears a circle region on the image by setting pixels transparent.
 func ClearCircle(img *ebiten.Image, cx, cy int, r float64) {
-	drawcommon.ClearCircle(img.(draw.Image), cx, cy, r)
+	drawcommon.ClearCircle(img, cx, cy, r)
 }
