@@ -44,6 +44,21 @@ func DrawFilledCircle(img *ebiten.Image, cx, cy, r float64, clr color.Color) {
 	}
 }
 
+// DrawFilledEllipse draws a filled ellipse with horizontal radius rx and vertical radius ry.
+func DrawFilledEllipse(img *ebiten.Image, cx, cy, rx, ry float64, clr color.Color) {
+	maxX := int(math.Ceil(rx))
+	maxY := int(math.Ceil(ry))
+	for dx := -maxX; dx <= maxX; dx++ {
+		for dy := -maxY; dy <= maxY; dy++ {
+			x := float64(dx)
+			y := float64(dy)
+			if (x*x)/(rx*rx)+(y*y)/(ry*ry) <= 1 {
+				ebitenutil.DrawRect(img, cx+x, cy+y, 1, 1, clr)
+			}
+		}
+	}
+}
+
 // DrawArc renders an arc from startDeg to endDeg going clockwise from 0 degrees to the right.
 func DrawArc(img *ebiten.Image, cx, cy, r float64, startDeg, endDeg float64, clr color.Color) {
 	if endDeg < startDeg {
@@ -57,6 +72,21 @@ func DrawArc(img *ebiten.Image, cx, cy, r float64, startDeg, endDeg float64, clr
 		y := cy - r*math.Sin(a*math.Pi/180)
 		ebitenutil.DrawLine(img, prevX, prevY, x, y, clr)
 		prevX, prevY = x, y
+	}
+}
+
+// DrawThickArc draws a thicker arc using overlapping circles.
+func DrawThickArc(img *ebiten.Image, cx, cy, r, thickness, startDeg, endDeg float64, clr color.Color) {
+	if endDeg < startDeg {
+		endDeg += 360
+	}
+	step := 1.0
+	rad := r
+	radius := thickness / 2
+	for a := startDeg; a <= endDeg; a += step {
+		x := cx + rad*math.Cos(a*math.Pi/180)
+		y := cy - rad*math.Sin(a*math.Pi/180)
+		DrawFilledCircle(img, x, y, radius, clr)
 	}
 }
 
@@ -95,8 +125,7 @@ func DrawBASSun(img *ebiten.Image, cx, cy, r float64, shocked bool, clr color.Co
 func DrawBASGorilla(img *ebiten.Image, x, y, scale float64, arms int, clr color.Color) {
 	S := func(v float64) float64 { return v * scale }
 	// head
-	DrawFilledRect(img, x-S(4), y, x+S(2.9), y+S(6), clr)
-	DrawFilledRect(img, x-S(5), y+S(2), x+S(4), y+S(4), clr)
+	DrawFilledCircle(img, x, y+S(3.5), S(4.5), clr)
 	ebitenutil.DrawLine(img, x-S(3), y+S(2), x+S(2), y+S(2), color.Black)
 	for i := -2.0; i <= -1.0; i++ {
 		ebitenutil.DrawRect(img, x+S(i), y+S(4), 1, 1, color.Black)
@@ -105,8 +134,7 @@ func DrawBASGorilla(img *ebiten.Image, x, y, scale float64, arms int, clr color.
 	// neck
 	ebitenutil.DrawLine(img, x-S(3), y+S(7), x+S(2), y+S(7), clr)
 	// body
-	DrawFilledRect(img, x-S(8), y+S(8), x+S(6.9), y+S(14), clr)
-	DrawFilledRect(img, x-S(6), y+S(15), x+S(4.9), y+S(20), clr)
+	DrawFilledEllipse(img, x, y+S(15), S(9), S(6), clr)
 	// legs
 	for i := 0.0; i <= 4; i++ {
 		DrawArc(img, x+S(i), y+S(25), S(10), 135, 202.5, clr)
@@ -115,18 +143,17 @@ func DrawBASGorilla(img *ebiten.Image, x, y, scale float64, arms int, clr color.
 	// chest outline
 	DrawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
 	DrawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
-	for i := -5.0; i <= -1.0; i++ {
-		switch arms {
-		case ArmsRightUp:
-			DrawArc(img, x+S(i-0.1), y+S(14), S(9), 135, 225, clr)
-			DrawArc(img, x+S(4.9)+S(i), y+S(4), S(9), 315, 45, clr)
-		case ArmsLeftUp:
-			DrawArc(img, x+S(i-0.1), y+S(4), S(9), 135, 225, clr)
-			DrawArc(img, x+S(4.9)+S(i), y+S(14), S(9), 315, 45, clr)
-		default:
-			DrawArc(img, x+S(i-0.1), y+S(14), S(9), 135, 225, clr)
-			DrawArc(img, x+S(4.9)+S(i), y+S(14), S(9), 315, 45, clr)
-		}
+	thick := S(4)
+	switch arms {
+	case ArmsRightUp:
+		DrawThickArc(img, x-S(3), y+S(14), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(4), S(9), thick, 315, 45, clr)
+	case ArmsLeftUp:
+		DrawThickArc(img, x-S(3), y+S(4), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(14), S(9), thick, 315, 45, clr)
+	default:
+		DrawThickArc(img, x-S(3), y+S(14), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(14), S(9), thick, 315, 45, clr)
 	}
 }
 

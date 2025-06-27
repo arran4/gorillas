@@ -76,6 +76,25 @@ func DrawFilledCircle(img image.Image, cx, cy, r float64, clr color.Color) {
 	}
 }
 
+// DrawFilledEllipse draws a filled ellipse with horizontal radius rx and vertical radius ry.
+func DrawFilledEllipse(img image.Image, cx, cy, rx, ry float64, clr color.Color) {
+	drw, ok := img.(interface{ Set(int, int, color.Color) })
+	if !ok {
+		return
+	}
+	maxX := int(math.Ceil(rx))
+	maxY := int(math.Ceil(ry))
+	for dx := -maxX; dx <= maxX; dx++ {
+		for dy := -maxY; dy <= maxY; dy++ {
+			x := float64(dx)
+			y := float64(dy)
+			if (x*x)/(rx*rx)+(y*y)/(ry*ry) <= 1 {
+				drw.Set(int(math.Round(cx+x)), int(math.Round(cy+y)), clr)
+			}
+		}
+	}
+}
+
 // DrawArc renders an arc from startDeg to endDeg going clockwise from 0 degrees to the right.
 func DrawArc(img image.Image, cx, cy, r float64, startDeg, endDeg float64, clr color.Color) {
 	if endDeg < startDeg {
@@ -89,6 +108,21 @@ func DrawArc(img image.Image, cx, cy, r float64, startDeg, endDeg float64, clr c
 		y := cy - r*math.Sin(a*math.Pi/180)
 		drawLine(img, prevX, prevY, x, y, clr)
 		prevX, prevY = x, y
+	}
+}
+
+// DrawThickArc draws a thicker arc using overlapping circles.
+func DrawThickArc(img image.Image, cx, cy, r, thickness, startDeg, endDeg float64, clr color.Color) {
+	if endDeg < startDeg {
+		endDeg += 360
+	}
+	step := 1.0
+	rad := r
+	radius := thickness / 2
+	for a := startDeg; a <= endDeg; a += step {
+		x := cx + rad*math.Cos(a*math.Pi/180)
+		y := cy - rad*math.Sin(a*math.Pi/180)
+		DrawFilledCircle(img, x, y, radius, clr)
 	}
 }
 
@@ -125,34 +159,31 @@ func DrawBASSun(img image.Image, cx, cy, r float64, shocked bool, clr color.Colo
 // DrawBASGorilla draws a simple approximation of the QBASIC gorilla sprite.
 func DrawBASGorilla(img image.Image, x, y, scale float64, arms int, clr color.Color) {
 	S := func(v float64) float64 { return v * scale }
-	DrawFilledRect(img, x-S(4), y, x+S(2.9), y+S(6), clr)
-	DrawFilledRect(img, x-S(5), y+S(2), x+S(4), y+S(4), clr)
+	DrawFilledCircle(img, x, y+S(3.5), S(4.5), clr)
 	drawLine(img, x-S(3), y+S(2), x+S(2), y+S(2), color.Black)
 	for i := -2.0; i <= -1.0; i++ {
 		DrawFilledRect(img, x+S(i), y+S(4), x+S(i)+1, y+S(4)+1, color.Black)
 		DrawFilledRect(img, x+S(i+3), y+S(4), x+S(i+3)+1, y+S(4)+1, color.Black)
 	}
 	drawLine(img, x-S(3), y+S(7), x+S(2), y+S(7), clr)
-	DrawFilledRect(img, x-S(8), y+S(8), x+S(6.9), y+S(14), clr)
-	DrawFilledRect(img, x-S(6), y+S(15), x+S(4.9), y+S(20), clr)
+	DrawFilledEllipse(img, x, y+S(15), S(9), S(6), clr)
 	for i := 0.0; i <= 4; i++ {
 		DrawArc(img, x+S(i), y+S(25), S(10), 135, 202.5, clr)
 		DrawArc(img, x-S(6)+S(i-0.1), y+S(25), S(10), 337.5, 45, clr)
 	}
 	DrawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
 	DrawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
-	for i := -5.0; i <= -1.0; i++ {
-		switch arms {
-		case ArmsRightUp:
-			DrawArc(img, x+S(i-0.1), y+S(14), S(9), 135, 225, clr)
-			DrawArc(img, x+S(4.9)+S(i), y+S(4), S(9), 315, 45, clr)
-		case ArmsLeftUp:
-			DrawArc(img, x+S(i-0.1), y+S(4), S(9), 135, 225, clr)
-			DrawArc(img, x+S(4.9)+S(i), y+S(14), S(9), 315, 45, clr)
-		default:
-			DrawArc(img, x+S(i-0.1), y+S(14), S(9), 135, 225, clr)
-			DrawArc(img, x+S(4.9)+S(i), y+S(14), S(9), 315, 45, clr)
-		}
+	thick := S(4)
+	switch arms {
+	case ArmsRightUp:
+		DrawThickArc(img, x-S(3), y+S(14), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(4), S(9), thick, 315, 45, clr)
+	case ArmsLeftUp:
+		DrawThickArc(img, x-S(3), y+S(4), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(14), S(9), thick, 315, 45, clr)
+	default:
+		DrawThickArc(img, x-S(3), y+S(14), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(14), S(9), thick, 315, 45, clr)
 	}
 }
 
