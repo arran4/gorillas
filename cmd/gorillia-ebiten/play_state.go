@@ -30,16 +30,8 @@ func (playState) Update(g *Game) error {
 				g.State = newAbortState()
 			case ebiten.KeyN:
 				g.abortPrompt = false
-				if g.resumeAng {
-					g.enteringAng = true
-				}
-				if g.resumePow {
-					g.enteringPow = true
-				}
 				g.angleInput = ""
 				g.powerInput = ""
-				g.resumeAng = false
-				g.resumePow = false
 			}
 		}
 		return nil
@@ -112,7 +104,7 @@ func (playState) Update(g *Game) error {
 			}
 			for _, k := range inpututil.AppendJustPressedKeys(nil) {
 				switch k {
-				case ebiten.KeyEnter, ebiten.KeyComma:
+				case ebiten.KeyEnter:
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
 							g.Angle = g.LastAngle[g.Current]
@@ -145,8 +137,6 @@ func (playState) Update(g *Game) error {
 				case ebiten.KeyEscape:
 					if g.enteringAng || g.enteringPow {
 						g.abortPrompt = true
-						g.resumeAng = g.enteringAng
-						g.resumePow = g.enteringPow
 						g.enteringAng = false
 						g.enteringPow = false
 						g.angleInput = ""
@@ -166,37 +156,60 @@ func (playState) Update(g *Game) error {
 		}
 		for _, r := range ebiten.AppendInputChars(nil) {
 			if r == '*' {
-				g.enteringAng = true
-				g.angleInput = "*"
+				if g.selAngle {
+					g.enteringAng = true
+					g.angleInput = "*"
+				} else {
+					g.enteringPow = true
+					g.powerInput = "*"
+				}
 				g.lastDigit = time.Now()
 				return nil
 			}
 			if r >= '0' && r <= '9' {
-				g.enteringAng = true
-				g.angleInput = string(r)
+				if g.selAngle {
+					g.enteringAng = true
+					g.angleInput = string(r)
+				} else {
+					g.enteringPow = true
+					g.powerInput = string(r)
+				}
 				g.lastDigit = time.Now()
 				return nil
 			}
 		}
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			if k >= ebiten.Key0 && k <= ebiten.Key9 {
-				g.enteringAng = true
-				g.angleInput = string('0' + rune(k-ebiten.Key0))
+				if g.selAngle {
+					g.enteringAng = true
+					g.angleInput = string('0' + rune(k-ebiten.Key0))
+				} else {
+					g.enteringPow = true
+					g.powerInput = string('0' + rune(k-ebiten.Key0))
+				}
 				g.lastDigit = time.Now()
 				return nil
 			}
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-			g.Angle += 0.5
+			g.selAngle = true
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyRight) {
-			g.Angle -= 0.5
+			g.selAngle = false
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyUp) {
-			g.Power += 0.5
+			if g.selAngle {
+				g.Angle += 0.5
+			} else {
+				g.Power += 0.5
+			}
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyDown) {
-			g.Power -= 0.5
+			if g.selAngle {
+				g.Angle -= 0.5
+			} else {
+				g.Power -= 0.5
+			}
 		}
 		if ebiten.IsKeyPressed(ebiten.KeySpace) {
 			g.Throw()
@@ -208,16 +221,24 @@ func (playState) Update(g *Game) error {
 				lx := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickHorizontal)
 				ly := ebiten.StandardGamepadAxisValue(id, ebiten.StandardGamepadAxisLeftStickVertical)
 				if lx < -0.2 {
-					g.Angle += 0.5
+					g.selAngle = true
 				}
 				if lx > 0.2 {
-					g.Angle -= 0.5
+					g.selAngle = false
 				}
 				if ly < -0.2 {
-					g.Power += 0.5
+					if g.selAngle {
+						g.Angle += 0.5
+					} else {
+						g.Power += 0.5
+					}
 				}
 				if ly > 0.2 {
-					g.Power -= 0.5
+					if g.selAngle {
+						g.Angle -= 0.5
+					} else {
+						g.Power -= 0.5
+					}
 				}
 				if inpututil.IsStandardGamepadButtonJustPressed(id, ebiten.StandardGamepadButtonRightBottom) {
 					g.Throw()
@@ -331,6 +352,11 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		} else {
 			powerStr = g.powerInput
 		}
+	}
+	if g.selAngle {
+		angleStr = "[" + angleStr + "]"
+	} else {
+		powerStr = "[" + powerStr + "]"
 	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
 		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
