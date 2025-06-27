@@ -23,36 +23,6 @@ type playState struct{}
 
 func (playState) Update(g *Game) error {
 	now := time.Now()
-	if g.enteringAng && g.angleInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
-		if strings.HasPrefix(g.angleInput, "*") {
-			g.Angle = g.LastAngle[g.Current]
-		} else if v, err := strconv.Atoi(g.angleInput); err == nil {
-			if v < 0 {
-				v = 0
-			} else if v > 360 {
-				v = 360
-			}
-			g.Angle = float64(v)
-		}
-		g.enteringAng = false
-		g.angleInput = ""
-		g.enteringPow = true
-	}
-	if g.enteringPow && g.powerInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
-		if strings.HasPrefix(g.powerInput, "*") {
-			g.Power = g.LastPower[g.Current]
-		} else if v, err := strconv.Atoi(g.powerInput); err == nil {
-			if v < 0 {
-				v = 0
-			} else if v > 200 {
-				v = 200
-			}
-			g.Power = float64(v)
-		}
-		g.enteringPow = false
-		g.powerInput = ""
-		g.Throw()
-	}
 	if g.abortPrompt {
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			switch k {
@@ -189,24 +159,6 @@ func (playState) Update(g *Game) error {
 						g.angleInput = g.angleInput[:len(g.angleInput)-1]
 					} else if g.enteringPow && len(g.powerInput) > 0 {
 						g.powerInput = g.powerInput[:len(g.powerInput)-1]
-					}
-				default:
-					if k >= ebiten.Key0 && k <= ebiten.Key9 {
-						r := '0' + rune(k-ebiten.Key0)
-						if now.Sub(g.lastDigit) > digitBufferTimeout {
-							if g.enteringAng {
-								g.angleInput = string(r)
-							} else {
-								g.powerInput = string(r)
-							}
-						} else {
-							if g.enteringAng && len(g.angleInput) < 3 {
-								g.angleInput += string(r)
-							} else if g.enteringPow && len(g.powerInput) < 3 {
-								g.powerInput += string(r)
-							}
-						}
-						g.lastDigit = now
 					}
 				}
 			}

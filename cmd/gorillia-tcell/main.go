@@ -48,7 +48,6 @@ type Game struct {
 const (
 	buildingWidth      = 8
 	sunMaxIntegrity    = 4
-	digitFinalizeDelay = 500 * time.Millisecond
 	digitBufferTimeout = 3 * time.Second
 )
 
@@ -297,8 +296,8 @@ func (g *Game) drawWindArrow() {
 		return
 	}
 	length := int(math.Round(g.Wind * 3 * float64(g.Width) / 320))
-       // Draw near the top instead of bottom for better visibility
-       y := 1
+	// Draw near the top instead of bottom for better visibility
+	y := 1
 	x := g.Width / 2
 	dir := 1
 	if length < 0 {
@@ -361,37 +360,6 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 		g.draw()
 		<-ticker.C
 		g.Step()
-		now := time.Now()
-		if g.enteringAng && g.angleInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
-			if strings.HasPrefix(g.angleInput, "*") {
-				g.Angle = g.LastAngle[g.Current]
-			} else if v, err := strconv.Atoi(g.angleInput); err == nil {
-				if v < 0 {
-					v = 0
-				} else if v > 360 {
-					v = 360
-				}
-				g.Angle = float64(v)
-			}
-			g.enteringAng = false
-			g.angleInput = ""
-			g.enteringPow = true
-		}
-		if g.enteringPow && g.powerInput != "" && now.Sub(g.lastDigit) > digitFinalizeDelay {
-			if strings.HasPrefix(g.powerInput, "*") {
-				g.Power = g.LastPower[g.Current]
-			} else if v, err := strconv.Atoi(g.powerInput); err == nil {
-				if v < 0 {
-					v = 0
-				} else if v > 200 {
-					v = 200
-				}
-				g.Power = float64(v)
-			}
-			g.enteringPow = false
-			g.powerInput = ""
-			g.throw()
-		}
 		if !prevExplosion && g.Explosion.Active {
 			g.startVictoryDance(g.Current)
 		}
@@ -923,11 +891,11 @@ func main() {
 		}
 		panic(err)
 	}
-    if err = s.Init(); err != nil {
-            panic(fmt.Errorf("screen init: %w", err))
-    }
-    s.SetStyle(tcell.StyleDefault.Background(tcell.ColorBlack).Foreground(tcell.ColorWhite))
-    defer s.Fini()
+	if err = s.Init(); err != nil {
+		panic(fmt.Errorf("screen init: %w", err))
+	}
+	s.SetStyle(tcell.StyleDefault.Background(tcell.ColorBlack).Foreground(tcell.ColorWhite))
+	defer s.Fini()
 
 	settings := gorillas.LoadSettings()
 	wind := flag.Float64("wind", math.NaN(), "initial wind")

@@ -21,7 +21,6 @@ import (
 const (
 	sunRadius          = 20 * sunScale
 	sunMaxIntegrity    = 4
-	digitFinalizeDelay = 500 * time.Millisecond
 	digitBufferTimeout = 3 * time.Second
 )
 
