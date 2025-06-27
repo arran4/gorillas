@@ -13,6 +13,7 @@ import (
 
 	"github.com/arran4/gorillas"
 	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
+	imgdraw "github.com/arran4/gorillas/drawings/img"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
@@ -79,11 +80,12 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
-	g.gorillaImg = ebdraw.DefaultGorillaSprite(gorillaScale)
+	gorillaBase := imgdraw.DefaultGorillaSprite(gorillaScale)
+	g.gorillaImg = ebiten.NewImageFromImage(gorillaBase)
 	if g.Game.HitMap != nil {
 		for i, gr := range g.Game.Gorillas {
 			g.Game.HitMap.ClearGorilla(int(gr.X), int(gr.Y), i, 4)
-			g.Game.HitMap.DrawGorillaImage(int(gr.X), int(gr.Y), i, g.gorillaImg)
+			g.Game.HitMap.DrawGorillaImage(int(gr.X), int(gr.Y), i, gorillaBase)
 		}
 	}
 	g.LoadScores()
