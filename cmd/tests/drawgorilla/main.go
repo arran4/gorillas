@@ -11,7 +11,7 @@ import (
 
 func main() {
 	scale := 2.0
-	width, height := 90, 59
+	width, height := 90, 90
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	sky := color.RGBA{0, 0, 170, 255}
@@ -22,7 +22,9 @@ func main() {
 	}
 
 	orange := color.RGBA{255, 170, 85, 255}
-	imgdraw.DrawBASGorilla(img, 15*scale+11, scale+12, scale, imgdraw.ArmsDown, orange)
+	x := (float64(width) + scale) / 2
+	y := (float64(height) - 23*scale) / 2
+	imgdraw.DrawBASGorilla(img, x, y, scale, imgdraw.ArmsDown, orange)
 
 	f, err := os.Create("gorilla.png")
 	if err != nil {
