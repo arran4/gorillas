@@ -38,8 +38,7 @@ type Game struct {
 	enteringAng  bool
 	enteringPow  bool
 	abortPrompt  bool
-	resumeAng    bool
-	resumePow    bool
+	selAngle     bool
 	gorillaArt   [][]string
 	js           *joystick
 	lastDigit    time.Time
@@ -271,6 +270,11 @@ func (g *Game) draw() {
 			powerStr = g.powerInput
 		}
 	}
+	if g.selAngle {
+		angleStr = "[" + angleStr + "]"
+	} else {
+		powerStr = "[" + powerStr + "]"
+	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
 		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
 	x := 0
@@ -410,27 +414,32 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				}
 				if r == 'N' {
 					g.abortPrompt = false
-					if g.resumeAng {
-						g.enteringAng = true
-						g.angleInput = ""
-					}
-					if g.resumePow {
-						g.enteringPow = true
-						g.powerInput = ""
-					}
-					g.resumeAng = false
-					g.resumePow = false
 				}
 				continue
 			}
-			if g.enteringAng || g.enteringPow {
-				now := time.Now()
-				switch key.Key() {
-				case tcell.KeyEnter:
-					if g.enteringAng {
-						if strings.HasPrefix(g.angleInput, "*") {
-							g.Angle = g.LastAngle[g.Current]
-						} else if v, err := strconv.Atoi(g.angleInput); err == nil {
+			now := time.Now()
+			switch key.Key() {
+			case tcell.KeyEscape:
+				g.abortPrompt = true
+			case tcell.KeyLeft, tcell.KeyRight:
+				g.selAngle = !g.selAngle
+			case tcell.KeyUp:
+				if g.selAngle {
+					g.Angle += 0.5
+				} else {
+					g.Power += 0.5
+				}
+			case tcell.KeyDown:
+				if g.selAngle {
+					g.Angle -= 0.5
+				} else {
+					g.Power -= 0.5
+				}
+			case tcell.KeyBackspace, tcell.KeyBackspace2:
+				if g.selAngle {
+					if len(g.angleInput) > 0 {
+						g.angleInput = g.angleInput[:len(g.angleInput)-1]
+						if v, err := strconv.Atoi(g.angleInput); err == nil {
 							if v < 0 {
 								v = 0
 							} else if v > 360 {
@@ -438,13 +447,11 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							}
 							g.Angle = float64(v)
 						}
-						g.enteringAng = false
-						g.angleInput = ""
-						g.enteringPow = true
-					} else {
-						if strings.HasPrefix(g.powerInput, "*") {
-							g.Power = g.LastPower[g.Current]
-						} else if v, err := strconv.Atoi(g.powerInput); err == nil {
+					}
+				} else {
+					if len(g.powerInput) > 0 {
+						g.powerInput = g.powerInput[:len(g.powerInput)-1]
+						if v, err := strconv.Atoi(g.powerInput); err == nil {
 							if v < 0 {
 								v = 0
 							} else if v > 200 {
@@ -452,121 +459,55 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							}
 							g.Power = float64(v)
 						}
-						g.enteringPow = false
-						g.powerInput = ""
-						g.throw()
-					}
-				case tcell.KeyEsc:
-					g.abortPrompt = true
-					g.resumeAng = g.enteringAng
-					g.resumePow = g.enteringPow
-					g.enteringAng = false
-					g.enteringPow = false
-					g.angleInput = ""
-					g.powerInput = ""
-				case tcell.KeyBackspace, tcell.KeyBackspace2:
-					if g.enteringAng {
-						if len(g.angleInput) > 0 {
-							g.angleInput = g.angleInput[:len(g.angleInput)-1]
-						}
-					} else if g.enteringPow {
-						if len(g.powerInput) > 0 {
-							g.powerInput = g.powerInput[:len(g.powerInput)-1]
-						}
-					}
-				default:
-					r := key.Rune()
-					if r == '*' {
-						if g.enteringAng {
-							if len(g.angleInput) == 0 {
-								g.angleInput = "*"
-							}
-						} else if g.enteringPow {
-							if len(g.powerInput) == 0 {
-								g.powerInput = "*"
-							}
-						}
-						g.lastDigit = now
-					} else if r == ',' {
-						if g.enteringAng {
-							if strings.HasPrefix(g.angleInput, "*") {
-								g.Angle = g.LastAngle[g.Current]
-							} else if v, err := strconv.Atoi(g.angleInput); err == nil {
-								if v < 0 {
-									v = 0
-								} else if v > 360 {
-									v = 360
-								}
-								g.Angle = float64(v)
-							}
-							g.enteringAng = false
-							g.angleInput = ""
-							g.enteringPow = true
-						} else if g.enteringPow {
-							if strings.HasPrefix(g.powerInput, "*") {
-								g.Power = g.LastPower[g.Current]
-							} else if v, err := strconv.Atoi(g.powerInput); err == nil {
-								if v < 0 {
-									v = 0
-								} else if v > 200 {
-									v = 200
-								}
-								g.Power = float64(v)
-							}
-							g.enteringPow = false
-							g.powerInput = ""
-							g.throw()
-						}
-					} else if r >= '0' && r <= '9' {
-						if now.Sub(g.lastDigit) > digitBufferTimeout {
-							if g.enteringAng {
-								g.angleInput = string(r)
-							} else {
-								g.powerInput = string(r)
-							}
-						} else {
-							if g.enteringAng {
-								if len(g.angleInput) < 3 {
-									g.angleInput += string(r)
-								}
-							} else if g.enteringPow {
-								if len(g.powerInput) < 3 {
-									g.powerInput += string(r)
-								}
-							}
-						}
-						g.lastDigit = now
 					}
 				}
-				continue
-			}
-			if key.Rune() == '*' {
-				g.enteringAng = true
-				g.angleInput = "*"
-				g.lastDigit = time.Now()
-				continue
-			}
-			if key.Rune() >= '0' && key.Rune() <= '9' {
-				g.enteringAng = true
-				g.angleInput = string(key.Rune())
-				g.lastDigit = time.Now()
-				continue
-			}
-			switch key.Key() {
-			case tcell.KeyEscape:
-				g.Aborted = true
-				return nil
-			case tcell.KeyLeft:
-				g.Angle += 0.5
-			case tcell.KeyRight:
-				g.Angle -= 0.5
-			case tcell.KeyUp:
-				g.Power += 0.5
-			case tcell.KeyDown:
-				g.Power -= 0.5
 			case tcell.KeyEnter:
 				g.throw()
+			default:
+				r := key.Rune()
+				if r == '*' {
+					if g.selAngle {
+						g.Angle = g.LastAngle[g.Current]
+						g.angleInput = ""
+					} else {
+						g.Power = g.LastPower[g.Current]
+						g.powerInput = ""
+					}
+					g.lastDigit = now
+				} else if r >= '0' && r <= '9' {
+					if g.selAngle {
+						if now.Sub(g.lastDigit) > digitBufferTimeout {
+							g.angleInput = string(r)
+						} else if len(g.angleInput) < 3 {
+							g.angleInput += string(r)
+						}
+						if v, err := strconv.Atoi(g.angleInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 360 {
+								v = 360
+							}
+							g.Angle = float64(v)
+						}
+					} else {
+						if now.Sub(g.lastDigit) > digitBufferTimeout {
+							g.powerInput = string(r)
+						} else if len(g.powerInput) < 3 {
+							g.powerInput += string(r)
+						}
+						if v, err := strconv.Atoi(g.powerInput); err == nil {
+							if v < 0 {
+								v = 0
+							} else if v > 200 {
+								v = 200
+							}
+							g.Power = float64(v)
+						}
+					}
+					g.lastDigit = now
+				}
 			}
+			continue
 		}
 	}
 }

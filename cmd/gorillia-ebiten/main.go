@@ -53,8 +53,7 @@ type Game struct {
 	enteringAng  bool
 	enteringPow  bool
 	abortPrompt  bool
-	resumeAng    bool
-	resumePow    bool
+	selAngle     bool
 	bananaLeft   *ebiten.Image
 	bananaRight  *ebiten.Image
 	bananaUp     *ebiten.Image
@@ -70,6 +69,7 @@ type Game struct {
 
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g := &Game{Game: gorillas.NewGame(800, 600, buildings)}
+	g.selAngle = true
 	if !math.IsNaN(wind) {
 		g.Game.Wind = wind
 	}
