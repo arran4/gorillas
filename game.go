@@ -89,6 +89,20 @@ type Dance struct {
 	Active bool
 }
 
+// NewDance creates a Dance with the provided parameters and initializes
+// internal state so the dance can be used by external packages without
+// accessing unexported fields.
+func NewDance(idx int, frames []float64, baseY float64) Dance {
+	d := Dance{
+		idx:    idx,
+		frames: frames,
+		baseY:  baseY,
+		Active: true,
+	}
+	d.frame = 0
+	return d
+}
+
 // ShotRecord stores the angle and power for a single throw.
 type ShotRecord struct {
 	Angle float64 `json:"angle"`
@@ -575,14 +589,7 @@ func (g *Game) startGorillaExplosion(idx int) {
 }
 
 func (g *Game) startVictoryDance(idx int) {
-	g.Dance = Dance{
-		idx: idx,
-		// start with a jump and finish before the explosion ends
-		frames: []float64{-3, 0, -3, 0},
-		baseY:  g.Gorillas[idx].Y,
-		Active: true,
-	}
-	g.Dance.frame = 0
+	g.Dance = NewDance(idx, []float64{-3, 0, -3, 0}, g.Gorillas[idx].Y)
 }
 
 func (g *Game) stepVictoryDance() {

@@ -342,13 +342,7 @@ func (g *Game) drawGorilla(idx int) {
 }
 
 func (g *Game) startVictoryDance(idx int) {
-	g.Dance = gorillas.Dance{
-		idx,
-		[]float64{-3, 0, -3, 0},
-		0,
-		g.Gorillas[idx].Y,
-		true,
-	}
+	g.Dance = gorillas.NewDance(idx, []float64{-3, 0, -3, 0}, g.Gorillas[idx].Y)
 }
 
 func (g *Game) throw() {
