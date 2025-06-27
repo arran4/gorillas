@@ -155,12 +155,15 @@ func DrawBASGorilla(img draw.Image, x, y, scale float64, arms int, clr color.Col
 	// round the torso edges
 	DrawFilledCircle(img, x-S(6), y+S(14), S(2), clr)
 	DrawFilledCircle(img, x+S(4.9), y+S(14), S(2), clr)
-	thick := S(4)
-	// legs rendered similar to the arms using thick arcs
-	DrawThickArc(img, x-S(3), y+S(13), S(8), thick, 135, 225, clr)
-	DrawThickArc(img, x+S(2), y+S(13), S(8), thick, -45, 45, clr)
-	DrawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
-	DrawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
+       thick := S(4)
+       // legs rendered similar to the arms using thick arcs
+       DrawThickArc(img, x-S(3), y+S(13), S(8), thick, 135, 225, clr)
+       DrawThickArc(img, x+S(2), y+S(13), S(8), thick, -45, 45, clr)
+       // extend the feet downward so they match the ASCII art legs
+       DrawFilledRect(img, x-S(3)-thick/2, y+S(20), x-S(3)+thick/2, y+S(25), clr)
+       DrawFilledRect(img, x+S(2)-thick/2, y+S(20), x+S(2)+thick/2, y+S(25), clr)
+       DrawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
+       DrawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
 	switch arms {
 	case ArmsRightUp:
 		DrawThickArc(img, x-S(3), y+S(15), S(9), thick, 135, 225, clr)
