@@ -30,3 +30,4 @@ go.work.sum
 cmd/tests/*.png
 /gorilla.png
 /sun.png
+/gorilla.gif
