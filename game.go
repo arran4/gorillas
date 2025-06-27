@@ -452,21 +452,27 @@ func (g *Game) gorillaHitBetween(x1, y1, x2, y2 float64) int {
 	if steps < 1 {
 		steps = 1
 	}
+	vx := x2 - x1
+	vy := y2 - y1
+	forward := (g.Current == 0 && vx > 0) || (g.Current == 1 && vx < 0)
 	for i := 1; i <= steps; i++ {
 		t := float64(i) / float64(steps)
 		x := x1 + (x2-x1)*t
 		y := y1 + (y2-y1)*t
 		if g.HitMap != nil {
 			idx := g.HitMap.GorillaHitAt(int(math.Round(x)), int(math.Round(y)))
-			if idx >= 0 && idx != g.Current {
+			if idx >= 0 {
+				if idx == g.Current && forward && vy <= 0 && i <= 5 {
+					continue
+				}
 				return idx
 			}
 		}
 		for j, gr := range g.Gorillas {
-			if j == g.Current {
-				continue
-			}
 			if math.Abs(gr.X-x) < 5 && math.Abs(gr.Y-y) < 10 {
+				if j == g.Current && forward && vy <= 0 && i <= 5 {
+					continue
+				}
 				return j
 			}
 		}
