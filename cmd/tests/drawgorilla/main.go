@@ -11,7 +11,7 @@ import (
 
 func main() {
 	scale := 2.0
-	width, height := 90, 60
+	width, height := 90, 90
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	sky := color.RGBA{0, 0, 170, 255}

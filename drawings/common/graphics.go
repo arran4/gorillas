@@ -157,8 +157,8 @@ func DrawBASGorilla(img draw.Image, x, y, scale float64, arms int, clr color.Col
 	DrawFilledCircle(img, x+S(4.9), y+S(14), S(2), clr)
 	thick := S(4)
 	// legs rendered similar to the arms using thick arcs
-	DrawThickArc(img, x-S(3), y+S(13), S(8), thick, 135, 225, clr)
-	DrawThickArc(img, x+S(2), y+S(13), S(8), thick, -45, 45, clr)
+	DrawThickArc(img, x-S(-2), y+S(25), S(8), thick, 135, 225, clr)
+	DrawThickArc(img, x+S(-1), y+S(25), S(8), thick, -45, 45, clr)
 	DrawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
 	DrawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
 	switch arms {
