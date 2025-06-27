@@ -679,21 +679,6 @@ func (g *Game) Step() ShotEvent {
 			return g.LastEvent
 		}
 	}
-	bw := float64(g.Width) / float64(g.BuildingCount)
-	idx := int(g.Banana.X / bw)
-	if idx >= 0 && idx < g.BuildingCount && g.Banana.Y < float64(g.Height) &&
-		g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
-		if !g.pointInDamage(idx, g.Banana.X, g.Banana.Y) {
-			g.Banana.Active = false
-			g.startExplosion(g.Banana.X, g.Banana.Y)
-			if g.roundOver {
-				return g.LastEvent
-			}
-			g.evaluateMiss()
-			g.setCurrent((g.Current + 1) % 2)
-			return g.LastEvent
-		}
-	}
 	if hit := g.gorillaHitBetween(oldX, oldY, g.Banana.X, g.Banana.Y); hit >= 0 {
 		g.Banana.Active = false
 		g.handleGorillaKill(hit)
@@ -737,6 +722,21 @@ func (g *Game) Step() ShotEvent {
 				PlayBeep()
 			}
 			return event
+		}
+	}
+	bw := float64(g.Width) / float64(g.BuildingCount)
+	idx := int(g.Banana.X / bw)
+	if idx >= 0 && idx < g.BuildingCount && g.Banana.Y < float64(g.Height) &&
+		g.Banana.Y > float64(g.Height)-g.Buildings[idx].H {
+		if !g.pointInDamage(idx, g.Banana.X, g.Banana.Y) {
+			g.Banana.Active = false
+			g.startExplosion(g.Banana.X, g.Banana.Y)
+			if g.roundOver {
+				return g.LastEvent
+			}
+			g.evaluateMiss()
+			g.setCurrent((g.Current + 1) % 2)
+			return g.LastEvent
 		}
 	}
 	if g.Banana.Y > float64(g.Height) || g.Banana.X < 0 || g.Banana.X >= float64(g.Width) {

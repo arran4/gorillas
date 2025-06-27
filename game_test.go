@@ -242,6 +242,28 @@ func TestHighSpeedGorillaHit(t *testing.T) {
 	}
 }
 
+func TestDirectHitOverBuilding(t *testing.T) {
+	g := newTestGame()
+	g.Angle = 0
+	g.Power = 20
+	g.Current = 0
+
+	startX := g.Gorillas[0].X
+	startY := g.Gorillas[0].Y
+	vx := math.Cos(g.Angle*math.Pi/180) * (g.Power / 2)
+	g.Gorillas[1] = Gorilla{X: startX + vx, Y: startY}
+
+	g.Throw()
+	g.Step()
+
+	if g.Wins[0] != 1 {
+		t.Fatalf("expected player 1 to score, wins: %v", g.Wins)
+	}
+	if !g.roundOver {
+		t.Fatal("round should be over after direct hit")
+	}
+}
+
 func TestWinnerFirstDisabled(t *testing.T) {
 	g := newTestGame()
 	g.Angle = 45
