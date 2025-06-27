@@ -22,7 +22,7 @@ func main() {
 	}
 
 	orange := color.RGBA{255, 170, 85, 255}
-	imgdraw.DrawBASGorilla(img, 15*scale+11, scale+14, scale, imgdraw.ArmsDown, orange)
+	imgdraw.DrawBASGorilla(img, 15*scale+11, scale+12, scale, imgdraw.ArmsDown, orange)
 
 	f, err := os.Create("gorilla.png")
 	if err != nil {

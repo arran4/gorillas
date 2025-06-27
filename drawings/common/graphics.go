@@ -151,25 +151,26 @@ func DrawBASGorilla(img draw.Image, x, y, scale float64, arms int, clr color.Col
 	drawLine(img, x-S(3), y+S(7), x+S(2), y+S(7), clr)
 	// body uses stacked rectangles like the BASIC original
 	DrawFilledRect(img, x-S(8), y+S(8), x+S(6.9), y+S(14), clr)
-	DrawFilledRect(img, x-S(6), y+S(15), x+S(4.9), y+S(20), clr)
+	DrawFilledRect(img, x-S(6), y+S(14), x+S(4.9), y+S(20), clr)
+	// round the torso edges
+	DrawFilledCircle(img, x-S(6), y+S(14), S(2), clr)
+	DrawFilledCircle(img, x+S(4.9), y+S(14), S(2), clr)
 	thick := S(4)
-	// legs drawn with simple arcs to mimic the BASIC sprite
-	for i := 0.0; i <= 4; i++ {
-		DrawArc(img, x+S(i), y+S(25), S(10), 135, 202.5, clr)
-		DrawArc(img, x-S(6)+S(i-0.1), y+S(25), S(10), 337.5, 45, clr)
-	}
+	// legs rendered similar to the arms using thick arcs
+	DrawThickArc(img, x-S(3), y+S(13), S(8), thick, 135, 225, clr)
+	DrawThickArc(img, x+S(2), y+S(13), S(8), thick, -45, 45, clr)
 	DrawArc(img, x-S(4.9), y+S(10), S(4.9), 270, 360, color.Black)
 	DrawArc(img, x+S(4.9), y+S(10), S(4.9), 180, 270, color.Black)
 	switch arms {
 	case ArmsRightUp:
-		DrawThickArc(img, x-S(3), y+S(14), S(9), thick, 135, 225, clr)
-		DrawThickArc(img, x+S(2), y+S(4), S(9), thick, 315, 45, clr)
+		DrawThickArc(img, x-S(3), y+S(15), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(5), S(9), thick, 315, 45, clr)
 	case ArmsLeftUp:
-		DrawThickArc(img, x-S(3), y+S(4), S(9), thick, 135, 225, clr)
-		DrawThickArc(img, x+S(2), y+S(14), S(9), thick, 315, 45, clr)
+		DrawThickArc(img, x-S(3), y+S(5), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(15), S(9), thick, 315, 45, clr)
 	default:
-		DrawThickArc(img, x-S(3), y+S(14), S(9), thick, 135, 225, clr)
-		DrawThickArc(img, x+S(2), y+S(14), S(9), thick, 315, 45, clr)
+		DrawThickArc(img, x-S(3), y+S(15), S(9), thick, 135, 225, clr)
+		DrawThickArc(img, x+S(2), y+S(15), S(9), thick, 315, 45, clr)
 	}
 }
 
