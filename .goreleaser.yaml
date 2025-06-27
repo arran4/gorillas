@@ -2,8 +2,12 @@ project_name: gorillas
 builds:
   - id: gorillia-ebiten
     main: ./cmd/gorillia-ebiten
+    env:
+      - CGO_ENABLED=1
   - id: gorillia-tcell
     main: ./cmd/gorillia-tcell
+    env:
+      - CGO_ENABLED=1
 release:
   github:
     owner: arran4
