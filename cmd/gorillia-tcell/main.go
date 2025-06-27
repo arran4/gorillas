@@ -10,7 +10,6 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
-	"strings"
 	"time"
 	"unicode"
 
@@ -176,11 +175,12 @@ func (g *Game) draw() {
 		g.buildings[i].h = int(g.Buildings[i].H)
 		g.buildings[i].damage = g.buildings[i].damage[:0]
 		for _, d := range g.Buildings[i].Damage {
+			r := int(math.Round(d.R))
 			g.buildings[i].damage = append(g.buildings[i].damage, damageRect{
-				x: int(d.X),
-				y: int(d.Y),
-				w: int(d.W),
-				h: int(d.H),
+				x: int(math.Round(d.X)) - r,
+				y: int(math.Round(d.Y)) - r,
+				w: 2 * r,
+				h: 2 * r,
 			})
 		}
 	}
@@ -343,12 +343,12 @@ func (g *Game) drawGorilla(idx int) {
 
 func (g *Game) startVictoryDance(idx int) {
 	g.Dance = gorillas.Dance{
-		idx:    idx,
-		frames: []float64{-3, 0, -3, 0},
-		baseY:  g.Gorillas[idx].Y,
-		Active: true,
+		idx,
+		[]float64{-3, 0, -3, 0},
+		0,
+		g.Gorillas[idx].Y,
+		true,
 	}
-	g.Dance.frame = 0
 }
 
 func (g *Game) throw() {
