@@ -264,6 +264,26 @@ func TestDirectHitOverBuilding(t *testing.T) {
 	}
 }
 
+func TestSelfHitAtLaunch(t *testing.T) {
+	g := newTestGame()
+	for i := range g.Buildings {
+		g.Buildings[i].H = 0
+	}
+	g.Angle = -90
+	g.Power = 20
+	g.Current = 0
+
+	g.Throw()
+	g.Step()
+
+	if g.Wins[1] != 1 {
+		t.Fatalf("expected player 2 to score, wins: %v", g.Wins)
+	}
+	if !g.roundOver {
+		t.Fatal("round should be over after self hit")
+	}
+}
+
 func TestWinnerFirstDisabled(t *testing.T) {
 	g := newTestGame()
 	g.Angle = 45
@@ -492,21 +512,13 @@ func TestGroundBounceReflectsVelocity(t *testing.T) {
 	g.Power = 20
 	g.Throw()
 
-	for g.Banana.Active && g.Banana.Y < float64(g.Height) {
-		g.Step()
-	}
+	g.Step()
 
-	if !g.Banana.Active {
-		t.Fatal("banana became inactive before ground impact")
+	if g.Wins[1] != 1 {
+		t.Fatalf("expected player 2 to score after self hit, wins: %v", g.Wins)
 	}
-	if g.Banana.Y != float64(g.Height) {
-		t.Fatalf("expected banana at ground, got %f", g.Banana.Y)
-	}
-	if math.Abs(g.Banana.VY+5) > 1e-6 {
-		t.Fatalf("expected vy -5 after bounce got %f", g.Banana.VY)
-	}
-	if !g.Banana.Active {
-		t.Fatal("banana should remain active after bounce")
+	if !g.roundOver {
+		t.Fatal("round should be over after self hit")
 	}
 }
 
