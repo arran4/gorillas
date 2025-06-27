@@ -11,8 +11,19 @@ import (
 
 func main() {
 	scale := 2.0
-	img := image.NewRGBA(image.Rect(0, 0, int(30*scale), int(30*scale)))
-	imgdraw.DrawBASGorilla(img, 15*scale, scale, scale, imgdraw.ArmsDown, color.RGBA{150, 75, 0, 255})
+	width, height := 90, 59
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	sky := color.RGBA{0, 0, 170, 255}
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, sky)
+		}
+	}
+
+	orange := color.RGBA{255, 170, 85, 255}
+	imgdraw.DrawBASGorilla(img, 15*scale+11, scale+14, scale, imgdraw.ArmsDown, orange)
+
 	f, err := os.Create("gorilla.png")
 	if err != nil {
 		panic(err)
