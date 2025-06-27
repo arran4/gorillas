@@ -43,7 +43,9 @@ terminals or for nostalgia.
 
 - Go toolchain installed (`go` 1.20 or newer).
 - Module downloads require internet access on first build.
-- `gorillia-ebiten` needs a graphical desktop environment.
+- `gorillia-ebiten` needs a graphical desktop environment and a working C toolchain.
+- Install Ebitengine dependencies on Linux:
+  `apt-get install gcc libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config`
 - `gorillia-tcell` requires a valid `$TERM` setting and the `infocmp` command.
 
 #### Build commands
@@ -84,7 +86,7 @@ libraries that may not be available in all environments. When running tests you
 can use stub implementations to avoid these dependencies:
 
 ```bash
-go test -tags test ./...
+go test -tags test
 ```
 
 ### Known limitations
