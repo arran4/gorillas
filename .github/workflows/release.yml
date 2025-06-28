@@ -35,6 +35,7 @@ jobs:
           echo "GOOS=$(go env GOOS)" >> "$GITHUB_ENV"
           echo "GOARCH=$(go env GOARCH)" >> "$GITHUB_ENV"
       - name: Package artifacts
+        shell: bash
         run: |
           for dir in dist/*/; do
             base="$(basename "${dir%/}")"
