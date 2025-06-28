@@ -16,6 +16,8 @@ Friday evening gorillas tournaments and beers form a cornerstone of GorillaStack
 
 ## Go Ports
 
+Vibe code ported
+
 A minimal Go implementation of Gorillas is provided under `cmd/gorillia-ebiten` using the Ebiten game library. An alternative terminal based version lives in `cmd/gorillia-tcell` built with the tcell library.
 
 Both ports are simplified remakes, sharing core gameplay logic in the
