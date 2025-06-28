@@ -4,6 +4,8 @@ The GorillaStack maintained version of everyone's favourite DOS game.
 
 Friday evening gorillas tournaments and beers form a cornerstone of GorillaStack's ethos, culture, ideology [insert further synonyms here].
 
+![Screenshot_20250628_100528.png](docs/Screenshot_20250628_100528.png)
+
 ### Development Roadmap
 
 * Optional wind fluctuations on each throw via `GORILLAS_WIND_FLUCT` setting
