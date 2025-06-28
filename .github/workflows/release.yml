@@ -40,7 +40,11 @@ jobs:
           for dir in dist/*/; do
             base="$(basename "${dir%/}")"
             zip_name="${base}-${GOOS}-${GOARCH}.zip"
-            (cd "$dir" && zip -r "../$zip_name" .)
+            if command -v zip >/dev/null; then
+              (cd "$dir" && zip -r "../$zip_name" .)
+            else
+              (cd "$dir" && 7z a -tzip "../$zip_name" .)
+            fi
           done
           find dist -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
       - name: Upload artifact
