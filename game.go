@@ -250,6 +250,9 @@ func NewGame(width, height, buildingCount int) *Game {
 	if buildingCount <= 0 {
 		buildingCount = DefaultBuildingCount
 	}
+	if buildingCount < 4 {
+		buildingCount = 4
+	}
 	g := &Game{Width: width, Height: height, Angle: 45, Power: 50, ScoreFile: defaultScoreFile, ShotsFile: defaultShotsFile, BuildingCount: buildingCount, Aborted: false}
 	g.roundOver = true
 	g.Angles = [2]float64{45, 45}

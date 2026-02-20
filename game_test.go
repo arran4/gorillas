@@ -218,6 +218,27 @@ func TestGorillaHitIncrementsWin(t *testing.T) {
 	}
 }
 
+func TestNewGameClampsSmallBuildingCounts(t *testing.T) {
+	t.Run("one building does not panic", func(t *testing.T) {
+		defer func() {
+			if r := recover(); r != nil {
+				t.Fatalf("NewGame should not panic for small building count: %v", r)
+			}
+		}()
+		g := NewGame(100, 100, 1)
+		if len(g.Buildings) < 4 {
+			t.Fatalf("expected at least 4 buildings, got %d", len(g.Buildings))
+		}
+	})
+
+	t.Run("three buildings keep gorillas apart", func(t *testing.T) {
+		g := NewGame(100, 100, 3)
+		if almostEqual(g.Gorillas[0].X, g.Gorillas[1].X) && almostEqual(g.Gorillas[0].Y, g.Gorillas[1].Y) {
+			t.Fatal("gorillas should not spawn at the same position")
+		}
+	})
+}
+
 func TestHighSpeedGorillaHit(t *testing.T) {
 	g := newTestGame()
 	g.Angle = 0
