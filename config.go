@@ -67,7 +67,7 @@ func loadSettingsFile(path string, s *Settings) {
 				s.UseVectorExplosions = false
 			}
 		case "NEWEXPLOSIONRADIUS":
-			if f, err := strconv.ParseFloat(val, 64); err == nil {
+			if f, err := strconv.ParseFloat(val, 64); err == nil && f > 0 {
 				s.NewExplosionRadius = f
 			}
 		case "USESLIDINGTEXT":
@@ -134,61 +134,73 @@ func LoadSettings() Settings {
 	s := DefaultSettings()
 	loadSettingsFile("gorillas.ini", &s)
 	if v, ok := os.LookupEnv("GORILLAS_SOUND"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.UseSound = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_OLD_EXPLOSIONS"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.UseOldExplosions = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_VECTOR_EXPLOSIONS"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.UseVectorExplosions = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_EXPLOSION_RADIUS"); ok {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
+		v = strings.TrimSpace(v)
+		if f, err := strconv.ParseFloat(v, 64); err == nil && f > 0 {
 			s.NewExplosionRadius = f
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_GRAVITY"); ok {
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
+		v = strings.TrimSpace(v)
+		if f, err := strconv.ParseFloat(v, 64); err == nil && f > 0 {
 			s.DefaultGravity = f
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_ROUNDS"); ok {
-		if n, err := strconv.Atoi(v); err == nil {
+		v = strings.TrimSpace(v)
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			s.DefaultRoundQty = n
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_SLIDING_TEXT"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.UseSlidingText = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_SHOW_INTRO"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.ShowIntro = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_FORCE_CGA"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.ForceCGA = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_WINNER_FIRST"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.WinnerFirst = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_VARIABLE_WIND"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.VariableWind = b
 		}
 	}
 	if v, ok := os.LookupEnv("GORILLAS_WIND_FLUCT"); ok {
+		v = strings.TrimSpace(v)
 		if b, err := strconv.ParseBool(v); err == nil {
 			s.WindFluctuations = b
 		}
