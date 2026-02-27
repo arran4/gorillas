@@ -3,9 +3,11 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"image/color"
+	"image/png"
 	"math"
 	"math/rand"
 	"os"
@@ -67,6 +69,25 @@ type Game struct {
 	Closed bool
 }
 
+func (g *Game) initBuildings() {
+	g.buildingBase = g.buildingBase[:0]
+	g.buildingImg = g.buildingImg[:0]
+	bw := float64(g.Width) / float64(g.Game.BuildingCount)
+	for i := 0; i < g.Game.BuildingCount; i++ {
+		h := g.Buildings[i].H
+		// If building has color set, use it. Otherwise generate random and save it.
+		if g.Buildings[i].Color.A != 0 {
+			// already set
+		} else {
+			g.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+		}
+		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Buildings[i].Color)
+		g.buildingBase = append(g.buildingBase, base)
+		img := ebiten.NewImage(int(bw-1), int(h))
+		g.buildingImg = append(g.buildingImg, img)
+	}
+}
+
 func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g := &Game{Game: gorillas.NewGame(800, 600, buildings)}
 	g.selAngle = true
@@ -89,32 +110,16 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	}
 	g.LoadScores()
 	rand.Seed(time.Now().UnixNano())
-	bw := float64(g.Width) / float64(g.Game.BuildingCount)
-	for i := 0; i < g.Game.BuildingCount; i++ {
-		h := g.Buildings[i].H
-		clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
-		base := ebdraw.CreateBuildingSprite(bw-1, h, clr)
-		g.buildingBase = append(g.buildingBase, base)
-		img := ebiten.NewImage(int(bw-1), int(h))
-		g.buildingImg = append(g.buildingImg, img)
-	}
+
+	g.initBuildings()
+
 	// centre the sun horizontally
 	g.sunX = float64(g.Width) / 2
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
 		g.sunIntegrity = sunMaxIntegrity
-		g.buildingBase = g.buildingBase[:0]
-		g.buildingImg = g.buildingImg[:0]
-		bw := float64(g.Width) / float64(g.Game.BuildingCount)
-		for i := 0; i < g.Game.BuildingCount; i++ {
-			h := g.Buildings[i].H
-			clr := color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
-			base := ebdraw.CreateBuildingSprite(bw-1, h, clr)
-			g.buildingBase = append(g.buildingBase, base)
-			img := ebiten.NewImage(int(bw-1), int(h))
-			g.buildingImg = append(g.buildingImg, img)
-		}
+		g.initBuildings()
 	}
 	g.bananaLeft, g.bananaRight, g.bananaUp, g.bananaDown = ebdraw.CreateBananaSprites()
 	g.gamepads = ebiten.AppendGamepadIDs(nil)
@@ -208,7 +213,61 @@ func main() {
 	ai := flag.Bool("ai", false, "enable computer opponent")
 	flag.BoolVar(&settings.UseSound, "sound", settings.UseSound, "enable sound")
 	flag.BoolVar(&settings.WinnerFirst, "winnerfirst", settings.WinnerFirst, "winner starts next round")
+
+	renderState := flag.String("render-state", "", "path to json state file to render")
+	outputImage := flag.String("output-image", "", "path to output rendered image (png)")
+
 	flag.Parse()
+
+	if *renderState != "" {
+		if *outputImage == "" {
+			fmt.Fprintln(os.Stderr, "-output-image is required when using -render-state")
+			os.Exit(1)
+		}
+
+		b, err := os.ReadFile(*renderState)
+		if err != nil {
+			panic(fmt.Errorf("read state file: %w", err))
+		}
+
+		var loadedGame gorillas.Game
+		if err := json.Unmarshal(b, &loadedGame); err != nil {
+			panic(fmt.Errorf("unmarshal state: %w", err))
+		}
+
+		// Initialize the main.Game wrapper
+		game := newGame(loadedGame.Settings, loadedGame.BuildingCount, loadedGame.Wind)
+
+		// Overwrite the core game state with loaded state
+		game.Game = &loadedGame
+
+		// Re-initialize building images based on loaded state
+		game.initBuildings()
+
+		// Set the state to playState to render the game
+		game.State = playState{}
+
+		// Create offscreen image
+		offscreen := ebiten.NewImage(game.Width, game.Height)
+
+		// Draw
+		game.Draw(offscreen)
+
+		// Save
+		f, err := os.Create(*outputImage)
+		if err != nil {
+			panic(fmt.Errorf("create output file: %w", err))
+		}
+		defer f.Close()
+
+		// Encode as PNG by default, or check extension if needed, but PNG is safe default from prompt
+		if err := png.Encode(f, offscreen); err != nil {
+			panic(fmt.Errorf("encode png: %w", err))
+		}
+
+		return
+	}
+
 	settings.DefaultGravity = *gravity
 	settings.DefaultRoundQty = *rounds
 	game := newGame(settings, *buildings, *wind)

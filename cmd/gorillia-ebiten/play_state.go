@@ -3,9 +3,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"image/color"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +24,17 @@ import (
 type playState struct{}
 
 func (playState) Update(g *Game) error {
+	// Debug save state key
+	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
+		b, err := json.MarshalIndent(g.Game, "", "  ")
+		if err == nil {
+			_ = os.WriteFile("dump_state.json", b, 0644)
+			fmt.Println("Saved dump_state.json")
+		} else {
+			fmt.Printf("Error saving state: %v\n", err)
+		}
+	}
+
 	if g.abortPrompt {
 		for _, k := range inpututil.AppendJustPressedKeys(nil) {
 			switch k {
