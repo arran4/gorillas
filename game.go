@@ -16,6 +16,7 @@ type DamageCircle struct {
 type Building struct {
 	X, W, H float64
 	Damage  []DamageCircle
+	Color   color.RGBA
 }
 
 type Gorilla struct {
@@ -46,7 +47,7 @@ type Settings struct {
 type Explosion struct {
 	X, Y    float64
 	Radii   []float64
-	Colors  []color.Color
+	Colors  []color.RGBA
 	Vectors [][]VectorPoint
 	Frame   int
 	Active  bool
@@ -210,14 +211,14 @@ type Game struct {
 	LastAngle     [2]float64
 	LastPower     [2]float64
 	Players       [2]string
-	League        *League
+	League        *League `json:"-"`
 	ScoreFile     string
 	ShotsFile     string
 	ShotHistory   []ShotRecord
 	Wind          float64
 	BuildingCount int
 	Gravity       float64
-	HitMap        *HitMap
+	HitMap        *HitMap `json:"-"`
 
 	// LastEvent records the outcome of the most recent shot.
 	LastEvent ShotEvent
@@ -229,7 +230,7 @@ type Game struct {
 	lastStartX float64
 	lastOtherX float64
 	lastVX     float64
-	ResetHook  func()
+	ResetHook  func() `json:"-"`
 
 	// roundOver indicates whether the current explosion ends the round.
 	roundOver bool
@@ -512,13 +513,13 @@ func (g *Game) startExplosion(x, y float64) {
 		}
 	} else {
 		g.Explosion.Radii = []float64{base * 1.175, base, base * 0.9, base * 0.6, base * 0.45, 0}
-		g.Explosion.Colors = []color.Color{
-			color.RGBA{128, 128, 128, 255},
-			color.RGBA{255, 0, 0, 255},
-			color.RGBA{255, 165, 0, 255},
-			color.RGBA{255, 255, 0, 255},
-			color.RGBA{255, 255, 255, 255},
-			color.Black,
+		g.Explosion.Colors = []color.RGBA{
+			{128, 128, 128, 255},
+			{255, 0, 0, 255},
+			{255, 165, 0, 255},
+			{255, 255, 0, 255},
+			{255, 255, 255, 255},
+			{0, 0, 0, 255},
 		}
 		if g.Settings.UseVectorExplosions {
 			frames := []float64{base, base * 0.9, base * 0.6, base * 0.45}
@@ -567,13 +568,13 @@ func (g *Game) startGorillaExplosion(idx int) {
 		}
 	} else {
 		g.Explosion.Radii = []float64{base * 1.175, base, base * 0.9, base * 0.6, base * 0.45, 0}
-		g.Explosion.Colors = []color.Color{
-			color.RGBA{128, 128, 128, 255},
-			color.RGBA{255, 0, 0, 255},
-			color.RGBA{255, 165, 0, 255},
-			color.RGBA{255, 255, 0, 255},
-			color.RGBA{255, 255, 255, 255},
-			color.Black,
+		g.Explosion.Colors = []color.RGBA{
+			{128, 128, 128, 255},
+			{255, 0, 0, 255},
+			{255, 165, 0, 255},
+			{255, 255, 0, 255},
+			{255, 255, 255, 255},
+			{0, 0, 0, 255},
 		}
 		if g.Settings.UseVectorExplosions {
 			frames := []float64{base, base * 0.9, base * 0.6, base * 0.45}
