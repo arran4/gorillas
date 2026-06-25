@@ -28,7 +28,7 @@ type setupState struct {
 func newSetupState(g *Game) *setupState {
 	s := &setupState{
 		game:          g,
-		fields:        []string{g.Game.Players[0], g.Game.Players[1], strconv.Itoa(g.Game.Settings.DefaultRoundQty), fmt.Sprintf("%.0f", g.Game.Settings.DefaultGravity)},
+		fields:        []string{g.Players[0], g.Players[1], strconv.Itoa(g.Settings.DefaultRoundQty), fmt.Sprintf("%.0f", g.Settings.DefaultGravity)},
 		players:       g.League.Names(),
 		editingPlayer: -1,
 	}
@@ -167,13 +167,13 @@ func (s *setupState) Update(g *Game) error {
 			r, _ := strconv.Atoi(s.fields[2])
 			gval, _ := strconv.ParseFloat(s.fields[3], 64)
 			s.game.Game.Players = [2]string{s.fields[0], s.fields[1]}
-			s.game.Game.Settings.DefaultRoundQty = r
-			s.game.Game.Settings.DefaultGravity = gval
+			s.game.Settings.DefaultRoundQty = r
+			s.game.Settings.DefaultGravity = gval
 			s.game.Game.Gravity = gval
 			s.game.State = playState{}
 			return nil
 		case ebiten.KeyQ:
-			s.game.State = newMenuState(s.game.Game.Settings.UseSound, s.game.Game.Settings.UseSlidingText)
+			s.game.State = newMenuState(s.game.Settings.UseSound, s.game.Settings.UseSlidingText)
 			return nil
 		case ebiten.KeyUp:
 			if s.cur > 0 {

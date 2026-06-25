@@ -72,16 +72,16 @@ type Game struct {
 func (g *Game) initBuildings() {
 	g.buildingBase = g.buildingBase[:0]
 	g.buildingImg = g.buildingImg[:0]
-	bw := float64(g.Game.Width) / float64(g.Game.BuildingCount)
-	for i := 0; i < g.Game.BuildingCount; i++ {
-		h := g.Game.Buildings[i].H
+	bw := float64(g.Width) / float64(g.BuildingCount)
+	for i := 0; i < g.BuildingCount; i++ {
+		h := g.Buildings[i].H
 		// If building has color set, use it. Otherwise generate random and save it.
-		if g.Game.Buildings[i].Color.A != 0 {
+		if g.Buildings[i].Color.A != 0 {
 			// already set
 		} else {
-			g.Game.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+			g.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
 		}
-		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Game.Buildings[i].Color)
+		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Buildings[i].Color)
 		g.buildingBase = append(g.buildingBase, base)
 		img := ebiten.NewImage(int(bw-1), int(h))
 		g.buildingImg = append(g.buildingImg, img)
@@ -114,7 +114,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g.initBuildings()
 
 	// centre the sun horizontally
-	g.sunX = float64(g.Game.Width) / 2
+	g.sunX = float64(g.Width) / 2
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
@@ -177,10 +177,10 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 	if g.Game.Wind == 0 {
 		return
 	}
-	length := g.Game.Wind * 3 * float64(g.Game.Width) / 320
+	length := g.Game.Wind * 3 * float64(g.Width) / 320
 	// Position arrow near the top instead of the bottom
-	y := float64(g.Game.Height) / 40
-	x := float64(g.Game.Width) / 2
+	y := float64(g.Height) / 40
+	x := float64(g.Width) / 2
 	end := x + length
 	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})
 	head := 5.0
@@ -194,7 +194,7 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return g.Game.Width, g.Game.Height
+	return g.Width, g.Height
 }
 
 func main() {

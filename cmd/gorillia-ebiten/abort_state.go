@@ -10,7 +10,7 @@ type abortState struct{}
 func newAbortState() *abortState { return &abortState{} }
 
 func (abortState) Update(g *Game) error {
-	g.Game.Aborted = true
+	g.Aborted = true
 	return ebiten.Termination
 }
 
