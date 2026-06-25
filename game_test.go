@@ -9,7 +9,7 @@ import (
 )
 
 func newTestGame() *Game {
-	rand.Seed(1)
+	rand.Seed(1) //nolint:staticcheck
 	g := NewGame(100, 100, DefaultBuildingCount)
 	g.Settings = DefaultSettings()
 	g.Gravity = g.Settings.DefaultGravity
@@ -155,7 +155,7 @@ func TestThrowAppliesWindFluctuation(t *testing.T) {
 	g := newTestGame()
 	g.Settings.WindFluctuations = true
 	g.Wind = 5
-	rand.Seed(2)
+	rand.Seed(2) //nolint:staticcheck
 	g.Angle = 0
 	g.Power = 20
 	g.Current = 0
@@ -497,7 +497,7 @@ func TestVictoryDanceStartsOnHit(t *testing.T) {
 }
 
 func TestNewGameWindUsesBasicAlgorithm(t *testing.T) {
-	rand.Seed(1)
+	rand.Seed(1) //nolint:staticcheck
 	g := NewGame(100, 100, DefaultBuildingCount)
 	if g.Wind != -11 {
 		t.Fatalf("expected wind -11 got %f", g.Wind)
@@ -505,7 +505,7 @@ func TestNewGameWindUsesBasicAlgorithm(t *testing.T) {
 }
 
 func TestVariableWindChangesEachRound(t *testing.T) {
-	rand.Seed(1)
+	rand.Seed(1) //nolint:staticcheck
 	g := NewGame(100, 100, DefaultBuildingCount)
 	g.Settings = DefaultSettings()
 	g.Settings.VariableWind = true

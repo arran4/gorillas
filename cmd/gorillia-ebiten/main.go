@@ -17,7 +17,7 @@ import (
 	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
 	imgdraw "github.com/arran4/gorillas/drawings/img"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 const (
@@ -76,9 +76,7 @@ func (g *Game) initBuildings() {
 	for i := 0; i < g.BuildingCount; i++ {
 		h := g.Buildings[i].H
 		// If building has color set, use it. Otherwise generate random and save it.
-		if g.Buildings[i].Color.A != 0 {
-			// already set
-		} else {
+		if g.Buildings[i].Color.A == 0 {
 			g.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
 		}
 		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Buildings[i].Color)
@@ -109,7 +107,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		}
 	}
 	g.Game.LoadScores()
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) //nolint:staticcheck
 
 	g.initBuildings()
 
@@ -147,7 +145,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 	if g.gorillaImg != nil {
 		op := &ebiten.DrawImageOptions{}
-		w, h := g.gorillaImg.Size()
+		sz := g.gorillaImg.Bounds().Size(); w, h := sz.X, sz.Y
 		op.GeoM.Scale(gorillaScale, gorillaScale)
 		op.GeoM.Translate(g.Game.Gorillas[idx].X-float64(w)*gorillaScale/2, g.Game.Gorillas[idx].Y-float64(h)*gorillaScale)
 		img.DrawImage(g.gorillaImg, op)
@@ -155,7 +153,7 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 	}
 	if len(g.gorillaArt) == 0 {
 		gr := g.Game.Gorillas[idx]
-		ebitenutil.DrawRect(img, gr.X-5*gorillaScale, gr.Y-10*gorillaScale, 10*gorillaScale, 10*gorillaScale, color.RGBA{255, 0, 0, 255})
+		vector.DrawFilledRect(img, float32(gr.X-5*gorillaScale), float32(gr.Y-10*gorillaScale), float32(10*gorillaScale), float32(10*gorillaScale), color.RGBA{255, 0, 0, 255}, false)
 		return
 	}
 	frame := g.gorillaArt[0]
@@ -167,7 +165,7 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 			if ch != ' ' {
 				x := float64(baseX + dx*gorillaScale)
 				y := float64(baseY + dy*gorillaScale)
-				ebitenutil.DrawRect(img, x, y, gorillaScale, gorillaScale, color.RGBA{255, 0, 0, 255})
+				vector.DrawFilledRect(img, float32(x), float32(y), float32(gorillaScale), float32(gorillaScale), color.RGBA{255, 0, 0, 255}, false)
 			}
 		}
 	}
@@ -182,18 +180,18 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 	y := float64(g.Height) / 40
 	x := float64(g.Width) / 2
 	end := x + length
-	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})
+	vector.StrokeLine(img, float32(x), float32(y), float32(end), float32(y), 1, color.RGBA{255, 255, 0, 255}, false)
 	head := 5.0
 	if length > 0 {
-		ebitenutil.DrawLine(img, end, y, end-head, y-3, color.RGBA{255, 255, 0, 255})
-		ebitenutil.DrawLine(img, end, y, end-head, y+3, color.RGBA{255, 255, 0, 255})
+		vector.StrokeLine(img, float32(end), float32(y), float32(end-head), float32(y-3), 1, color.RGBA{255, 255, 0, 255}, false)
+		vector.StrokeLine(img, float32(end), float32(y), float32(end-head), float32(y+3), 1, color.RGBA{255, 255, 0, 255}, false)
 	} else {
-		ebitenutil.DrawLine(img, end, y, end+head, y-3, color.RGBA{255, 255, 0, 255})
-		ebitenutil.DrawLine(img, end, y, end+head, y+3, color.RGBA{255, 255, 0, 255})
+		vector.StrokeLine(img, float32(end), float32(y), float32(end+head), float32(y-3), 1, color.RGBA{255, 255, 0, 255}, false)
+		vector.StrokeLine(img, float32(end), float32(y), float32(end+head), float32(y+3), 1, color.RGBA{255, 255, 0, 255}, false)
 	}
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
+func (g *Game) Layout(_, _ int) (int, int) {
 	return g.Width, g.Height
 }
 

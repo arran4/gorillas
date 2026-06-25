@@ -15,6 +15,7 @@ import (
 )
 
 // introGame implements ebiten.Game to play the ASCII intro.
+//nolint
 type introGame struct {
 	useSound bool
 	sliding  bool
@@ -29,6 +30,7 @@ type introGame struct {
 	done     bool
 }
 
+//nolint
 func (g *introGame) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		g.done = true
@@ -85,6 +87,7 @@ func (g *introGame) Update() error {
 	return nil
 }
 
+//nolint
 func (g *introGame) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 	y0 := g.height/2 - charH
@@ -120,10 +123,12 @@ func (g *introGame) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (g *introGame) Layout(outsideWidth, outsideHeight int) (int, int) {
+//nolint
+func (g *introGame) Layout(_, _ int) (int, int) {
 	return g.width, g.height
 }
 
+//nolint
 func newIntroGame(w, h int, useSound, sliding bool) *introGame {
 	if w == 0 || h == 0 {
 		w, h = 800, 600
@@ -139,6 +144,7 @@ func newIntroGame(w, h int, useSound, sliding bool) *introGame {
 }
 
 // showIntroMovie runs the introductory animation.
+//nolint:unused
 func showIntroMovie(useSound, sliding bool) error {
 	w, h := ebiten.WindowSize()
 	ig := newIntroGame(w, h, useSound, sliding)
@@ -146,6 +152,7 @@ func showIntroMovie(useSound, sliding bool) error {
 }
 
 // introScreenGame implements ebiten.Game for the initial menu.
+//nolint
 type introScreenGame struct {
 	useSound bool
 	sliding  bool
@@ -157,6 +164,7 @@ type introScreenGame struct {
 	play     bool
 }
 
+//nolint
 func (g *introScreenGame) Update() error {
 	now := time.Now()
 	switch g.stage {
@@ -190,6 +198,7 @@ func (g *introScreenGame) Update() error {
 	return nil
 }
 
+//nolint
 func (g *introScreenGame) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 	cx := g.width/2 - 10*charW
@@ -219,11 +228,14 @@ func (g *introScreenGame) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (g *introScreenGame) Layout(outsideWidth, outsideHeight int) (int, int) {
+//nolint
+func (g *introScreenGame) Layout(_, _ int) (int, int) {
 	return g.width, g.height
 }
 
 // introScreen runs the intro menu and returns true if the player chose to play.
+//nolint:unused
+//nolint:unused
 func introScreen(useSound, sliding bool) (bool, error) {
 	w, h := ebiten.WindowSize()
 	if w == 0 || h == 0 {
@@ -293,7 +305,7 @@ func (g *sparkleGame) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (g *sparkleGame) Layout(outsideWidth, outsideHeight int) (int, int) {
+func (g *sparkleGame) Layout(_, _ int) (int, int) {
 	return g.width, g.height
 }
 

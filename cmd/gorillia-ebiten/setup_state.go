@@ -62,7 +62,7 @@ func keyToRune(k ebiten.Key) rune {
 	return 0
 }
 
-func (s *setupState) Update(g *Game) error {
+func (s *setupState) Update(_ *Game) error {
 	for _, k := range inpututil.AppendJustPressedKeys(nil) {
 		if s.editing {
 			switch k {

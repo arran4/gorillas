@@ -329,7 +329,7 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		}
 		if img != nil {
 			op := &ebiten.DrawImageOptions{}
-			w, h := img.Size()
+			sz := img.Bounds().Size(); w, h := sz.X, sz.Y
 			op.GeoM.Scale(bananaScale, bananaScale)
 			op.GeoM.Translate(g.Banana.X-float64(w)*bananaScale/2, g.Banana.Y-float64(h)*bananaScale/2)
 			screen.DrawImage(img, op)

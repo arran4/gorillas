@@ -14,4 +14,4 @@ func (abortState) Update(g *Game) error {
 	return ebiten.Termination
 }
 
-func (abortState) Draw(g *Game, screen *ebiten.Image) {}
+func (abortState) Draw(_ *Game, _ *ebiten.Image) {}

@@ -26,7 +26,7 @@ func showExtro() {
 	reader := bufio.NewReader(os.Stdin)
 	done := make(chan struct{})
 	go func() {
-		reader.ReadString('\n')
+		_, _ = reader.ReadString('\n')
 		close(done)
 	}()
 

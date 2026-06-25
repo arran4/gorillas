@@ -539,9 +539,7 @@ func (g *Game) startExplosion(x, y float64) {
 			maxR = r
 		}
 	}
-	if g.killGorillaIfInRadius(x, y, maxR) {
-		// handleGorillaKill sets roundOver and other state
-	} else {
+	if !g.killGorillaIfInRadius(x, y, maxR) {
 		g.roundOver = false
 	}
 	g.recordExplosionDamage(x, y, base)
@@ -782,7 +780,7 @@ func (g *Game) testShot(angle, power float64) bool {
 
 // FindShot searches for an angle and power likely to hit the opponent.
 func (g *Game) FindShot() (angle, power float64) {
-	for a := 15.0; a <= 75; a += 1 {
+	for a := 15.0; a <= 75; a++ {
 		for p := 20.0; p <= 100; p += 2 {
 			if g.testShot(a, p) {
 				return a, p
