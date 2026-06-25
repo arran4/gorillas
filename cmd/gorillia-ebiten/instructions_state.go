@@ -39,7 +39,7 @@ func newInstructionsState(sliding bool) *instructionsState {
 func (s *instructionsState) Update(g *Game) error {
 	if s.done {
 		if len(inpututil.AppendJustPressedKeys(nil)) > 0 {
-			g.State = newMenuState(g.Settings.UseSound, g.Settings.UseSlidingText)
+			g.State = newMenuState(g.Game.Settings.UseSound, g.Game.Settings.UseSlidingText)
 		}
 		return nil
 	}
@@ -61,7 +61,7 @@ func (s *instructionsState) Update(g *Game) error {
 
 func (s *instructionsState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	y0 := g.Height/2 - len(s.lines)*charH/2
+	y0 := g.Game.Height/2 - len(s.lines)*charH/2
 	for i, line := range s.lines {
 		draw := line
 		if s.sliding && s.charIdx < len(line) {
@@ -71,6 +71,6 @@ func (s *instructionsState) Draw(g *Game, screen *ebiten.Image) {
 				draw = line[:s.charIdx]
 			}
 		}
-		ebitenutil.DebugPrintAt(screen, draw, (g.Width-len(line)*charW)/2, y0+i*charH)
+		ebitenutil.DebugPrintAt(screen, draw, (g.Game.Width-len(line)*charW)/2, y0+i*charH)
 	}
 }

@@ -45,8 +45,8 @@ func (s *scoreState) Update(g *Game) error {
 func (s *scoreState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
 	pattern := []rune("*    ")
-	cols := g.Width / charW
-	rows := g.Height / charH
+	cols := g.Game.Width / charW
+	rows := g.Game.Height / charH
 	for x := 0; x < cols; x++ {
 		ch1 := pattern[(s.phase+x)%5]
 		ch2 := pattern[(4-s.phase+x)%5]
@@ -63,6 +63,6 @@ func (s *scoreState) Draw(g *Game, screen *ebiten.Image) {
 	}
 	y0 := rows/2 - len(s.lines)/2
 	for i, line := range s.lines {
-		ebitenutil.DebugPrintAt(screen, line, (g.Width-len(line)*charW)/2, (y0+i)*charH)
+		ebitenutil.DebugPrintAt(screen, line, (g.Game.Width-len(line)*charW)/2, (y0+i)*charH)
 	}
 }

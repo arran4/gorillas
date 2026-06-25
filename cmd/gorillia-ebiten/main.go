@@ -72,16 +72,16 @@ type Game struct {
 func (g *Game) initBuildings() {
 	g.buildingBase = g.buildingBase[:0]
 	g.buildingImg = g.buildingImg[:0]
-	bw := float64(g.Width) / float64(g.Game.BuildingCount)
+	bw := float64(g.Game.Width) / float64(g.Game.BuildingCount)
 	for i := 0; i < g.Game.BuildingCount; i++ {
-		h := g.Buildings[i].H
+		h := g.Game.Buildings[i].H
 		// If building has color set, use it. Otherwise generate random and save it.
-		if g.Buildings[i].Color.A != 0 {
+		if g.Game.Buildings[i].Color.A != 0 {
 			// already set
 		} else {
-			g.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+			g.Game.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
 		}
-		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Buildings[i].Color)
+		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Game.Buildings[i].Color)
 		g.buildingBase = append(g.buildingBase, base)
 		img := ebiten.NewImage(int(bw-1), int(h))
 		g.buildingImg = append(g.buildingImg, img)
@@ -108,13 +108,13 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 			g.Game.HitMap.DrawGorillaImage(int(gr.X), int(gr.Y), i, gorillaBase)
 		}
 	}
-	g.LoadScores()
+	g.Game.LoadScores()
 	rand.Seed(time.Now().UnixNano())
 
 	g.initBuildings()
 
 	// centre the sun horizontally
-	g.sunX = float64(g.Width) / 2
+	g.sunX = float64(g.Game.Width) / 2
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
@@ -129,7 +129,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 func (g *Game) Update() error {
 	if ebiten.IsWindowBeingClosed() {
 		g.Closed = true
-		g.Aborted = true
+		g.Game.Aborted = true
 		return ebiten.Termination
 	}
 	if g.State != nil {
@@ -149,19 +149,19 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 		op := &ebiten.DrawImageOptions{}
 		w, h := g.gorillaImg.Size()
 		op.GeoM.Scale(gorillaScale, gorillaScale)
-		op.GeoM.Translate(g.Gorillas[idx].X-float64(w)*gorillaScale/2, g.Gorillas[idx].Y-float64(h)*gorillaScale)
+		op.GeoM.Translate(g.Game.Gorillas[idx].X-float64(w)*gorillaScale/2, g.Game.Gorillas[idx].Y-float64(h)*gorillaScale)
 		img.DrawImage(g.gorillaImg, op)
 		return
 	}
 	if len(g.gorillaArt) == 0 {
-		gr := g.Gorillas[idx]
+		gr := g.Game.Gorillas[idx]
 		ebitenutil.DrawRect(img, gr.X-5*gorillaScale, gr.Y-10*gorillaScale, 10*gorillaScale, 10*gorillaScale, color.RGBA{255, 0, 0, 255})
 		return
 	}
 	frame := g.gorillaArt[0]
 	width := gorillas.FrameWidth(frame)
-	baseX := int(g.Gorillas[idx].X) - width*gorillaScale/2
-	baseY := int(g.Gorillas[idx].Y) - len(frame)*gorillaScale
+	baseX := int(g.Game.Gorillas[idx].X) - width*gorillaScale/2
+	baseY := int(g.Game.Gorillas[idx].Y) - len(frame)*gorillaScale
 	for dy, line := range frame {
 		for dx, ch := range line {
 			if ch != ' ' {
@@ -174,13 +174,13 @@ func (g *Game) drawGorilla(img *ebiten.Image, idx int) {
 }
 
 func (g *Game) drawWindArrow(img *ebiten.Image) {
-	if g.Wind == 0 {
+	if g.Game.Wind == 0 {
 		return
 	}
-	length := g.Wind * 3 * float64(g.Width) / 320
+	length := g.Game.Wind * 3 * float64(g.Game.Width) / 320
 	// Position arrow near the top instead of the bottom
-	y := float64(g.Height) / 40
-	x := float64(g.Width) / 2
+	y := float64(g.Game.Height) / 40
+	x := float64(g.Game.Width) / 2
 	end := x + length
 	ebitenutil.DrawLine(img, x, y, end, y, color.RGBA{255, 255, 0, 255})
 	head := 5.0
@@ -194,7 +194,7 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return g.Width, g.Height
+	return g.Game.Width, g.Game.Height
 }
 
 func main() {
@@ -272,17 +272,17 @@ func main() {
 	settings.DefaultRoundQty = *rounds
 	game := newGame(settings, *buildings, *wind)
 	game.AI = *ai
-	game.Players = [2]string{*p1, *p2}
+	game.Game.Players = [2]string{*p1, *p2}
 	if settings.ShowIntro {
 		game.State = newIntroMovieState(settings.UseSound, settings.UseSlidingText)
 	} else {
 		game.State = newMenuState(settings.UseSound, settings.UseSlidingText)
 	}
-	winsBackup := game.TotalWins
+	winsBackup := game.Game.TotalWins
 	var playersBackup map[string]*gorillas.PlayerStats
-	if game.League != nil {
-		playersBackup = make(map[string]*gorillas.PlayerStats, len(game.League.Players))
-		for n, ps := range game.League.Players {
+	if game.Game.League != nil {
+		playersBackup = make(map[string]*gorillas.PlayerStats, len(game.Game.League.Players))
+		for n, ps := range game.Game.League.Players {
 			cp := *ps
 			playersBackup[n] = &cp
 		}
@@ -294,10 +294,10 @@ func main() {
 		return
 	}
 	if game.Aborted {
-		game.TotalWins = winsBackup
-		if game.League != nil {
-			game.League.Players = playersBackup
-			game.League.Save()
+		game.Game.TotalWins = winsBackup
+		if game.Game.League != nil {
+			game.Game.League.Players = playersBackup
+			game.Game.League.Save()
 		}
 		if err := SparklePause([]string{"Game aborted"}, 0); err != nil {
 			panic(fmt.Errorf("sparkle pause: %w", err))
@@ -308,8 +308,8 @@ func main() {
 	if err := showStats(game.StatsString()); err != nil {
 		panic(fmt.Errorf("show stats: %w", err))
 	}
-	if game.League != nil {
-		if err := showLeague(game.League); err != nil {
+	if game.Game.League != nil {
+		if err := showLeague(game.Game.League); err != nil {
 			panic(fmt.Errorf("show league: %w", err))
 		}
 	}
