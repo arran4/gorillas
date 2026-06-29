@@ -41,7 +41,7 @@ on:
         type: boolean
   schedule:
     - cron: '17 3 1 * *'
-    - cron: '41 2 * * *'
+    - cron: '0 20 1 * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
@@ -111,7 +111,7 @@ jobs:
               if [[ "${{ github.event.schedule }}" == "17 3 1 * *" ]]; then
                 is_monthly=true
               fi
-              if [[ "${{ github.event.schedule }}" == "41 2 * * *" ]]; then
+              if [[ "${{ github.event.schedule }}" == "0 20 1 * *" ]]; then
                 is_nightly=true
               fi
               ;;
@@ -228,6 +228,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Install dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc libc6-dev libgl1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev libasound2-dev pkg-config
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
