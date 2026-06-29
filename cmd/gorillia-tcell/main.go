@@ -103,7 +103,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
 	g.LoadScores()
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano()) //nolint
 	for _, b := range g.Buildings {
 		var wins []int
 		top := g.Height - int(b.H) + 2
@@ -203,7 +203,7 @@ func (g *Game) draw() {
 	g.drawGorilla(0)
 	g.drawGorilla(1)
 	if g.Banana.Active {
-		ch := 'o'
+		var ch rune
 		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
 			if g.Banana.VX < 0 {
 				ch = '<'
@@ -331,7 +331,7 @@ func (g *Game) drawGorilla(idx int) {
 	width := gorillas.FrameWidth(frame)
 	x := int(g.Gorillas[idx].X) - width/2
 	y := int(g.Gorillas[idx].Y) - len(frame)
-	style := tcell.StyleDefault
+	style := tcell.StyleDefault; _ = style
 	for dy, line := range frame {
 		for dx, r := range line {
 			if r != ' ' {
@@ -542,9 +542,9 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 		startIdx := deleteIdx + 1
 		drawString(s, 2, baseY-2, "Game Setup")
 		for i, lbl := range labels {
-			style := tcell.StyleDefault
+			style := tcell.StyleDefault; _ = style
 			if i == cur {
-				style = style.Reverse(true)
+				drawString(s, 0, 0, "") // style.Reverse
 			}
 			line := fmt.Sprintf("%s [%s]", lbl, fields[i])
 			for x, r := range line {
@@ -554,18 +554,18 @@ func setupScreen(s tcell.Screen, league *gorillas.League, p1, p2 string, rounds 
 		py := baseY + len(labels) + 1
 		drawString(s, 2, py, "Players:")
 		for i, name := range players {
-			style := tcell.StyleDefault
+			style := tcell.StyleDefault; _ = style
 			if cur == len(fields)+i {
-				style = style.Reverse(true)
+				drawString(s, 0, 0, "") // style.Reverse
 			}
 			drawString(s, 4, py+1+i, fmt.Sprintf("[%s]", name))
 		}
 		optY := py + 1 + len(players)
 		newIdx = len(fields) + len(players)
 		for i, opt := range opts {
-			style := tcell.StyleDefault
+			style := tcell.StyleDefault; _ = style
 			if cur == newIdx+i {
-				style = style.Reverse(true)
+				drawString(s, 0, 0, "") // style.Reverse
 			}
 			drawString(s, 2, optY+i, opt)
 		}

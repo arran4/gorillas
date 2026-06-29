@@ -62,7 +62,7 @@ func keyToRune(k ebiten.Key) rune {
 	return 0
 }
 
-func (s *setupState) Update(g *Game) error {
+func (s *setupState) Update(_ *Game) error {
 	for _, k := range inpututil.AppendJustPressedKeys(nil) {
 		if s.editing {
 			switch k {
@@ -70,9 +70,9 @@ func (s *setupState) Update(g *Game) error {
 				if s.editingPlayer >= 0 {
 					name := s.players[s.editingPlayer]
 					if s.newPlayer {
-						s.game.League.AddPlayer(name)
+						s.game.Game.League.AddPlayer(name)
 					} else {
-						s.game.League.RenamePlayer(s.oldName, name)
+						s.game.Game.League.RenamePlayer(s.oldName, name)
 						if s.fields[0] == s.oldName {
 							s.fields[0] = name
 						}
@@ -80,7 +80,7 @@ func (s *setupState) Update(g *Game) error {
 							s.fields[1] = name
 						}
 					}
-					s.game.League.Save()
+					s.game.Game.League.Save()
 					s.editingPlayer = -1
 					s.newPlayer = false
 				}
@@ -166,10 +166,10 @@ func (s *setupState) Update(g *Game) error {
 		case ebiten.KeyEscape:
 			r, _ := strconv.Atoi(s.fields[2])
 			gval, _ := strconv.ParseFloat(s.fields[3], 64)
-			s.game.Players = [2]string{s.fields[0], s.fields[1]}
+			s.game.Game.Players = [2]string{s.fields[0], s.fields[1]}
 			s.game.Settings.DefaultRoundQty = r
 			s.game.Settings.DefaultGravity = gval
-			s.game.Gravity = gval
+			s.game.Game.Gravity = gval
 			s.game.State = playState{}
 			return nil
 		case ebiten.KeyQ:
@@ -213,8 +213,8 @@ func (s *setupState) Update(g *Game) error {
 			if s.cur >= len(s.fields) {
 				idx := s.cur - len(s.fields)
 				name := s.players[idx]
-				s.game.League.DeletePlayer(name)
-				s.game.League.Save()
+				s.game.Game.League.DeletePlayer(name)
+				s.game.Game.League.Save()
 				s.players = append(s.players[:idx], s.players[idx+1:]...)
 				if s.fields[0] == name {
 					s.fields[0] = ""
@@ -240,7 +240,7 @@ func (s *setupState) Update(g *Game) error {
 
 func (s *setupState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	baseY := g.Height/2 - 2*charH
+	baseY := g.Game.Height/2 - 2*charH
 	ebitenutil.DebugPrintAt(screen, "Game Setup (Esc to start)", 2*charW, baseY-2*charH)
 	labels := []string{"Player 1:", "Player 2:", "Rounds:", "Gravity:"}
 	for i, lbl := range labels {

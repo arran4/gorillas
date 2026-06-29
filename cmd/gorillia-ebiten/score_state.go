@@ -26,7 +26,7 @@ func newScoreState(stats string) *scoreState {
 	return &scoreState{lines: lines}
 }
 
-func (s *scoreState) Update(g *Game) error {
+func (s *scoreState) Update(_ *Game) error {
 	if s.start.IsZero() {
 		s.start = time.Now()
 		s.next = s.start.Add(50 * time.Millisecond)

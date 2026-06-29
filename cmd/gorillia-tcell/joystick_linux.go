@@ -33,7 +33,7 @@ func openJoystick() (*joystick, error) {
 	for i := 0; i < 4; i++ {
 		p := "/dev/input/js" + strconv.Itoa(i)
 		if f, err := os.Open(p); err == nil {
-			unix.SetNonblock(int(f.Fd()), true)
+			_ = unix.SetNonblock(int(f.Fd()), true)
 			return &joystick{f: f}, nil
 		}
 	}
