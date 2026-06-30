@@ -8,7 +8,7 @@ import (
 
 	"github.com/arran4/gorillas"
 	drawcommon "github.com/arran4/gorillas/drawings/common"
-	"github.com/hajimehoshi/ebiten/v2"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 )
 
 // DrawVectorLines joins a series of points with lines of the specified colour.

@@ -48,9 +48,9 @@ func (playState) Update(g *Game) error {
 		}
 		return nil
 	}
-	if !g.Banana.Active && !g.Explosion.Active {
-		if g.AI && g.Current == 1 {
-			g.AutoShot()
+	if !g.Game.Banana.Active && !g.Game.Explosion.Active {
+		if g.AI && g.Game.Current == 1 {
+			g.Game.AutoShot()
 			return nil
 		}
 		if g.enteringAng || g.enteringPow {
@@ -68,7 +68,7 @@ func (playState) Update(g *Game) error {
 				if r == ',' {
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
-							g.Game.Angle = g.Game.LastAngle[g.Current]
+							g.Game.Angle = g.Game.LastAngle[g.Game.Current]
 						} else if v, err := strconv.Atoi(g.angleInput); err == nil {
 							if v < 0 {
 								v = 0
@@ -82,7 +82,7 @@ func (playState) Update(g *Game) error {
 						g.enteringPow = true
 					} else if g.enteringPow {
 						if strings.HasPrefix(g.powerInput, "*") {
-							g.Game.Power = g.Game.LastPower[g.Current]
+							g.Game.Power = g.Game.LastPower[g.Game.Current]
 						} else if v, err := strconv.Atoi(g.powerInput); err == nil {
 							if v < 0 {
 								v = 0
@@ -119,7 +119,7 @@ func (playState) Update(g *Game) error {
 				case ebiten.KeyEnter:
 					if g.enteringAng {
 						if strings.HasPrefix(g.angleInput, "*") {
-							g.Game.Angle = g.Game.LastAngle[g.Current]
+							g.Game.Angle = g.Game.LastAngle[g.Game.Current]
 						} else if v, err := strconv.Atoi(g.angleInput); err == nil {
 							if v < 0 {
 								v = 0
@@ -133,7 +133,7 @@ func (playState) Update(g *Game) error {
 						g.enteringPow = true
 					} else {
 						if strings.HasPrefix(g.powerInput, "*") {
-							g.Game.Power = g.Game.LastPower[g.Current]
+							g.Game.Power = g.Game.LastPower[g.Game.Current]
 						} else if v, err := strconv.Atoi(g.powerInput); err == nil {
 							if v < 0 {
 								v = 0
@@ -263,10 +263,10 @@ func (playState) Update(g *Game) error {
 		}
 	} else {
 		g.Game.Step()
-		if g.Banana.Active && g.sunIntegrity > 0 {
+		if g.Game.Banana.Active && g.sunIntegrity > 0 {
 			r := float64(g.sunIntegrity) * sunRadius / sunMaxIntegrity
-			if g.Banana.X >= g.sunX-r && g.Banana.X <= g.sunX+r &&
-				g.Banana.Y >= g.sunY-r && g.Banana.Y <= g.sunY+r {
+			if g.Game.Banana.X >= g.sunX-r && g.Game.Banana.X <= g.sunX+r &&
+				g.Game.Banana.Y >= g.sunY-r && g.Game.Banana.Y <= g.sunY+r {
 				g.sunHitTicks = 10
 				if g.sunIntegrity > 0 {
 					g.sunIntegrity--
@@ -282,35 +282,35 @@ func (playState) Update(g *Game) error {
 
 func (playState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 255, 255})
-	bw := float64(g.Width) / float64(g.BuildingCount)
-	for i := 0; i < g.BuildingCount; i++ {
-		h := g.Buildings[i].H
+	bw := float64(g.Game.Width) / float64(g.Game.BuildingCount)
+	for i := 0; i < g.Game.BuildingCount; i++ {
+		h := g.Game.Buildings[i].H
 		intH := int(h)
 		img := g.buildingImg[i]
 		img.Fill(color.RGBA{})
 		img.DrawImage(g.buildingBase[i], nil)
-		for _, d := range g.Buildings[i].Damage {
+		for _, d := range g.Game.Buildings[i].Damage {
 			rx := int(d.X - float64(i)*bw)
-			ry := int(d.Y - float64(g.Height-intH))
+			ry := int(d.Y - float64(g.Game.Height-intH))
 			ebdraw.ClearCircle(img, rx, ry, d.R)
 		}
 		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(i)*bw, float64(g.Height-intH))
+		op.GeoM.Translate(float64(i)*bw, float64(g.Game.Height-intH))
 		screen.DrawImage(img, op)
 	}
 	for i := range g.Game.Gorillas {
 		g.drawGorilla(screen, i)
 	}
-	if g.Banana.Active {
+	if g.Game.Banana.Active {
 		dir := 0
-		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
-			if g.Banana.VX < 0 {
+		if math.Abs(g.Game.Banana.VX) > math.Abs(g.Game.Banana.VY) {
+			if g.Game.Banana.VX < 0 {
 				dir = 0
 			} else {
 				dir = 1
 			}
 		} else {
-			if g.Banana.VY < 0 {
+			if g.Game.Banana.VY < 0 {
 				dir = 2
 			} else {
 				dir = 3
@@ -331,20 +331,20 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 			op := &ebiten.DrawImageOptions{}
 			sz := img.Bounds().Size(); w, h := sz.X, sz.Y
 			op.GeoM.Scale(bananaScale, bananaScale)
-			op.GeoM.Translate(g.Banana.X-float64(w)*bananaScale/2, g.Banana.Y-float64(h)*bananaScale/2)
+			op.GeoM.Translate(g.Game.Banana.X-float64(w)*bananaScale/2, g.Game.Banana.Y-float64(h)*bananaScale/2)
 			screen.DrawImage(img, op)
 		}
 	}
-	if g.Explosion.Active {
+	if g.Game.Explosion.Active {
 		clr := color.RGBA{255, 255, 0, 255}
-		if len(g.Explosion.Colors) > g.Explosion.Frame {
-			clr = color.RGBAModel.Convert(g.Explosion.Colors[g.Explosion.Frame]).(color.RGBA)
+		if len(g.Game.Explosion.Colors) > g.Game.Explosion.Frame {
+			clr = color.RGBAModel.Convert(g.Game.Explosion.Colors[g.Game.Explosion.Frame]).(color.RGBA)
 		}
-		frame := g.Explosion.Frame
-		if g.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Explosion.Vectors) {
-			drawVectorLines(screen, g.Explosion.Vectors[frame-1], clr)
+		frame := g.Game.Explosion.Frame
+		if g.Game.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Game.Explosion.Vectors) {
+			drawVectorLines(screen, g.Game.Explosion.Vectors[frame-1], clr)
 		} else {
-			ebdraw.DrawFilledCircle(screen, g.Explosion.X, g.Explosion.Y, g.Explosion.Radii[frame], clr)
+			ebdraw.DrawFilledCircle(screen, g.Game.Explosion.X, g.Game.Explosion.Y, g.Game.Explosion.Radii[frame], clr)
 		}
 	}
 	g.drawSun(screen)
@@ -371,10 +371,10 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 		powerStr = "[" + powerStr + "]"
 	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
-		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Game.Wind, g.Game.Wins[0], g.Game.Wins[1])
+		g.Game.Current+1, g.Game.Players[g.Game.Current], angleStr, powerStr, g.Game.Wind, g.Game.Wins[0], g.Game.Wins[1])
 	x := 0
-	if g.Current == 1 {
-		x = g.Width - len(info)*charW
+	if g.Game.Current == 1 {
+		x = g.Game.Width - len(info)*charW
 		if x < 0 {
 			x = 0
 		}
@@ -382,13 +382,13 @@ func (playState) Draw(g *Game, screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, info, x, 0)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
-		x := (g.Width - len(msg)*charW) / 2
-		y := g.Height/2 - charH/2
+		x := (g.Game.Width - len(msg)*charW) / 2
+		y := g.Game.Height/2 - charH/2
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
 	} else if g.Game.LastEvent != gorillas.EventNone {
 		msg := g.Game.LastEventMsg
-		x := (g.Width - len(msg)*charW) / 2
-		y := g.Height / 3
+		x := (g.Game.Width - len(msg)*charW) / 2
+		y := g.Game.Height / 3
 		ebitenutil.DebugPrintAt(screen, msg, x, y)
 	}
 }

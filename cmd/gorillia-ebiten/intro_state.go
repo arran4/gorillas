@@ -94,7 +94,7 @@ func (s *introMovieState) Update(g *Game) error {
 
 func (s *introMovieState) Draw(g *Game, screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255})
-	y0 := g.Height/2 - charH
+	y0 := g.Game.Height/2 - charH
 	for i, line := range s.lines {
 		draw := line
 		if s.stage == 0 && s.sliding {
@@ -110,14 +110,14 @@ func (s *introMovieState) Draw(g *Game, screen *ebiten.Image) {
 				draw = ""
 			}
 		}
-		ebitenutil.DebugPrintAt(screen, draw, (g.Width-len(line)*charW)/2, y0+i*charH)
+		ebitenutil.DebugPrintAt(screen, draw, (g.Game.Width-len(line)*charW)/2, y0+i*charH)
 	}
 	if s.stage >= 2 {
 		f1 := gorillaFrames[s.frame%len(gorillaFrames)]
 		f2 := gorillaFrames[(s.frame+1)%len(gorillaFrames)]
-		x1 := g.Width/2 - 10*charW
-		x2 := g.Width/2 + 2*charW
-		y := g.Height/2 + 2*charH
+		x1 := g.Game.Width/2 - 10*charW
+		x2 := g.Game.Width/2 + 2*charW
+		y := g.Game.Height/2 + 2*charH
 		for i, l := range f1 {
 			ebitenutil.DebugPrintAt(screen, l, x1, y+i*charH)
 		}

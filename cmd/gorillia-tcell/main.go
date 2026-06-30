@@ -102,12 +102,12 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	} else {
 		g.gorillaArt = [][]string{{" O ", "/|\\", "/ \\"}}
 	}
-	g.LoadScores()
+	g.Game.LoadScores()
 	rand.Seed(time.Now().UnixNano()) //nolint
-	for _, b := range g.Buildings {
+	for _, b := range g.Game.Buildings {
 		var wins []int
-		top := g.Height - int(b.H) + 2
-		for y := g.Height - 2; y > top; y -= 2 {
+		top := g.Game.Height - int(b.H) + 2
+		for y := g.Game.Height - 2; y > top; y -= 2 {
 			if rand.Intn(3) != 0 {
 				wins = append(wins, y)
 			}
@@ -115,7 +115,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 		g.buildings = append(g.buildings, building{h: int(b.H), windows: wins})
 	}
 	// position the sun in the horizontal centre
-	g.sunX = g.Width/2 - 1
+	g.sunX = g.Game.Width/2 - 1
 	g.sunY = 1
 	if js, err := openJoystick(); err == nil {
 		g.js = js
@@ -172,9 +172,9 @@ func (g *Game) drawSun() {
 func (g *Game) draw() {
 	g.screen.Clear()
 	for i := range g.buildings {
-		g.buildings[i].h = int(g.Buildings[i].H)
+		g.buildings[i].h = int(g.Game.Buildings[i].H)
 		g.buildings[i].damage = g.buildings[i].damage[:0]
-		for _, d := range g.Buildings[i].Damage {
+		for _, d := range g.Game.Buildings[i].Damage {
 			r := int(math.Round(d.R))
 			g.buildings[i].damage = append(g.buildings[i].damage, damageRect{
 				x: int(math.Round(d.X)) - r,
@@ -186,7 +186,7 @@ func (g *Game) draw() {
 	}
 	for i, b := range g.buildings {
 		x := i*buildingWidth + 4
-		for y := g.Height - 1; y >= g.Height-b.h; y-- {
+		for y := g.Game.Height - 1; y >= g.Game.Height-b.h; y-- {
 			g.screen.SetContent(x, y, '#', nil, tcell.StyleDefault)
 		}
 		for _, wy := range b.windows {
@@ -202,49 +202,49 @@ func (g *Game) draw() {
 	}
 	g.drawGorilla(0)
 	g.drawGorilla(1)
-	if g.Banana.Active {
+	if g.Game.Banana.Active {
 		var ch rune
-		if math.Abs(g.Banana.VX) > math.Abs(g.Banana.VY) {
-			if g.Banana.VX < 0 {
+		if math.Abs(g.Game.Banana.VX) > math.Abs(g.Game.Banana.VY) {
+			if g.Game.Banana.VX < 0 {
 				ch = '<'
 			} else {
 				ch = '>'
 			}
 		} else {
-			if g.Banana.VY < 0 {
+			if g.Game.Banana.VY < 0 {
 				ch = '^'
 			} else {
 				ch = 'v'
 			}
 		}
-		g.screen.SetContent(int(g.Banana.X), int(g.Banana.Y), ch, nil, tcell.StyleDefault)
+		g.screen.SetContent(int(g.Game.Banana.X), int(g.Game.Banana.Y), ch, nil, tcell.StyleDefault)
 	}
-	if g.Explosion.Active {
+	if g.Game.Explosion.Active {
 		char := '*'
-		if !g.Settings.UseOldExplosions {
+		if !g.Game.Settings.UseOldExplosions {
 			chars := []rune{'#', '@', 'O', 'o', '.'}
-			if g.Explosion.Frame < len(chars) {
-				char = chars[g.Explosion.Frame]
+			if g.Game.Explosion.Frame < len(chars) {
+				char = chars[g.Game.Explosion.Frame]
 			} else {
 				char = chars[len(chars)-1]
 			}
 		}
-		frame := g.Explosion.Frame
-		if g.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Explosion.Vectors) {
-			pts := g.Explosion.Vectors[frame-1]
+		frame := g.Game.Explosion.Frame
+		if g.Game.Settings.UseVectorExplosions && frame > 0 && frame-1 < len(g.Game.Explosion.Vectors) {
+			pts := g.Game.Explosion.Vectors[frame-1]
 			for i := 1; i < len(pts); i++ {
 				drawLine(g.screen, int(pts[i-1].X), int(pts[i-1].Y), int(pts[i].X), int(pts[i].Y), char)
 			}
 		} else {
-			r := int(g.Explosion.Radii[frame])
-			ex := int(g.Explosion.X)
-			ey := int(g.Explosion.Y)
+			r := int(g.Game.Explosion.Radii[frame])
+			ex := int(g.Game.Explosion.X)
+			ey := int(g.Game.Explosion.Y)
 			for dx := -r; dx <= r; dx++ {
 				for dy := -r; dy <= r; dy++ {
 					if dx*dx+dy*dy <= r*r {
 						x := ex + dx
 						y := ey + dy
-						if x >= 0 && x < g.Width && y >= 0 && y < g.Height {
+						if x >= 0 && x < g.Game.Width && y >= 0 && y < g.Game.Height {
 							g.screen.SetContent(x, y, char, nil, tcell.StyleDefault)
 						}
 					}
@@ -254,7 +254,7 @@ func (g *Game) draw() {
 	}
 	g.drawSun()
 	g.drawWindArrow()
-	angleStr := fmt.Sprintf("%3.0f", g.Angle)
+	angleStr := fmt.Sprintf("%3.0f", g.Game.Angle)
 	if g.enteringAng {
 		if g.angleInput == "" {
 			angleStr = "_"
@@ -262,7 +262,7 @@ func (g *Game) draw() {
 			angleStr = g.angleInput
 		}
 	}
-	powerStr := fmt.Sprintf("%3.0f", g.Power)
+	powerStr := fmt.Sprintf("%3.0f", g.Game.Power)
 	if g.enteringPow {
 		if g.powerInput == "" {
 			powerStr = "_"
@@ -276,10 +276,10 @@ func (g *Game) draw() {
 		powerStr = "[" + powerStr + "]"
 	}
 	info := fmt.Sprintf("Player %d (%s) - Angle:%s° Power:%s Wind:%+2.0f Score:%d-%d",
-		g.Current+1, g.Players[g.Current], angleStr, powerStr, g.Wind, g.Wins[0], g.Wins[1])
+		g.Game.Current+1, g.Game.Players[g.Game.Current], angleStr, powerStr, g.Game.Wind, g.Game.Wins[0], g.Game.Wins[1])
 	x := 0
-	if g.Current == 1 {
-		x = g.Width - len(info)
+	if g.Game.Current == 1 {
+		x = g.Game.Width - len(info)
 		if x < 0 {
 			x = 0
 		}
@@ -287,34 +287,34 @@ func (g *Game) draw() {
 	drawString(g.screen, x, 0, info)
 	if g.abortPrompt {
 		msg := "Abort game? [Y/N]"
-		drawString(g.screen, (g.Width-len(msg))/2, 1, msg)
-	} else if g.LastEvent != gorillas.EventNone {
-		msg := g.LastEventMsg
-		drawString(g.screen, (g.Width-len(msg))/2, g.Height/3, msg)
+		drawString(g.screen, (g.Game.Width-len(msg))/2, 1, msg)
+	} else if g.Game.LastEvent != gorillas.EventNone {
+		msg := g.Game.LastEventMsg
+		drawString(g.screen, (g.Game.Width-len(msg))/2, g.Game.Height/3, msg)
 	}
 	g.screen.Show()
 }
 
 func (g *Game) drawWindArrow() {
-	if g.Wind == 0 {
+	if g.Game.Wind == 0 {
 		return
 	}
-	length := int(math.Round(g.Wind * 3 * float64(g.Width) / 320))
+	length := int(math.Round(g.Game.Wind * 3 * float64(g.Game.Width) / 320))
 	// Draw near the top instead of bottom for better visibility
 	y := 1
-	x := g.Width / 2
+	x := g.Game.Width / 2
 	dir := 1
 	if length < 0 {
 		dir = -1
 	}
 	for i := dir; i != length; i += dir {
 		pos := x + i
-		if pos >= 0 && pos < g.Width {
+		if pos >= 0 && pos < g.Game.Width {
 			g.screen.SetContent(pos, y, '-', nil, tcell.StyleDefault)
 		}
 	}
 	headX := x + length
-	if headX >= 0 && headX < g.Width {
+	if headX >= 0 && headX < g.Game.Width {
 		head := '>'
 		if length < 0 {
 			head = '<'
@@ -329,8 +329,8 @@ func (g *Game) drawGorilla(idx int) {
 	}
 	frame := g.gorillaArt[0]
 	width := gorillas.FrameWidth(frame)
-	x := int(g.Gorillas[idx].X) - width/2
-	y := int(g.Gorillas[idx].Y) - len(frame)
+	x := int(g.Game.Gorillas[idx].X) - width/2
+	y := int(g.Game.Gorillas[idx].Y) - len(frame)
 	style := tcell.StyleDefault; _ = style
 	for dy, line := range frame {
 		for dx, r := range line {
@@ -342,7 +342,7 @@ func (g *Game) drawGorilla(idx int) {
 }
 
 func (g *Game) startVictoryDance(idx int) {
-	g.Dance = gorillas.NewDance(idx, []float64{-3, 0, -3, 0}, g.Gorillas[idx].Y)
+	g.Game.Dance = gorillas.NewDance(idx, []float64{-3, 0, -3, 0}, g.Game.Gorillas[idx].Y)
 }
 
 func (g *Game) throw() {
@@ -353,48 +353,48 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 	g.screen = s
 
 	ticker := time.NewTicker(50 * time.Millisecond)
-	prevExplosion := g.Explosion.Active
+	prevExplosion := g.Game.Explosion.Active
 	for {
 		g.draw()
 		<-ticker.C
 		g.Step()
-		if !prevExplosion && g.Explosion.Active {
-			g.startVictoryDance(g.Current)
+		if !prevExplosion && g.Game.Explosion.Active {
+			g.startVictoryDance(g.Game.Current)
 		}
-		prevExplosion = g.Explosion.Active
-		if g.Banana.Active && g.sunIntegrity > 0 {
-			if int(g.Banana.X) >= g.sunX && int(g.Banana.X) < g.sunX+3 && int(g.Banana.Y) >= g.sunY && int(g.Banana.Y) < g.sunY+3 {
+		prevExplosion = g.Game.Explosion.Active
+		if g.Game.Banana.Active && g.sunIntegrity > 0 {
+			if int(g.Game.Banana.X) >= g.sunX && int(g.Game.Banana.X) < g.sunX+3 && int(g.Game.Banana.Y) >= g.sunY && int(g.Game.Banana.Y) < g.sunY+3 {
 				g.sunHitTicks = 10
 				if g.sunIntegrity > 0 {
 					g.sunIntegrity--
 				}
 			}
 		}
-		if g.Banana.Active || g.Explosion.Active || g.Dance.Active {
+		if g.Game.Banana.Active || g.Game.Explosion.Active || g.Game.Dance.Active {
 			continue
 		}
 
 		if g.js != nil {
 			g.js.poll()
 			if g.js.axis[0] < -10000 {
-				g.Angle += 0.5
+				g.Game.Angle += 0.5
 			}
 			if g.js.axis[0] > 10000 {
-				g.Angle -= 0.5
+				g.Game.Angle -= 0.5
 			}
 			if g.js.axis[1] < -10000 {
-				g.Power += 0.5
+				g.Game.Power += 0.5
 			}
 			if g.js.axis[1] > 10000 {
-				g.Power -= 0.5
+				g.Game.Power -= 0.5
 			}
 			if g.js.btn[0] {
 				g.throw()
 			}
 		}
 
-		if ai && g.Current == 1 {
-			g.AutoShot()
+		if ai && g.Game.Current == 1 {
+			g.Game.AutoShot()
 			continue
 		}
 
@@ -403,7 +403,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 			if g.abortPrompt {
 				r := unicode.ToUpper(key.Rune())
 				if r == 'Y' {
-					g.Aborted = true
+					g.Game.Aborted = true
 					return nil
 				}
 				if r == 'N' {
@@ -419,15 +419,15 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				g.selAngle = !g.selAngle
 			case tcell.KeyUp:
 				if g.selAngle {
-					g.Angle += 0.5
+					g.Game.Angle += 0.5
 				} else {
-					g.Power += 0.5
+					g.Game.Power += 0.5
 				}
 			case tcell.KeyDown:
 				if g.selAngle {
-					g.Angle -= 0.5
+					g.Game.Angle -= 0.5
 				} else {
-					g.Power -= 0.5
+					g.Game.Power -= 0.5
 				}
 			case tcell.KeyBackspace, tcell.KeyBackspace2:
 				if g.selAngle {
@@ -439,7 +439,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							} else if v > 360 {
 								v = 360
 							}
-							g.Angle = float64(v)
+							g.Game.Angle = float64(v)
 						}
 					}
 				} else {
@@ -451,7 +451,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							} else if v > 200 {
 								v = 200
 							}
-							g.Power = float64(v)
+							g.Game.Power = float64(v)
 						}
 					}
 				}
@@ -461,10 +461,10 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 				r := key.Rune()
 				if r == '*' {
 					if g.selAngle {
-						g.Angle = g.LastAngle[g.Current]
+						g.Game.Angle = g.Game.LastAngle[g.Game.Current]
 						g.angleInput = ""
 					} else {
-						g.Power = g.LastPower[g.Current]
+						g.Game.Power = g.Game.LastPower[g.Game.Current]
 						g.powerInput = ""
 					}
 					g.lastDigit = now
@@ -481,7 +481,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							} else if v > 360 {
 								v = 360
 							}
-							g.Angle = float64(v)
+							g.Game.Angle = float64(v)
 						}
 					} else {
 						if now.Sub(g.lastDigit) > digitBufferTimeout {
@@ -495,7 +495,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 							} else if v > 200 {
 								v = 200
 							}
-							g.Power = float64(v)
+							g.Game.Power = float64(v)
 						}
 					}
 					g.lastDigit = now
@@ -864,13 +864,13 @@ func main() {
 	settings.DefaultRoundQty = *rounds
 
 	g := newGame(settings, *buildings, *wind)
-	g.Players = [2]string{*p1, *p2}
-	g.League = league
-	winsBackup := g.TotalWins
+	g.Game.Players = [2]string{*p1, *p2}
+	g.Game.League = league
+	winsBackup := g.Game.TotalWins
 	var playersBackup map[string]*gorillas.PlayerStats
-	if g.League != nil {
-		playersBackup = make(map[string]*gorillas.PlayerStats, len(g.League.Players))
-		for n, ps := range g.League.Players {
+	if g.Game.League != nil {
+		playersBackup = make(map[string]*gorillas.PlayerStats, len(g.Game.League.Players))
+		for n, ps := range g.Game.League.Players {
 			cp := *ps
 			playersBackup[n] = &cp
 		}
@@ -878,20 +878,20 @@ func main() {
 	if err := g.run(s, *ai); err != nil {
 		panic(fmt.Errorf("run game: %w", err))
 	}
-	if g.Aborted {
-		g.TotalWins = winsBackup
-		if g.League != nil {
-			g.League.Players = playersBackup
-			g.League.Save()
+	if g.Game.Aborted {
+		g.Game.TotalWins = winsBackup
+		if g.Game.League != nil {
+			g.Game.League.Players = playersBackup
+			g.Game.League.Save()
 		}
 		showGameAborted(s)
 		return
 	}
-	g.SaveScores()
-	showStats(s, g.StatsString())
-	if g.League != nil {
-		showLeague(s, g.League)
+	g.Game.SaveScores()
+	showStats(s, g.Game.StatsString())
+	if g.Game.League != nil {
+		showLeague(s, g.Game.League)
 	}
-	fmt.Println(g.StatsString())
+	fmt.Println(g.Game.StatsString())
 	showExtro(s)
 }
