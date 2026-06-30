@@ -7,7 +7,7 @@ import (
 	"image/color"
 	"strconv"
 
-	"github.com/hajimehoshi/ebiten/v2"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -28,8 +28,8 @@ type setupState struct {
 func newSetupState(g *Game) *setupState {
 	s := &setupState{
 		game:          g,
-		fields:        []string{g.Players[0], g.Players[1], strconv.Itoa(g.Settings.DefaultRoundQty), fmt.Sprintf("%.0f", g.Settings.DefaultGravity)},
-		players:       g.League.Names(),
+		fields:        []string{g.Game.Players[0], g.Game.Players[1], strconv.Itoa(g.Game.Settings.DefaultRoundQty), fmt.Sprintf("%.0f", g.Game.Settings.DefaultGravity)},
+		players:       g.Game.League.Names(),
 		editingPlayer: -1,
 	}
 	s.updateAssignField()
@@ -167,13 +167,13 @@ func (s *setupState) Update(_ *Game) error {
 			r, _ := strconv.Atoi(s.fields[2])
 			gval, _ := strconv.ParseFloat(s.fields[3], 64)
 			s.game.Game.Players = [2]string{s.fields[0], s.fields[1]}
-			s.game.Settings.DefaultRoundQty = r
-			s.game.Settings.DefaultGravity = gval
+			s.game.Game.Settings.DefaultRoundQty = r
+			s.game.Game.Settings.DefaultGravity = gval
 			s.game.Game.Gravity = gval
 			s.game.State = playState{}
 			return nil
 		case ebiten.KeyQ:
-			s.game.State = newMenuState(s.game.Settings.UseSound, s.game.Settings.UseSlidingText)
+			s.game.State = newMenuState(s.game.Game.Settings.UseSound, s.game.Game.Settings.UseSlidingText)
 			return nil
 		case ebiten.KeyUp:
 			if s.cur > 0 {

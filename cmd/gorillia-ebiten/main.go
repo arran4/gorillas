@@ -16,7 +16,7 @@ import (
 	"github.com/arran4/gorillas"
 	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
 	imgdraw "github.com/arran4/gorillas/drawings/img"
-	"github.com/hajimehoshi/ebiten/v2"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -72,14 +72,14 @@ type Game struct {
 func (g *Game) initBuildings() {
 	g.buildingBase = g.buildingBase[:0]
 	g.buildingImg = g.buildingImg[:0]
-	bw := float64(g.Width) / float64(g.BuildingCount)
-	for i := 0; i < g.BuildingCount; i++ {
-		h := g.Buildings[i].H
+	bw := float64(g.Game.Width) / float64(g.Game.BuildingCount)
+	for i := 0; i < g.Game.BuildingCount; i++ {
+		h := g.Game.Buildings[i].H
 		// If building has color set, use it. Otherwise generate random and save it.
-		if g.Buildings[i].Color.A == 0 {
-			g.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
+		if g.Game.Buildings[i].Color.A == 0 {
+			g.Game.Buildings[i].Color = color.RGBA{uint8(rand.Intn(200)), uint8(rand.Intn(200)), uint8(rand.Intn(200)), 255}
 		}
-		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Buildings[i].Color)
+		base := ebdraw.CreateBuildingSprite(bw-1, h, g.Game.Buildings[i].Color)
 		g.buildingBase = append(g.buildingBase, base)
 		img := ebiten.NewImage(int(bw-1), int(h))
 		g.buildingImg = append(g.buildingImg, img)
@@ -112,7 +112,7 @@ func newGame(settings gorillas.Settings, buildings int, wind float64) *Game {
 	g.initBuildings()
 
 	// centre the sun horizontally
-	g.sunX = float64(g.Width) / 2
+	g.sunX = float64(g.Game.Width) / 2
 	g.sunY = 40
 	g.sunIntegrity = sunMaxIntegrity
 	g.Game.ResetHook = func() {
@@ -175,10 +175,10 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 	if g.Game.Wind == 0 {
 		return
 	}
-	length := g.Game.Wind * 3 * float64(g.Width) / 320
+	length := g.Game.Wind * 3 * float64(g.Game.Width) / 320
 	// Position arrow near the top instead of the bottom
-	y := float64(g.Height) / 40
-	x := float64(g.Width) / 2
+	y := float64(g.Game.Height) / 40
+	x := float64(g.Game.Width) / 2
 	end := x + length
 	vector.StrokeLine(img, float32(x), float32(y), float32(end), float32(y), 1, color.RGBA{255, 255, 0, 255}, false)
 	head := 5.0
@@ -192,7 +192,7 @@ func (g *Game) drawWindArrow(img *ebiten.Image) {
 }
 
 func (g *Game) Layout(_, _ int) (int, int) {
-	return g.Width, g.Height
+	return g.Game.Width, g.Game.Height
 }
 
 func main() {
@@ -246,7 +246,7 @@ func main() {
 		game.State = playState{}
 
 		// Create offscreen image
-		offscreen := ebiten.NewImage(game.Width, game.Height)
+		offscreen := ebiten.NewImage(game.Game.Width, game.Game.Height)
 
 		// Draw
 		game.Draw(offscreen)
@@ -291,7 +291,7 @@ func main() {
 	if game.Closed {
 		return
 	}
-	if game.Aborted {
+	if game.Game.Aborted {
 		game.Game.TotalWins = winsBackup
 		if game.Game.League != nil {
 			game.Game.League.Players = playersBackup
@@ -302,8 +302,8 @@ func main() {
 		}
 		return
 	}
-	game.SaveScores()
-	if err := showStats(game.StatsString()); err != nil {
+	game.Game.SaveScores()
+	if err := showStats(game.Game.StatsString()); err != nil {
 		panic(fmt.Errorf("show stats: %w", err))
 	}
 	if game.Game.League != nil {
@@ -311,6 +311,6 @@ func main() {
 			panic(fmt.Errorf("show league: %w", err))
 		}
 	}
-	fmt.Println(game.StatsString())
+	fmt.Println(game.Game.StatsString())
 	showExtro()
 }

@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 )
 
 // State defines game state behaviour.
