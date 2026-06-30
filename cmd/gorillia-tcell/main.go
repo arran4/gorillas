@@ -346,7 +346,7 @@ func (g *Game) startVictoryDance(idx int) {
 }
 
 func (g *Game) throw() {
-	g.Throw()
+	g.Game.Throw()
 }
 
 func (g *Game) run(s tcell.Screen, ai bool) error {
@@ -357,7 +357,7 @@ func (g *Game) run(s tcell.Screen, ai bool) error {
 	for {
 		g.draw()
 		<-ticker.C
-		g.Step()
+		g.Game.Step()
 		if !prevExplosion && g.Game.Explosion.Active {
 			g.startVictoryDance(g.Game.Current)
 		}

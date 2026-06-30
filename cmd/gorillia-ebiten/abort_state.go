@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import ebiten "github.com/hajimehoshi/ebiten/v2"
 
 // abortState ends the game when activated.
 type abortState struct{}

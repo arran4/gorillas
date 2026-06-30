@@ -16,7 +16,7 @@ import (
 	"github.com/arran4/gorillas"
 	ebdraw "github.com/arran4/gorillas/drawings/ebiten"
 	imgdraw "github.com/arran4/gorillas/drawings/img"
-	"github.com/hajimehoshi/ebiten/v2"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
